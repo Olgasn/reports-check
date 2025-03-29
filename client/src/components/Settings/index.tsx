@@ -1,6 +1,7 @@
 import { TopHeader } from '@components/TopHeader';
 import { FC } from 'react';
 import { KeysSettings } from './KeysSettings';
+import { ModelsSettings } from './ModelsSettings';
 
 export const Settings: FC = () => {
   return (
@@ -10,6 +11,10 @@ export const Settings: FC = () => {
       <hr />
 
       <KeysSettings />
+
+      <hr />
+
+      <ModelsSettings />
 
       <hr />
     </div>

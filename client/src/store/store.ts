@@ -1,7 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { settingsSlice } from './features';
 
 export const store = configureStore({
-  reducer: {},
+  reducer: {
+    settings: settingsSlice.reducer,
+  },
 });
 
 export type AppStore = typeof store;
