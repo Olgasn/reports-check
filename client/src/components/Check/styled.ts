@@ -1,0 +1,42 @@
+import { COLORS } from '@constants';
+import styled from 'styled-components';
+
+export const FormStyled = styled.form`
+  display: flex;
+  flex-direction: column;
+`;
+
+export const FormItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+`;
+
+export const FormHeading = styled.div`
+  font-family: 'Roboto';
+  font-size: 18px;
+  color: ${COLORS.TEXT};
+  font-weight: bold;
+`;
+
+export const FormDesc = styled.div`
+  font-family: 'Roboto';
+  font-size: 16px;
+  color: ${COLORS.TEXT_LIGHTER};
+  margin-top: 5px;
+  margin-bottom: 15px;
+`;
+
+export const MidItem = styled.span`
+  margin: 0px 20px;
+`;
+
+export const FormBtn = styled.button`
+  background-color: ${COLORS.MENU_BG};
+  color: white;
+  font-family: 'Roboto';
+  font-size: 16px;
+  height: 40px;
+  border-radius: 5px;
+  border: 1px solid ${COLORS.MENU_BG};
+`;

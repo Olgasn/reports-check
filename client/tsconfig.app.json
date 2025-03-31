@@ -28,7 +28,8 @@
       "@constants": ["./src/constants"],
       "@@types": ["./src/types"],
       "@routes": ["./src/routes"],
-      "@fonts/*": ["./src/assets/fonts/*"]
+      "@fonts/*": ["./src/assets/fonts/*"],
+      "@hooks/*": ["./src/hooks"]
     }
   },
   "include": ["src"]

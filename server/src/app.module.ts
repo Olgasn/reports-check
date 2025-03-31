@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeormModule } from './typeorm/typeorm.module';
 import { config } from './config/config';
 import { ModelModule } from './model/model.module';
+import { FileModule } from './file/file.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { ModelModule } from './model/model.module';
     TypeormModule,
     KeyModule,
     ModelModule,
+    FileModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],
