@@ -6,6 +6,7 @@ import { config } from './config/config';
 import { ModelModule } from './model/model.module';
 import { FileModule } from './file/file.module';
 import { ReportsModule } from './reports/reports.module';
+import { LlmModule } from './llm/llm.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ReportsModule } from './reports/reports.module';
     ModelModule,
     FileModule,
     ReportsModule,
+    LlmModule,
   ],
   controllers: [],
   providers: [],

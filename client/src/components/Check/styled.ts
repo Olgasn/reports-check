@@ -1,5 +1,5 @@
 import { COLORS } from '@constants';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const FormStyled = styled.form`
   display: flex;
@@ -19,12 +19,18 @@ export const FormHeading = styled.div`
   font-weight: bold;
 `;
 
-export const FormDesc = styled.div`
-  font-family: 'Roboto';
-  font-size: 16px;
-  color: ${COLORS.TEXT_LIGHTER};
-  margin-top: 5px;
-  margin-bottom: 15px;
+interface FormDescProps {
+  margin?: boolean;
+}
+
+export const FormDesc = styled.div<FormDescProps>`
+  ${({ margin }) => css`
+    font-family: 'Roboto';
+    font-size: 16px;
+    color: ${COLORS.TEXT_LIGHTER};
+    margin-top: 5px;
+    margin-bottom: ${margin ? '0px' : '15px'};
+  `}
 `;
 
 export const MidItem = styled.span`
@@ -39,4 +45,17 @@ export const FormBtn = styled.button`
   height: 40px;
   border-radius: 5px;
   border: 1px solid ${COLORS.MENU_BG};
+`;
+
+export const LoaderDiv = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+`;
+
+export const LoaderTextDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-right: 15px;
 `;

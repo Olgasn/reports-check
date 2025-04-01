@@ -13,6 +13,10 @@ async function bootstrap() {
 
   SwaggerModule.setup('/docs', app, documentFactory);
 
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new SerializeInterceptor(new Reflector()));
   app.setGlobalPrefix('/api');

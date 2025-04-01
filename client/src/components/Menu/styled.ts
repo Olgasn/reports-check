@@ -13,6 +13,7 @@ export const MenuStyled = styled.aside<MenuProps>`
     width: ${isOpen ? '330px' : '60px'};
     align-items: center;
     transition: all 0.2s ease;
+    min-height: 100vh;
   `}
 `;
 

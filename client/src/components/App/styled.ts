@@ -31,4 +31,6 @@ export const MainDiv = styled.main`
 export const ContainerDiv = styled.div`
   width: 100%;
   padding: 10px 20px;
+  max-height: 100vh;
+  overflow-y: auto;
 `;

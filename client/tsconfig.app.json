@@ -28,6 +28,7 @@
       "@constants": ["./src/constants"],
       "@@types": ["./src/types"],
       "@routes": ["./src/routes"],
+      "@api": ["./src/api"],
       "@fonts/*": ["./src/assets/fonts/*"],
       "@hooks/*": ["./src/hooks"]
     }

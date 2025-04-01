@@ -7,5 +7,6 @@ import { KeyModule } from 'src/key/key.module';
   controllers: [ModelController],
   providers: [ModelService],
   imports: [KeyModule],
+  exports: [ModelService],
 })
 export class ModelModule {}

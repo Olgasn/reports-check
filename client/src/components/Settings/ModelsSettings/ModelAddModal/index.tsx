@@ -56,13 +56,7 @@ export const ModelAddModal: FC<Props> = ({ isShow, handleClose }) => {
   });
 
   const onSubmit = (data: FormInput) => {
-    const key = keys.find((k) => k.id === data.key);
-
-    if (!key) {
-      return;
-    }
-
-    const model = { key, name: data.name, value: data.value };
+    const model = { keyId: data.key, name: data.name, value: data.value };
 
     dispatch(createModel(model));
 

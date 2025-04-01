@@ -1,13 +1,23 @@
 import { TopHeader } from '@components/TopHeader';
-import { FC } from 'react';
-import { FormBtn, FormDesc, FormHeading, FormItem, FormStyled } from './styled';
-import { useSelector } from 'react-redux';
-import { RootState } from '@store';
+import { FC, Fragment } from 'react';
+import {
+  FormBtn,
+  FormDesc,
+  FormHeading,
+  FormItem,
+  FormStyled,
+  LoaderDiv,
+  LoaderTextDiv,
+} from './styled';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, checkReports, RootState } from '@store';
 import Form from 'react-bootstrap/esm/Form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import { useFileSelect } from '@hooks/*';
+import { CircularProgress } from '@mui/material';
+import { CheckInfo } from './CheckInfo';
 interface FormInput {
   modelId: number;
 }
@@ -17,6 +27,8 @@ const schema = yup.object({
 });
 
 export const CheckForm: FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { results, checkReportsThunk } = useSelector((state: RootState) => state.reports);
   const { models } = useSelector((state: RootState) => state.settings);
   const task = useFileSelect();
   const reports = useFileSelect();
@@ -27,12 +39,6 @@ export const CheckForm: FC = () => {
   });
 
   const onSubmit = (data: FormInput) => {
-    const model = models.find((m) => m.id === data.modelId);
-
-    if (!model) {
-      return;
-    }
-
     if (!task.file) {
       window.alert('Выберите файл с заданием!');
 
@@ -44,6 +50,14 @@ export const CheckForm: FC = () => {
 
       return;
     }
+
+    dispatch(
+      checkReports({
+        task: task.file,
+        reportsZip: reports.file,
+        modelId: data.modelId,
+      })
+    );
   };
 
   return (
@@ -89,6 +103,35 @@ export const CheckForm: FC = () => {
 
         <FormBtn>Проверить</FormBtn>
       </FormStyled>
+
+      {checkReportsThunk.status === 'pending' && (
+        <>
+          <hr />
+
+          <LoaderDiv>
+            <LoaderTextDiv>
+              <FormHeading>Выполняется проверка</FormHeading>
+              <FormDesc margin>Подождите, пожалуйста, пока выполняется проверка отчетов.</FormDesc>
+            </LoaderTextDiv>
+            <CircularProgress color="inherit" />
+          </LoaderDiv>
+
+          <hr />
+        </>
+      )}
+
+      {!!results.length && (
+        <>
+          <hr />
+
+          {results.map((res, ind) => (
+            <Fragment key={ind}>
+              <CheckInfo data={res} />
+              <hr />
+            </Fragment>
+          ))}
+        </>
+      )}
     </div>
   );
 };

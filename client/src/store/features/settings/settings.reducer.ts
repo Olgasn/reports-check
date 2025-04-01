@@ -7,6 +7,8 @@ import {
   deleteModel,
   editKey,
   editModel,
+  getKeys,
+  getModels,
 } from './settings.thunk';
 
 interface State {
@@ -16,6 +18,8 @@ interface State {
   keysAddModalOpen: boolean;
   modelsModalOpen: boolean;
   addModelsModalOpen: boolean;
+  getKeysThunk: Thunk;
+  getModelsThunk: Thunk;
   createKeyThunk: Thunk;
   deleteKeyThunk: Thunk;
   editKeyThunk: Thunk;
@@ -27,6 +31,8 @@ interface State {
 const state: State = {
   keysAddModalOpen: false,
   addModelsModalOpen: false,
+  getKeysThunk: ThunkInit(),
+  getModelsThunk: ThunkInit(),
   createKeyThunk: ThunkInit(),
   deleteKeyThunk: ThunkInit(),
   editKeyThunk: ThunkInit(),
@@ -35,95 +41,8 @@ const state: State = {
   editModelThunk: ThunkInit(),
   keysModalOpen: false,
   modelsModalOpen: false,
-  keys: [
-    {
-      id: 1,
-      name: 'KEY 1',
-      value: 'REDACTED',
-    },
-    {
-      id: 2,
-      name: 'KEY 2',
-      value: 'REDACTED',
-    },
-    {
-      id: 3,
-      name: 'KEY 3',
-      value: 'REDACTED',
-    },
-  ],
-  models: [
-    {
-      id: 1,
-      name: 'DeepSeek R1',
-      value: 'deepseek/deepseek-r1:free',
-      key: {
-        id: 1,
-        name: 'KEY 1',
-        value: 'REDACTED',
-      },
-    },
-    {
-      id: 2,
-      name: 'Google Gemini 2.5',
-      value: 'google/gemini-2.5-pro-exp-03-25:free',
-      key: {
-        id: 1,
-        name: 'KEY 1',
-        value: 'REDACTED',
-      },
-    },
-    {
-      id: 3,
-      name: 'DeepSeek V3',
-      value: 'deepseek/deepseek-chat-v3-0324:free',
-      key: {
-        id: 1,
-        name: 'KEY 1',
-        value: 'REDACTED',
-      },
-    },
-    {
-      id: 4,
-      name: 'Qwen 32B',
-      value: 'qwen/qwq-32b:free',
-      key: {
-        id: 1,
-        name: 'KEY 1',
-        value: 'REDACTED',
-      },
-    },
-    {
-      id: 5,
-      name: 'R1 Distill Llama 70B',
-      value: 'deepseek/deepseek-r1-distill-llama-70b:free',
-      key: {
-        id: 1,
-        name: 'KEY 1',
-        value: 'REDACTED',
-      },
-    },
-    {
-      id: 6,
-      name: 'Llama 3.3',
-      value: 'meta-llama/llama-3.3-70b-instruct:free',
-      key: {
-        id: 2,
-        name: 'KEY 2',
-        value: 'REDACTED',
-      },
-    },
-    {
-      id: 7,
-      name: 'Gemini Flash 2.0',
-      value: 'google/gemini-2.0-flash-exp:free',
-      key: {
-        id: 3,
-        name: 'KEY 2',
-        value: 'REDACTED',
-      },
-    },
-  ],
+  keys: [],
+  models: [],
 };
 
 export const settingsSlice = createSlice({
@@ -145,6 +64,36 @@ export const settingsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getKeys.pending, (state) => {
+        state.getKeysThunk.status = 'pending';
+      })
+      .addCase(getKeys.fulfilled, (state, action) => {
+        state.getKeysThunk.status = 'succeeded';
+
+        const result = action.payload;
+
+        state.keys = result;
+      })
+      .addCase(getKeys.rejected, (state, action) => {
+        state.getKeysThunk.status = 'rejected';
+        state.getKeysThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
+      .addCase(getModels.pending, (state) => {
+        state.getModelsThunk.status = 'pending';
+      })
+      .addCase(getModels.fulfilled, (state, action) => {
+        state.getModelsThunk.status = 'succeeded';
+
+        const result = action.payload;
+
+        state.models = result;
+      })
+      .addCase(getModels.rejected, (state, action) => {
+        state.getModelsThunk.status = 'rejected';
+        state.getModelsThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
       .addCase(createKey.pending, (state) => {
         state.createKeyThunk.status = 'pending';
       })

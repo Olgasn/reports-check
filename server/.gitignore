@@ -14,6 +14,7 @@ lerna-debug.log*
 /uploads
 /temp
 /check
+/llms
 # OS
 .DS_Store
 
