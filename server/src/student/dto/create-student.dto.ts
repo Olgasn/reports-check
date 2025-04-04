@@ -1,0 +1,31 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsNumber, IsPositive, IsString, MinLength } from 'class-validator';
+
+export class CreateStudentDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  name: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  surname: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  middlename: string;
+
+  @ApiProperty()
+  @Type(() => Number)
+  @IsNumber()
+  num: number;
+
+  @ApiProperty()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  groupId: number;
+}

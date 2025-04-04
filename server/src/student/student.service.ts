@@ -1,0 +1,66 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { Student } from './entities/student.entity';
+import { GroupService } from 'src/group/group.service';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+
+@Injectable()
+export class StudentService {
+  private readonly studentRepo: Repository<Student>;
+
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly groupService: GroupService,
+  ) {
+    this.studentRepo = this.dataSource.getRepository(Student);
+  }
+
+  async findOne(id: number) {
+    const student = await this.studentRepo.findOne({
+      where: { id },
+      relations: {
+        group: true,
+      },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Студент не был найден.');
+    }
+
+    return student;
+  }
+
+  findMany() {
+    return this.studentRepo.find({ relations: { group: true } });
+  }
+
+  async create(createStudentDto: CreateStudentDto) {
+    const { name, surname, middlename, num, groupId } = createStudentDto;
+    const group = await this.groupService.findOne(groupId);
+    const studentPlain = this.studentRepo.create({ name, surname, middlename, num, group });
+
+    return this.studentRepo.save(studentPlain);
+  }
+
+  async update(id: number, updateStudentDto: UpdateStudentDto) {
+    const student = await this.findOne(id);
+    const { name, surname, middlename, groupId } = updateStudentDto;
+
+    if (groupId) {
+      const group = await this.groupService.findOne(groupId);
+
+      student.group = group;
+    }
+
+    Object.assign(student, { name, surname, middlename });
+
+    return this.studentRepo.save(student);
+  }
+
+  async delete(id: number) {
+    const student = await this.findOne(id);
+
+    await this.studentRepo.remove(student);
+  }
+}

@@ -7,7 +7,11 @@ import { SerializeInterceptor } from './common/interceptors/serialize.intercepto
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const config = new DocumentBuilder().setTitle('API').setVersion('1.0').build();
+  const config = new DocumentBuilder()
+    .setTitle('API')
+    .setVersion('1.0')
+    .setDescription('Reports check API')
+    .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
 

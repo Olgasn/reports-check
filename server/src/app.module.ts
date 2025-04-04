@@ -7,6 +7,10 @@ import { ModelModule } from './model/model.module';
 import { FileModule } from './file/file.module';
 import { ReportsModule } from './reports/reports.module';
 import { LlmModule } from './llm/llm.module';
+import { StudentModule } from './student/student.module';
+import { GroupModule } from './group/group.module';
+import { CourseModule } from './course/course.module';
+import { LabModule } from './lab/lab.module';
 
 @Module({
   imports: [
@@ -20,6 +24,10 @@ import { LlmModule } from './llm/llm.module';
     FileModule,
     ReportsModule,
     LlmModule,
+    StudentModule,
+    GroupModule,
+    CourseModule,
+    LabModule,
   ],
   controllers: [],
   providers: [],
