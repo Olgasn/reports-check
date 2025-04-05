@@ -11,6 +11,7 @@ import { StudentModule } from './student/student.module';
 import { GroupModule } from './group/group.module';
 import { CourseModule } from './course/course.module';
 import { LabModule } from './lab/lab.module';
+import { PromptModule } from './prompt/prompt.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { LabModule } from './lab/lab.module';
     GroupModule,
     CourseModule,
     LabModule,
+    PromptModule,
   ],
   controllers: [],
   providers: [],

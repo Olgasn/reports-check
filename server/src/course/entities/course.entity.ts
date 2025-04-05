@@ -1,5 +1,6 @@
 import { Group } from 'src/group/entities/group.entity';
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Prompt } from 'src/prompt/entities/prompt.entity';
+import { Column, Entity, ManyToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('courses')
 export class Course {
@@ -14,4 +15,7 @@ export class Course {
 
   @ManyToMany(() => Group, (group) => group.courses)
   groups: Group[];
+
+  @OneToOne(() => Prompt, (prompt) => prompt.course)
+  prompt: Prompt;
 }

@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { GroupService } from 'src/group/group.service';
 import { CreateStudentDto } from './dto/create-student.dto';
@@ -11,6 +11,7 @@ export class StudentService {
 
   constructor(
     private readonly dataSource: DataSource,
+    @Inject(forwardRef(() => GroupService))
     private readonly groupService: GroupService,
   ) {
     this.studentRepo = this.dataSource.getRepository(Student);
@@ -31,8 +32,8 @@ export class StudentService {
     return student;
   }
 
-  findMany() {
-    return this.studentRepo.find({ relations: { group: true } });
+  findMany(cond: FindOptionsWhere<Student> = {}) {
+    return this.studentRepo.find({ where: cond, relations: { group: true } });
   }
 
   async create(createStudentDto: CreateStudentDto) {

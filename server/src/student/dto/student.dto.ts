@@ -26,5 +26,5 @@ export class StudentDto {
   @ApiProperty()
   @Type(() => GroupDto)
   @Expose()
-  group: GroupDto;
+  group: GroupDto | null;
 }

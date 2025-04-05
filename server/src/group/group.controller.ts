@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { GroupService } from './group.service';
 import {
   ApiBadRequestResponse,
@@ -11,6 +11,8 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { Serialize } from 'src/common/decorators/serialize.decorator';
 import { GroupDto } from './dto/group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { GroupOpDto } from './dto/group-op.dto';
+import { StudentDto } from 'src/student/dto/student.dto';
 
 @ApiTags('Group')
 @Controller('groups')
@@ -56,5 +58,40 @@ export class GroupController {
   @ApiNotFoundResponse({ description: 'Group not found' })
   delete(@Param('id') id: number) {
     return this.groupService.delete(id);
+  }
+
+  @Put(':groupId/add-student/:studentId')
+  @ApiOkResponse({ description: 'Student added' })
+  @ApiNotFoundResponse({ description: 'Student | Group not found' })
+  @ApiBadRequestResponse({ description: 'Incorrect data' })
+  addStudent(@Param('groupId') groupId: number, @Param('studentId') studentId: number) {
+    const groupOpDto = new GroupOpDto();
+
+    groupOpDto.groupId = groupId;
+    groupOpDto.studentId = studentId;
+
+    return this.groupService.addMember(groupOpDto);
+  }
+
+  @Put(':groupId/delete-student/:studentId')
+  @ApiOkResponse({ description: 'Student added' })
+  @ApiNotFoundResponse({ description: 'Student | Group not found' })
+  @ApiBadRequestResponse({ description: 'Incorrect data' })
+  deleteStudent(@Param('groupId') groupId: number, @Param('studentId') studentId: number) {
+    const groupOpDto = new GroupOpDto();
+
+    groupOpDto.groupId = groupId;
+    groupOpDto.studentId = studentId;
+
+    return this.groupService.removeMember(groupOpDto);
+  }
+
+  @Get(':groupId/students')
+  @Serialize(StudentDto)
+  @ApiOkResponse({ type: StudentDto })
+  @ApiNotFoundResponse({ description: 'Group not found' })
+  @ApiBadRequestResponse({ description: 'Incorrect data' })
+  getStudents(@Param('groupId') groupId: number) {
+    return this.groupService.getGroupStudents(groupId);
   }
 }
