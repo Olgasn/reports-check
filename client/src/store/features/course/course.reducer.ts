@@ -1,6 +1,14 @@
 import { ICourse, Thunk, ThunkInit } from '@@types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createCourse, deleteCourse, editCourse, getCourses } from './course.thunk';
+import {
+  createCourse,
+  createPrompt,
+  deleteCourse,
+  editCourse,
+  editPrompt,
+  getCourse,
+  getCourses,
+} from './course.thunk';
 
 interface State {
   addModalOpen: boolean;
@@ -10,6 +18,9 @@ interface State {
   createCourseThunk: Thunk;
   editCourseThunk: Thunk;
   deleteCourseThunk: Thunk;
+  findOneCourseThunk: Thunk;
+  createPromptThunk: Thunk;
+  editPromptThunk: Thunk;
   course: ICourse | null;
 }
 
@@ -21,7 +32,10 @@ const state: State = {
   getCoursesThunk: ThunkInit(),
   createCourseThunk: ThunkInit(),
   editCourseThunk: ThunkInit(),
+  findOneCourseThunk: ThunkInit(),
   deleteCourseThunk: ThunkInit(),
+  createPromptThunk: ThunkInit(),
+  editPromptThunk: ThunkInit(),
 };
 
 export const courseSlice = createSlice({
@@ -40,6 +54,63 @@ export const courseSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(createPrompt.pending, (state) => {
+        state.createPromptThunk.status = 'pending';
+      })
+      .addCase(createPrompt.fulfilled, (state, action) => {
+        state.createPromptThunk.status = 'succeeded';
+
+        const { prompt, courseId } = action.payload;
+
+        const course = state.courses.find((c) => c.id === courseId);
+
+        if (!course) {
+          return;
+        }
+
+        course.prompt = prompt;
+      })
+      .addCase(createPrompt.rejected, (state, action) => {
+        state.createPromptThunk.status = 'rejected';
+        state.createPromptThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
+      .addCase(editPrompt.pending, (state) => {
+        state.editPromptThunk.status = 'pending';
+      })
+      .addCase(editPrompt.fulfilled, (state, action) => {
+        state.editPromptThunk.status = 'succeeded';
+
+        const { prompt, courseId } = action.payload;
+
+        const course = state.courses.find((c) => c.id === courseId);
+
+        if (!course) {
+          return;
+        }
+
+        course.prompt = prompt;
+      })
+      .addCase(editPrompt.rejected, (state, action) => {
+        state.editPromptThunk.status = 'rejected';
+        state.editPromptThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
+      .addCase(getCourse.pending, (state) => {
+        state.findOneCourseThunk.status = 'pending';
+      })
+      .addCase(getCourse.fulfilled, (state, action) => {
+        state.findOneCourseThunk.status = 'succeeded';
+
+        const result = action.payload;
+
+        state.courses.push(result);
+      })
+      .addCase(getCourse.rejected, (state, action) => {
+        state.findOneCourseThunk.status = 'rejected';
+        state.findOneCourseThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
       .addCase(getCourses.pending, (state) => {
         state.getCoursesThunk.status = 'pending';
       })

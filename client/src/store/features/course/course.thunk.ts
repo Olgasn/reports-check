@@ -1,4 +1,10 @@
-import { createAppAsyncThunk, ICreateCourse, IEditCourse } from '@@types';
+import {
+  createAppAsyncThunk,
+  ICreateCourse,
+  ICreatePrompt,
+  IEditCourse,
+  IEditPrompt,
+} from '@@types';
 import { coursesApi } from '@api';
 
 export const getCourses = createAppAsyncThunk('course/getCourses', async () => {
@@ -30,3 +36,27 @@ export const deleteCourse = createAppAsyncThunk('course/deleteCourse', async (id
 
   return id;
 });
+
+export const getCourse = createAppAsyncThunk('course/findOne', async (id: number) => {
+  const course = await coursesApi.findCourse(id);
+
+  return course;
+});
+
+export const createPrompt = createAppAsyncThunk(
+  'course/createPrompt',
+  async (data: { courseId: number; data: ICreatePrompt }) => {
+    const prompt = await coursesApi.createPrompt(data.data);
+
+    return { courseId: data.courseId, prompt };
+  }
+);
+
+export const editPrompt = createAppAsyncThunk(
+  'course/editPrompt',
+  async (data: { courseId: number; id: number; data: IEditPrompt }) => {
+    const prompt = await coursesApi.editPrompt(data.id, data.data);
+
+    return { courseId: data.courseId, prompt };
+  }
+);

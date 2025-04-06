@@ -12,7 +12,7 @@ import { EditCourseModal } from './EditCourse';
 export const Course: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  const { courses, getCoursesThunk, addModalOpen, course, editModalOpen } = useSelector(
+  const { courses, addModalOpen, course, editModalOpen } = useSelector(
     (state: RootState) => state.course
   );
 

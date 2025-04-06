@@ -1,7 +1,10 @@
+import { IPrompt } from './prompt.types';
+
 export interface ICourse {
   id: number;
   name: string;
   description: string;
+  prompt: IPrompt | null;
 }
 
 export interface ICreateCourse {

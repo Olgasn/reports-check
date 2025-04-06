@@ -5,6 +5,7 @@ import { Dropdowns } from '@components/Settings/Dropdowns';
 import { faPenToSquare, faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, deleteCourse, RootState, setCourse, setEditModal } from '@store';
+import { NavLink } from 'react-router';
 
 export const CourseItem: FC<ICourse> = ({ id, name, description }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -13,7 +14,9 @@ export const CourseItem: FC<ICourse> = ({ id, name, description }) => {
   return (
     <CourseItemDiv>
       <CourseHeaderDiv>
-        <CourseHeader>{name}</CourseHeader>
+        <CourseHeader>
+          <NavLink to={`/courses/${id}`}>{name}</NavLink>
+        </CourseHeader>
         <Dropdowns
           actions={[
             {
