@@ -12,12 +12,20 @@ import { GroupModule } from './group/group.module';
 import { CourseModule } from './course/course.module';
 import { LabModule } from './lab/lab.module';
 import { PromptModule } from './prompt/prompt.module';
+import { CheckModule } from './check/check.module';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [config],
       isGlobal: true,
+    }),
+    MulterModule.register({
+      fileFilter: (_, file, cb) => {
+        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+        cb(null, true);
+      },
     }),
     TypeormModule,
     KeyModule,
@@ -30,6 +38,7 @@ import { PromptModule } from './prompt/prompt.module';
     CourseModule,
     LabModule,
     PromptModule,
+    CheckModule,
   ],
   controllers: [],
   providers: [],

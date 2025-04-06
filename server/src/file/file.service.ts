@@ -18,6 +18,8 @@ export class FileService {
     const fullpath = path.join(dir, data.name);
 
     fs.writeFileSync(fullpath, data.content, { encoding: 'utf-8' });
+
+    return fullpath;
   }
 
   async parseArchive(zipBuffer: Buffer) {

@@ -1,5 +1,6 @@
 import { App } from '@components/App';
 import { CheckForm } from '@components/Check';
+import { Course } from '@components/Course';
 import { Settings } from '@components/Settings';
 import { Tests } from '@components/Tests';
 import { RouteObject } from 'react-router';
@@ -20,6 +21,10 @@ export const Routes: RouteObject[] = [
       {
         path: '/tests',
         element: <Tests />,
+      },
+      {
+        path: '/courses',
+        element: <Course />,
       },
     ],
   },

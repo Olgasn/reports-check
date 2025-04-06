@@ -13,4 +13,16 @@ export class LabDto {
   @ApiProperty()
   @Expose()
   description: string;
+
+  @ApiProperty()
+  @Expose()
+  filename: string;
+
+  @ApiProperty()
+  @Expose()
+  filepath: string;
+
+  @ApiProperty()
+  @Expose()
+  filesize: number;
 }

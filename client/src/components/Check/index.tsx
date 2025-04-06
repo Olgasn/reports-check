@@ -15,7 +15,7 @@ import Form from 'react-bootstrap/esm/Form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
-import { useFileSelect } from '@hooks/*';
+import { useFileSelect } from '@hooks';
 import { CircularProgress } from '@mui/material';
 import { CheckInfo } from './CheckInfo';
 interface FormInput {

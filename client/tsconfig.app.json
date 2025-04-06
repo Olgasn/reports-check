@@ -30,7 +30,8 @@
       "@routes": ["./src/routes"],
       "@api": ["./src/api"],
       "@fonts/*": ["./src/assets/fonts/*"],
-      "@hooks/*": ["./src/hooks"]
+      "@hooks": ["./src/hooks"],
+      "@utils": ["./src/utils"]
     }
   },
   "include": ["src"]

@@ -25,6 +25,7 @@ export const HeadingText = styled.div`
 export const ModalBtn = styled.button`
   font-family: 'Roboto';
   font-size: 16px;
+  height: 40px;
   background-color: ${COLORS.SECONDARY};
   color: white;
   padding: 5px 20px;

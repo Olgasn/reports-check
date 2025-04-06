@@ -1,10 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { reportsSlice, settingsSlice } from './features';
+import { courseSlice, reportsSlice, settingsSlice } from './features';
 
 export const store = configureStore({
   reducer: {
     settings: settingsSlice.reducer,
     reports: reportsSlice.reducer,
+    course: courseSlice.reducer,
   },
 });
 

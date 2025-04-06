@@ -13,7 +13,12 @@ export class CourseService {
   }
 
   async findOne(id: number) {
-    const course = await this.courseRepo.findOne({ where: { id } });
+    const course = await this.courseRepo.findOne({
+      where: { id },
+      relations: {
+        prompt: true,
+      },
+    });
 
     if (!course) {
       throw new NotFoundException('Курс не был найден.');
@@ -23,7 +28,11 @@ export class CourseService {
   }
 
   findMany() {
-    return this.courseRepo.find();
+    return this.courseRepo.find({
+      relations: {
+        prompt: true,
+      },
+    });
   }
 
   create(createCourseDto: CreateCourseDto) {
@@ -44,5 +53,20 @@ export class CourseService {
     const course = await this.findOne(id);
 
     await this.courseRepo.remove(course);
+  }
+
+  async getLabs(id: number) {
+    const course = await this.courseRepo.findOne({
+      where: { id },
+      relations: {
+        labs: true,
+      },
+    });
+
+    if (!course) {
+      throw new NotFoundException('Курс не был найден.');
+    }
+
+    return course.labs;
   }
 }

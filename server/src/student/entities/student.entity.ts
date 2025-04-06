@@ -1,5 +1,7 @@
+import { Check } from 'src/check/entities/check.entity';
 import { Group } from 'src/group/entities/group.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Lab } from 'src/lab/entities/lab.entity';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('students')
 export class Student {
@@ -20,4 +22,7 @@ export class Student {
 
   @ManyToOne(() => Group, (group) => group.students)
   group: Group;
+
+  @OneToMany(() => Lab, (lab) => lab.checks)
+  checks: Check[];
 }

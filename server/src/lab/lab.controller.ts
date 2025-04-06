@@ -1,7 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { LabService } from './lab.service';
 import {
   ApiBadRequestResponse,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -11,6 +22,7 @@ import { LabDto } from './dto/lab.dto';
 import { CreateLabDto } from './dto/create-lab.dto';
 import { UpdateLabDto } from './dto/update-course.dto';
 import { Serialize } from 'src/common/decorators/serialize.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Lab')
 @Controller('labs')
@@ -34,19 +46,31 @@ export class LabController {
   }
 
   @Post()
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('task'))
   @Serialize(LabDto)
   @ApiCreatedResponse({ type: LabDto })
   @ApiBadRequestResponse({ description: 'Incorrect data' })
-  create(@Body() createLabDto: CreateLabDto) {
+  create(@Body() createLabDto: CreateLabDto, @UploadedFile() task: Express.Multer.File) {
+    createLabDto.task = task;
+
     return this.labService.create(createLabDto);
   }
 
   @Patch(':id')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('task'))
   @Serialize(LabDto)
   @ApiOkResponse({ type: LabDto })
   @ApiNotFoundResponse({ description: 'Lab not found' })
   @ApiBadRequestResponse({ description: 'Incorrect data' })
-  update(@Param('id') id: number, @Body() updateLabDto: UpdateLabDto) {
+  update(
+    @Param('id') id: number,
+    @Body() updateLabDto: UpdateLabDto,
+    @UploadedFile() task: Express.Multer.File,
+  ) {
+    updateLabDto.task = task;
+
     return this.labService.update(id, updateLabDto);
   }
 
