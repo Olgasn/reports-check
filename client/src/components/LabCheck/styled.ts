@@ -59,3 +59,14 @@ export const LoaderTextDiv = styled.div`
   flex-direction: column;
   margin-right: 15px;
 `;
+
+export const LabTaskWrapper = styled.div`
+  background-color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  margin-top: 10px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+`;

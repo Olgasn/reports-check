@@ -17,10 +17,10 @@ export class Lab {
   filename: string;
 
   @Column()
-  filepath: string;
+  filesize: number;
 
   @Column()
-  filesize: number;
+  content: string;
 
   @ManyToOne(() => Course, (course) => course.labs)
   course: Course;

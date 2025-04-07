@@ -73,6 +73,8 @@ export const EditLabModal: FC<Props> = ({ isShow, handleClose, courseId, item })
       })
     );
 
+    task.resetFile();
+
     handleClose();
   };
 

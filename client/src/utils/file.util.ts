@@ -1,3 +1,5 @@
+import { faFile, faFileLines, faFilePdf, faFileWord } from '@fortawesome/free-regular-svg-icons';
+
 export const prepareFormData = (data: object) => {
   const formData = new FormData();
 
@@ -27,4 +29,26 @@ export const formatFileSize = (bytes: number, decimals = 2) => {
   const value = parseFloat((bytes / Math.pow(k, i)).toFixed(decimals));
 
   return `${value} ${sizes[i]}`.replace(/\.0+$/, '');
+};
+
+export const getFileIcon = (filename: string) => {
+  const p = filename.split('.');
+
+  if (!p.length || p.length === 1) {
+    return faFile;
+  }
+
+  const ext = p[p.length - 1];
+
+  switch (ext) {
+    case '.doc':
+    case '.docx':
+      return faFileWord;
+    case '.txt':
+      return faFileLines;
+    case '.pdf':
+      return faFilePdf;
+    default:
+      return faFile;
+  }
 };

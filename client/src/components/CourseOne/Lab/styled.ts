@@ -2,12 +2,15 @@ import { COLORS } from '@constants';
 import styled from 'styled-components';
 
 export const LabDiv = styled.div`
-  height: 90px;
   background-color: white;
   padding: 20px 25px;
   border-radius: 10px;
 
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+  &:not(:first-child) {
+    margin-top: 10px;
+  }
 `;
 
 export const LabHeader = styled.div`

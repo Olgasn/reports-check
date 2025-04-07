@@ -4,6 +4,7 @@ export interface ILab {
   description: string;
   filename: string;
   filesize: number;
+  content: string;
 }
 
 export interface ICreateLab {

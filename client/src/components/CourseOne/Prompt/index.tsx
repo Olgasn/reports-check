@@ -6,7 +6,7 @@ import { CourseHeader } from '../styled';
 import { BtnOffset, BtnsDiv, PromptInputDiv } from './styled';
 import Form from 'react-bootstrap/esm/Form';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
-import { FormBtn } from '@components/Check/styled';
+import { FormBtn } from '@components/LabCheck/styled';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';

@@ -21,10 +21,15 @@ export const useFileSelect = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const resetFile = () => {
+    setFile(undefined);
+  };
+
   return {
     file,
     fileInputRef,
     handleBtnClick,
     handleFileChange,
+    resetFile,
   };
 };

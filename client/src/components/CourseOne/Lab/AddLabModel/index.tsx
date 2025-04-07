@@ -65,6 +65,8 @@ export const AddLabModal: FC<Props> = ({ isShow, handleClose, courseId }) => {
 
     dispatch(createLab({ courseId, data: lab }));
 
+    task.resetFile();
+
     handleClose();
   };
 

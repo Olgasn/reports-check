@@ -20,9 +20,9 @@ export class LabDto {
 
   @ApiProperty()
   @Expose()
-  filepath: string;
+  filesize: number;
 
   @ApiProperty()
   @Expose()
-  filesize: number;
+  content: string;
 }

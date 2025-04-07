@@ -23,10 +23,8 @@ export const Menu: FC = () => {
       <BtnClose onClick={toggleOpen}>
         <FontAwesomeIcon icon={isOpen ? faReply : faShare} />
       </BtnClose>
-      <LinkItem to="/check" icon={faCircleCheck} isOpen={isOpen} text="Проверка" />
       <LinkItem to="/courses" icon={faGraduationCap} isOpen={isOpen} text="Курсы" />
       <LinkItem to="/settings" icon={faGear} isOpen={isOpen} text="Настройки" />
-      <LinkItem to="/tests" icon={faFlaskVial} isOpen={isOpen} text="Тесты" />
     </MenuStyled>
   );
 };

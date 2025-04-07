@@ -17,10 +17,10 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { Prompt } from './Prompt';
 import { useLabs } from '@hooks';
-import { FormBtn } from '@components/Check/styled';
 import { AddLabModal } from './Lab/AddLabModel';
 import { Lab } from './Lab';
 import { EditLabModal } from './Lab/EditLabModel';
+import { FormBtn } from '@components/LabCheck/styled';
 
 interface Props {
   course: ICourse;

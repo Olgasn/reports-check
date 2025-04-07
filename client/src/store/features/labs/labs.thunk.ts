@@ -1,6 +1,12 @@
 import { createAppAsyncThunk, ICreateLab, IEditLab } from '@@types';
 import { labsApi } from '@api';
 
+export const getOneLab = createAppAsyncThunk('labs/getOneLab', async (labId: number) => {
+  const lab = await labsApi.getOneLab(labId);
+
+  return lab;
+});
+
 export const getCourseLabs = createAppAsyncThunk('labs/getByCourse', async (courseId: number) => {
   const labs = await labsApi.getCourseLabs(courseId);
 

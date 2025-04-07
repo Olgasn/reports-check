@@ -1,23 +1,33 @@
+import { ILab } from '@@types';
 import { TopHeader } from '@components/TopHeader';
-import { FC, Fragment } from 'react';
+import { AppDispatch, RootState } from '@store';
+import { FC, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import Form from 'react-bootstrap/esm/Form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useForm } from 'react-hook-form';
+import { useFileSelect } from '@hooks';
 import {
   FormBtn,
   FormDesc,
   FormHeading,
   FormItem,
   FormStyled,
+  LabTaskWrapper,
   LoaderDiv,
   LoaderTextDiv,
 } from './styled';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, checkReports, RootState } from '@store';
-import Form from 'react-bootstrap/esm/Form';
-import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
-import { useFileSelect } from '@hooks';
+import { LabTask } from '@components/CourseOne/Lab/LabTask';
+import { TaskModal } from '@components/CourseOne/Lab/TaskModal';
+import { Action, Dropdowns } from '@components/Settings/Dropdowns';
+import { faEye } from '@fortawesome/free-regular-svg-icons';
 import { CircularProgress } from '@mui/material';
-import { CheckInfo } from './CheckInfo';
+
+interface Props {
+  lab: ILab;
+}
+
 interface FormInput {
   modelId: number;
 }
@@ -26,43 +36,65 @@ const schema = yup.object({
   modelId: yup.number().required('Необходимо выбрать элемент'),
 });
 
-export const CheckForm: FC = () => {
+export const LabCheck: FC<Props> = ({ lab }) => {
+  const [taskVisible, setTaskVisible] = useState(false);
+
+  const handleTaskClose = () => {
+    setTaskVisible(false);
+  };
+
+  const handleTaskOpen = () => {
+    setTaskVisible(true);
+  };
+
   const dispatch = useDispatch<AppDispatch>();
-  const { results, checkReportsThunk } = useSelector((state: RootState) => state.reports);
   const { models } = useSelector((state: RootState) => state.settings);
-  const task = useFileSelect();
-  const reports = useFileSelect();
 
   const { register, handleSubmit } = useForm<FormInput>({
     resolver: yupResolver(schema),
     defaultValues: {},
   });
 
+  const reports = useFileSelect();
+
   const onSubmit = (data: FormInput) => {
-    if (!task.file) {
-      window.alert('Выберите файл с заданием!');
-
-      return;
-    }
-
     if (!reports.file) {
       window.alert('Выберите архив с отчетами!');
 
       return;
     }
-
-    dispatch(
-      checkReports({
-        task: task.file,
-        reportsZip: reports.file,
-        modelId: data.modelId,
-      })
-    );
   };
+
+  const actions: Action[] = [
+    {
+      text: 'Просмотр',
+      icon: faEye,
+      cb: () => {
+        handleTaskOpen();
+      },
+    },
+  ];
 
   return (
     <div>
       <TopHeader text="Проверка отчетов" subText="Здесь вы можете проверить отчеты студентов." />
+
+      <hr />
+
+      <TopHeader text={lab.name} subText={lab.description} />
+
+      <LabTaskWrapper>
+        <LabTask filename={lab.filename} filesize={lab.filesize} />
+
+        <Dropdowns actions={actions} itemId={1} />
+      </LabTaskWrapper>
+
+      <TaskModal
+        isShow={taskVisible}
+        handleClose={handleTaskClose}
+        content={lab.content}
+        name={lab.name}
+      />
 
       <hr />
 
@@ -82,18 +114,6 @@ export const CheckForm: FC = () => {
         <hr />
 
         <FormItem>
-          <FormHeading>Задание</FormHeading>
-          <FormDesc>Выберите файл с заданием в формате docx, pdf или txt.</FormDesc>
-          <Form.Control
-            type="file"
-            accept=".pdf, .docx, .doc, .txt"
-            onChange={task.handleFileChange}
-          />
-        </FormItem>
-
-        <hr />
-
-        <FormItem>
           <FormHeading>Отчеты</FormHeading>
           <FormDesc>Выберите архив со списком отчетов в формате zip.</FormDesc>
           <Form.Control type="file" accept=".zip" onChange={reports.handleFileChange} />
@@ -104,7 +124,7 @@ export const CheckForm: FC = () => {
         <FormBtn>Проверить</FormBtn>
       </FormStyled>
 
-      {checkReportsThunk.status === 'pending' && (
+      {false && (
         <>
           <hr />
 
@@ -117,19 +137,6 @@ export const CheckForm: FC = () => {
           </LoaderDiv>
 
           <hr />
-        </>
-      )}
-
-      {!!results.length && (
-        <>
-          <hr />
-
-          {results.map((res, ind) => (
-            <Fragment key={ind}>
-              <CheckInfo data={res} />
-              <hr />
-            </Fragment>
-          ))}
         </>
       )}
     </div>

@@ -1,6 +1,6 @@
 import { ILab, Thunk, ThunkInit } from '@@types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { createLab, deleteLab, getCourseLabs, updateLab } from './labs.thunk';
+import { createLab, deleteLab, getCourseLabs, getOneLab, updateLab } from './labs.thunk';
 
 interface IState {
   addLabModal: boolean;
@@ -10,7 +10,9 @@ interface IState {
   updateLabThunk: Thunk;
   deleteLabThunk: Thunk;
   getCourseLabsThunk: Thunk;
+  findOneLabThunk: Thunk;
   lab: ILab | null;
+  labFound: ILab | null;
 }
 
 const state: IState = {
@@ -21,7 +23,9 @@ const state: IState = {
   updateLabThunk: ThunkInit(),
   deleteLabThunk: ThunkInit(),
   getCourseLabsThunk: ThunkInit(),
+  findOneLabThunk: ThunkInit(),
   lab: null,
+  labFound: null,
 };
 
 export const labsSlice = createSlice({
@@ -40,6 +44,21 @@ export const labsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getOneLab.pending, (state) => {
+        state.findOneLabThunk.status = 'pending';
+      })
+      .addCase(getOneLab.fulfilled, (state, action) => {
+        state.findOneLabThunk.status = 'succeeded';
+
+        const lab = action.payload;
+
+        state.labFound = lab;
+      })
+      .addCase(getOneLab.rejected, (state, action) => {
+        state.findOneLabThunk.status = 'rejected';
+        state.findOneLabThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
       .addCase(getCourseLabs.pending, (state) => {
         state.getCourseLabsThunk.status = 'pending';
       })

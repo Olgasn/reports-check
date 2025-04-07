@@ -2,6 +2,12 @@ import { ICreateLab, IEditLab, ILab } from '@@types';
 import { api } from './api';
 import { prepareFormData } from '@utils';
 
+export const getOneLab = async (labId: number) => {
+  const response = await api.get<ILab>(`/labs/${labId}`);
+
+  return response.data;
+};
+
 export const getCourseLabs = async (courseId: number) => {
   const response = await api.get<ILab[]>(`/courses/${courseId}/labs`);
 
