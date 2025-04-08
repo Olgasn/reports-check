@@ -1,4 +1,4 @@
-import { ApiKey, createAppAsyncThunk, Model } from '@@types';
+import { ApiKey, createAppAsyncThunk, ICreateModel, Model } from '@@types';
 import { keysApi, modelsApi } from '@api';
 
 export const getKeys = createAppAsyncThunk('/settings/getKeys', async () => {
@@ -40,14 +40,11 @@ export const editModel = createAppAsyncThunk('settings/editModel', async (data: 
   return result;
 });
 
-export const createModel = createAppAsyncThunk(
-  'settings/addModel',
-  async (data: { name: string; value: string; keyId: number }) => {
-    const result = await modelsApi.createModel(data);
+export const createModel = createAppAsyncThunk('settings/addModel', async (data: ICreateModel) => {
+  const result = await modelsApi.createModel(data);
 
-    return result;
-  }
-);
+  return result;
+});
 
 export const deleteModel = createAppAsyncThunk('settings/deleteModel', async (id: number) => {
   await modelsApi.deleteModel(id);

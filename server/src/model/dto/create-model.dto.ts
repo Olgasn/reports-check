@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNumber, IsPositive, IsString, MinLength } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { Providers } from 'src/types/reports.types';
 
 export class CreateModelDto {
   @ApiProperty()
@@ -32,8 +33,16 @@ export class CreateModelDto {
   max_tokens: number;
 
   @ApiProperty()
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  keyId: number;
+  keyId?: number;
+
+  @ApiProperty({
+    enum: Providers,
+    example: Providers.OpenRouter,
+  })
+  @IsEnum(Providers)
+  provider: Providers;
 }

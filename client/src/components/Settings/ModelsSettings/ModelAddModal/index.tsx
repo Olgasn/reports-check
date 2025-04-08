@@ -1,3 +1,4 @@
+import { Providers } from '@@types';
 import {
   ModalForm,
   InputDiv,
@@ -7,7 +8,7 @@ import {
 } from '@components/Settings/KeysSettings/KeyEditModal/styled';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { AppDispatch, createModel, RootState } from '@store';
-import { FC, useRef, useEffect } from 'react';
+import { FC, useRef, useEffect, useState, ChangeEvent } from 'react';
 import Form from 'react-bootstrap/esm/Form';
 import Modal from 'react-bootstrap/esm/Modal';
 import { useForm } from 'react-hook-form';
@@ -45,6 +46,7 @@ interface Props {
 
 export const ModelAddModal: FC<Props> = ({ isShow, handleClose }) => {
   const { keys } = useSelector((state: RootState) => state.settings);
+  const [provider, setProvider] = useState<Providers>(Providers.OpenRouter);
   const dispatch = useDispatch<AppDispatch>();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -65,9 +67,17 @@ export const ModelAddModal: FC<Props> = ({ isShow, handleClose }) => {
   });
 
   const onSubmit = (data: FormInput) => {
-    const model = { keyId: data.key, name: data.name, value: data.value };
-
-    dispatch(createModel(model));
+    dispatch(
+      createModel({
+        keyId: data.key,
+        name: data.name,
+        value: data.value,
+        provider,
+        top_p: data.top_p,
+        temperature: data.temperature,
+        max_tokens: data.max_tokens,
+      })
+    );
 
     handleClose();
   };
@@ -118,6 +128,19 @@ export const ModelAddModal: FC<Props> = ({ isShow, handleClose }) => {
               <HeadingText>Max Tokens</HeadingText>
               <Form.Control {...register('max_tokens')} />
               {errors.max_tokens && <ErrorDiv>{errors.max_tokens.message}</ErrorDiv>}
+            </InputDiv>
+            <InputDiv>
+              <HeadingText>Провайдер</HeadingText>
+              <Form.Select
+                value={provider}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                  setProvider(e.target.value as Providers)
+                }
+              >
+                <option value={Providers.OpenRouter}>{Providers.OpenRouter}</option>
+                <option value={Providers.Ollama}>{Providers.Ollama}</option>
+              </Form.Select>
+              {errors.key && <ErrorDiv>{errors.key.message}</ErrorDiv>}
             </InputDiv>
             <InputDiv>
               <HeadingText>Ключ API</HeadingText>

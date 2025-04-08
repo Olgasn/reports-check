@@ -1,5 +1,6 @@
 import { Check } from 'src/check/entities/check.entity';
 import { Key } from 'src/key/entities/key.entity';
+import { Providers } from 'src/types/reports.types';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('models')
@@ -24,6 +25,9 @@ export class Model {
 
   @ManyToOne(() => Key, (key) => key.models)
   key: Key;
+
+  @Column({ default: Providers.OpenRouter })
+  provider: Providers;
 
   @OneToMany(() => Check, (check) => check.model)
   checks: Check[];

@@ -46,7 +46,13 @@ export class ReportsService {
       this.logger.log(`Начал провека отчета студента [${studentStr}]`);
 
       const prompt = this.promptService.preparePrompt(report.content, task, content);
-      const result = await this.llmService.query(prompt, model.value, model.key.value);
+      const result = await this.llmService.query(prompt, model);
+
+      this.fileService.writeFile({
+        name: `${Date.now()}_model_${model.name}.txt`,
+        folder: 'models_logs',
+        content: result,
+      });
 
       this.logger.log(`Отчет студента [${studentStr}] был проверен`);
 

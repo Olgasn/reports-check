@@ -5,3 +5,8 @@ export interface ReportCheck {
   num: string;
   content: string;
 }
+
+export enum Providers {
+  OpenRouter = 'openrouter',
+  Ollama = 'ollama',
+}

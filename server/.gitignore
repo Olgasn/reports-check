@@ -15,6 +15,7 @@ lerna-debug.log*
 /temp
 /check
 /llms
+/models_logs
 # OS
 .DS_Store
 

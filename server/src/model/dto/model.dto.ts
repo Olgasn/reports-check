@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { KeyDto } from 'src/key/dto/key.dto';
+import { Providers } from 'src/types/reports.types';
 
 export class ModelDto {
   @ApiProperty()
@@ -19,6 +20,10 @@ export class ModelDto {
   @Type(() => KeyDto)
   @Expose()
   key: KeyDto;
+
+  @ApiProperty()
+  @Expose()
+  provider: Providers;
 
   @ApiProperty()
   @Expose()

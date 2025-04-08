@@ -1,7 +1,7 @@
-import { Model } from '@@types';
+import { ICreateModel, Model } from '@@types';
 import { api } from './api';
 
-export const createModel = async (data: { name: string; value: string; keyId: number }) => {
+export const createModel = async (data: ICreateModel) => {
   const response = await api.post<Model>('/models', data);
 
   return response.data;

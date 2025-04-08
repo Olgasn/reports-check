@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Model } from './entities/model.entity';
 import { KeyService } from 'src/key/key.service';
 import { CreateModelDto } from './dto/create-model.dto';
 import { UpdateModelDto } from './dto/update-model.dto';
+import { Providers } from 'src/types/reports.types';
 
 @Injectable()
 export class ModelService {
@@ -36,18 +37,38 @@ export class ModelService {
   }
 
   async create(createModelDto: CreateModelDto) {
-    const { name, value, keyId, top_p, temperature, max_tokens } = createModelDto;
-    const key = await this.keyService.findOne(keyId);
-    const modelPlain = this.modelRepo.create({ key, name, value, top_p, temperature, max_tokens });
+    const { name, value, keyId, top_p, temperature, max_tokens, provider } = createModelDto;
+    const modelPlain = this.modelRepo.create({
+      name,
+      value,
+      top_p,
+      temperature,
+      max_tokens,
+      provider,
+    });
+
+    if (!keyId && provider === Providers.OpenRouter) {
+      throw new BadRequestException('Для OpenRouter модели вы должны задать ключ API.');
+    }
+
+    if (keyId) {
+      const key = await this.keyService.findOne(keyId);
+
+      modelPlain.key = key;
+    }
 
     return this.modelRepo.save(modelPlain);
   }
 
   async update(id: number, updateModelDto: UpdateModelDto) {
-    const { name, value, keyId, top_p, temperature, max_tokens } = updateModelDto;
+    const { name, value, keyId, top_p, temperature, max_tokens, provider } = updateModelDto;
     const model = await this.findOne(id);
 
     Object.assign(model, { name, value, top_p, temperature, max_tokens });
+
+    if (!keyId && provider === Providers.OpenRouter) {
+      throw new BadRequestException('Для OpenRouter модели вы должны задать ключ API.');
+    }
 
     if (keyId) {
       const key = await this.keyService.findOne(id);
