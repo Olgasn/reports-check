@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CheckReportDto } from './dto/check-report.dto';
 import { FileService } from 'src/file/file.service';
-import * as path from 'path';
 import { LlmService } from 'src/llm/llm.service';
 import { ModelService } from 'src/model/model.service';
 import { CheckResultDto } from './dto/check-result.dto';
+import { CheckService } from 'src/check/check.service';
+import { LabService } from 'src/lab/lab.service';
+import { StudentService } from 'src/student/student.service';
+import { PromptService } from 'src/prompt/prompt.service';
 
 @Injectable()
 export class ReportsService {
@@ -14,86 +17,68 @@ export class ReportsService {
     private readonly fileService: FileService,
     private readonly llmService: LlmService,
     private readonly modelService: ModelService,
+    private readonly checkService: CheckService,
+    private readonly labService: LabService,
+    private readonly studentService: StudentService,
+    private readonly promptService: PromptService,
   ) {}
 
-  preparePromt(task: string, answer: string) {
-    return `
-      Вы преподаватель в университете и эксперт по базам данных и системам управления базами данных, информационным системам и разработке программных приложений для них.
-      Вы выдали студенту задание для выполнение лабораторной работы по учебной дисциплине "Базы данных"
-      Задание на лабораторную работу: ${task}
-      Отчет студента на задание по лабораторной работе: ${answer}   
-      Оцени предоставленный студентом отчет по лабораторной работе на: соответствие выполненного задания исходному заданию с учетом варанта студента, правильность и полноту выполнения задания. 
-      Выставь оценку отчету студента по шкале от 1 до 10. Оценка ниже 4 выставляется в случае несоответствия варианту или выполнения не всех пунктов задания.
-      Напиши отзыв на выполненную работу.
-      В ответе должен быть русский язык.
-      Тебе нужно представить ответ в таком виде (ОБЯЗАТЕЛЬНО). Именно обернуть в тег, чтобы я мог его правильно распарсить.
-      Данный ответ как бы представляет собой json. Он должен быть корректен, иначе будет ошибка.
-      <JSON>
-      {
-        "grade": //оценка от 1 до 10,
-        "review": //отзыв на ответ,
-        "advantages": [] //положительные стороны ответа,
-        "disadvantages": [] //отрицательные стороны ответа
-      }
-      </JSON>
-    `;
+  async getLabChecks(labId: number) {
+    return this.checkService.findByLabs(labId);
   }
 
-  async parseStudentsFiles(checkReportDto: CheckReportDto) {
-    const model = await this.modelService.findOne(checkReportDto.modelId);
+  async checkReports(checkReportDto: CheckReportDto) {
+    const { labId, modelId, reportsZip } = checkReportDto;
 
-    const { reportsZip, task } = checkReportDto;
+    const lab = await this.labService.findOne(labId, { course: { prompt: true } });
+    const model = await this.modelService.findOne(modelId);
 
-    const folder = `check/reports_check_${Date.now()}`;
+    const { content } = lab.course.prompt;
+    const task = lab.content;
 
     const reportsData = await this.fileService.parseArchive(reportsZip.buffer);
-    const taskTxt = await this.fileService.parseFile(task.originalname, task.buffer);
 
     const promises = reportsData.map(async (report) => {
-      const student = `${report.name} ${report.surname} ${report.middlename}`;
+      const studentStr = `${report.name} ${report.surname} ${report.middlename}`;
 
-      this.logger.log(`Началась проверка отчета студента [${student}]`);
+      const studentFound = await this.studentService.findByNum(report.num);
 
-      const prompt = this.preparePromt(taskTxt, report.content);
+      this.logger.log(`Начал провека отчета студента [${studentStr}]`);
 
+      const prompt = this.promptService.preparePrompt(report.content, task, content);
       const result = await this.llmService.query(prompt, model.value, model.key.value);
 
-      this.fileService.writeFile({
-        name: `${model.name}_${student}_${Date.now()}.txt`,
-        content: result,
-        folder: 'llms',
+      this.logger.log(`Отчет студента [${studentStr}] был проверен`);
+
+      const resultDto = await this.llmService.extractData(CheckResultDto, result);
+
+      let student = studentFound;
+
+      if (!student) {
+        const { name, surname, middlename, num } = report;
+
+        student = await this.studentService.create({ name, surname, middlename, num });
+      }
+
+      const check = await this.checkService.create({
+        studentId: student.id,
+        labId,
+        modelId,
+        advantages: resultDto.advantages.join('\n'),
+        disadvantages: resultDto.disadvantages.join('\n'),
+        grade: resultDto.grade,
+        review: resultDto.review,
+        report: report.content,
       });
 
-      this.logger.log(`Отчет студента [${student}] был проверен`);
-
-      const dto = await this.llmService.extractData(CheckResultDto, result);
-
-      dto.student = student;
-      dto.num = report.num;
-
-      this.fileService.writeFile({
-        name: `${student}_${report.num}.txt`,
-        content: report.content,
-        folder: path.join(folder, 'reports'),
-      });
-
-      this.fileService.writeFile({
-        name: `${student}_${report.num}.txt`,
-        content: JSON.stringify(dto, null, 2),
-        folder: path.join(folder, 'answers'),
-      });
-
-      return dto;
+      return check;
     });
 
     const results = await Promise.allSettled(promises);
 
-    this.fileService.writeFile({
-      name: `task.txt`,
-      content: taskTxt,
-      folder,
-    });
-
-    return results.filter((res) => res.status === 'fulfilled').map((data) => data.value);
+    return results
+      .filter((pr) => pr.status === 'fulfilled')
+      .map((pr) => pr.value)
+      .filter((pr) => !!pr);
   }
 }

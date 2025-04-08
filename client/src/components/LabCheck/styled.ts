@@ -70,3 +70,9 @@ export const LabTaskWrapper = styled.div`
   flex-direction: row;
   justify-content: space-between;
 `;
+
+export const CheckResultsDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: 15px;
+`;

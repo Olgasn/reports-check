@@ -1,5 +1,6 @@
+import { Check } from 'src/check/entities/check.entity';
 import { Key } from 'src/key/entities/key.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('models')
 export class Model {
@@ -12,6 +13,18 @@ export class Model {
   @Column()
   value: string;
 
+  @Column('float', { default: 1.0 })
+  top_p: number;
+
+  @Column('float', { default: 1.0 })
+  temperature: number;
+
+  @Column({ default: null })
+  max_tokens: number;
+
   @ManyToOne(() => Key, (key) => key.models)
   key: Key;
+
+  @OneToMany(() => Check, (check) => check.model)
+  checks: Check[];
 }

@@ -8,5 +8,6 @@ import { FileModule } from 'src/file/file.module';
   controllers: [LabController],
   providers: [LabService],
   imports: [CourseModule, FileModule],
+  exports: [LabService],
 })
 export class LabModule {}

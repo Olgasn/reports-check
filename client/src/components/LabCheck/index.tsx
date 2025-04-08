@@ -1,6 +1,6 @@
 import { ILab } from '@@types';
 import { TopHeader } from '@components/TopHeader';
-import { AppDispatch, RootState } from '@store';
+import { AppDispatch, checkReports, RootState } from '@store';
 import { FC, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Form from 'react-bootstrap/esm/Form';
@@ -9,6 +9,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import { useFileSelect } from '@hooks';
 import {
+  CheckResultsDiv,
   FormBtn,
   FormDesc,
   FormHeading,
@@ -23,6 +24,7 @@ import { TaskModal } from '@components/CourseOne/Lab/TaskModal';
 import { Action, Dropdowns } from '@components/Settings/Dropdowns';
 import { faEye } from '@fortawesome/free-regular-svg-icons';
 import { CircularProgress } from '@mui/material';
+import { CheckInfo } from './CheckInfo';
 
 interface Props {
   lab: ILab;
@@ -49,6 +51,7 @@ export const LabCheck: FC<Props> = ({ lab }) => {
 
   const dispatch = useDispatch<AppDispatch>();
   const { models } = useSelector((state: RootState) => state.settings);
+  const { results, checkReportsThunk } = useSelector((state: RootState) => state.reports);
 
   const { register, handleSubmit } = useForm<FormInput>({
     resolver: yupResolver(schema),
@@ -63,6 +66,14 @@ export const LabCheck: FC<Props> = ({ lab }) => {
 
       return;
     }
+
+    dispatch(
+      checkReports({
+        modelId: data.modelId,
+        labId: lab.id,
+        reportsZip: reports.file,
+      })
+    );
   };
 
   const actions: Action[] = [
@@ -124,7 +135,7 @@ export const LabCheck: FC<Props> = ({ lab }) => {
         <FormBtn>Проверить</FormBtn>
       </FormStyled>
 
-      {false && (
+      {checkReportsThunk.status === 'pending' ? (
         <>
           <hr />
 
@@ -137,6 +148,16 @@ export const LabCheck: FC<Props> = ({ lab }) => {
           </LoaderDiv>
 
           <hr />
+        </>
+      ) : (
+        <>
+          <hr />
+
+          <CheckResultsDiv>
+            {results.map((r) => (
+              <CheckInfo data={r} key={r.id} />
+            ))}
+          </CheckResultsDiv>
         </>
       )}
     </div>

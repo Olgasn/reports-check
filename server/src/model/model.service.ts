@@ -36,18 +36,18 @@ export class ModelService {
   }
 
   async create(createModelDto: CreateModelDto) {
-    const { name, value, keyId } = createModelDto;
+    const { name, value, keyId, top_p, temperature, max_tokens } = createModelDto;
     const key = await this.keyService.findOne(keyId);
-    const modelPlain = this.modelRepo.create({ key, name, value });
+    const modelPlain = this.modelRepo.create({ key, name, value, top_p, temperature, max_tokens });
 
     return this.modelRepo.save(modelPlain);
   }
 
   async update(id: number, updateModelDto: UpdateModelDto) {
-    const { name, value, keyId } = updateModelDto;
+    const { name, value, keyId, top_p, temperature, max_tokens } = updateModelDto;
     const model = await this.findOne(id);
 
-    Object.assign(model, { name, value });
+    Object.assign(model, { name, value, top_p, temperature, max_tokens });
 
     if (keyId) {
       const key = await this.keyService.findOne(id);

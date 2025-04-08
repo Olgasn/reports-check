@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Lab } from './entities/lab.entity';
 import { CreateLabDto } from './dto/create-lab.dto';
 import { UpdateLabDto } from './dto/update-course.dto';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, FindOptionsRelations } from 'typeorm';
 import { CourseService } from 'src/course/course.service';
 import { FileService } from 'src/file/file.service';
 
@@ -18,8 +18,8 @@ export class LabService {
     this.labRepo = this.dataSource.getRepository(Lab);
   }
 
-  async findOne(id: number) {
-    const lab = await this.labRepo.findOne({ where: { id } });
+  async findOne(id: number, relations: FindOptionsRelations<Lab> = {}) {
+    const lab = await this.labRepo.findOne({ where: { id }, relations });
 
     if (!lab) {
       throw new NotFoundException('Лабораторная не была найдена.');

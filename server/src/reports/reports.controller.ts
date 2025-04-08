@@ -1,30 +1,41 @@
-import { Body, Controller, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
-import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiConsumes,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ReportsService } from './reports.service';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { CheckReportDto } from './dto/check-report.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Serialize } from 'src/common/decorators/serialize.decorator';
-import { CheckResultDto } from './dto/check-result.dto';
+import { CheckDto } from 'src/check/dto/check.dto';
+import { CheckReportDto } from './dto/check-report.dto';
 @ApiTags('Report')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Post()
-  @Serialize(CheckResultDto)
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'reportsZip' }, { name: 'task' }]))
+  @Serialize(CheckDto)
+  @UseInterceptors(FileInterceptor('reportsZip'))
   @ApiConsumes('multipart/form-data')
+  @ApiOkResponse({ type: [CheckDto] })
   async uploadArchive(
     @Body() checkReportDto: CheckReportDto,
-    @UploadedFiles()
-    files: {
-      reportsZip: Express.Multer.File[];
-      task: Express.Multer.File[];
-    },
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    checkReportDto.reportsZip = files.reportsZip[0];
-    checkReportDto.task = files.task[0];
+    checkReportDto.reportsZip = file;
 
-    return this.reportsService.parseStudentsFiles(checkReportDto);
+    return this.reportsService.checkReports(checkReportDto);
+  }
+
+  @Get('/lab-checks/:labId')
+  @Serialize(CheckDto)
+  @ApiNotFoundResponse({ description: 'Lab not found' })
+  @ApiBadRequestResponse({ description: 'Incorrect data' })
+  @ApiOkResponse({ type: [CheckDto] })
+  async findLabChecks(@Param('labId') labId: number) {
+    return this.reportsService.getLabChecks(labId);
   }
 }

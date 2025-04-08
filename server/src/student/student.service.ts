@@ -17,6 +17,12 @@ export class StudentService {
     this.studentRepo = this.dataSource.getRepository(Student);
   }
 
+  async findByNum(num: string) {
+    const student = await this.studentRepo.findOne({ where: { num } });
+
+    return student;
+  }
+
   async findOne(id: number) {
     const student = await this.studentRepo.findOne({
       where: { id },
@@ -38,8 +44,13 @@ export class StudentService {
 
   async create(createStudentDto: CreateStudentDto) {
     const { name, surname, middlename, num, groupId } = createStudentDto;
-    const group = await this.groupService.findOne(groupId);
-    const studentPlain = this.studentRepo.create({ name, surname, middlename, num, group });
+    const studentPlain = this.studentRepo.create({ name, surname, middlename, num });
+
+    if (groupId) {
+      const group = await this.groupService.findOne(groupId);
+
+      studentPlain.group = group;
+    }
 
     return this.studentRepo.save(studentPlain);
   }

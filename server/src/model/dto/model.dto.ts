@@ -19,4 +19,16 @@ export class ModelDto {
   @Type(() => KeyDto)
   @Expose()
   key: KeyDto;
+
+  @ApiProperty()
+  @Expose()
+  top_p: number;
+
+  @ApiProperty()
+  @Expose()
+  temperature: number;
+
+  @ApiProperty()
+  @Expose()
+  max_tokens: number;
 }

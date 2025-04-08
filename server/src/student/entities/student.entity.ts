@@ -18,7 +18,7 @@ export class Student {
   middlename: string;
 
   @Column()
-  num: number;
+  num: string;
 
   @ManyToOne(() => Group, (group) => group.students)
   group: Group;

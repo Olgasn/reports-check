@@ -1,20 +1,22 @@
-import { CheckData, CheckResult } from '@@types';
+import { ICheckData, ICheckResult } from '@@types';
 import { api } from './api';
+import { prepareFormData } from '@utils';
 
-export const checkReports = async (data: CheckData) => {
-  const { reportsZip, task, modelId } = data;
+export const checkReports = async (data: ICheckData) => {
+  const formData = prepareFormData(data);
 
-  const formData = new FormData();
-
-  formData.append('reportsZip', reportsZip);
-  formData.append('task', task);
-  formData.append('modelId', modelId.toString());
-
-  const response = await api.post<CheckResult[]>('/reports', formData, {
+  const response = await api.post<ICheckResult[]>('/reports', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
     timeout: 0,
   });
+
+  return response.data;
+};
+
+export const getLabChecks = async (labId: number) => {
+  const response = await api.get<ICheckResult[]>(`/reports/lab-checks/${labId}`);
+
   return response.data;
 };

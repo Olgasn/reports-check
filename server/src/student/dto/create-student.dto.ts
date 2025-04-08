@@ -1,3 +1,4 @@
+import { Optional } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNumber, IsPositive, IsString, MinLength } from 'class-validator';
@@ -21,11 +22,12 @@ export class CreateStudentDto {
   @ApiProperty()
   @Type(() => Number)
   @IsNumber()
-  num: number;
+  num: string;
 
   @ApiProperty()
+  @Optional()
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  groupId: number;
+  groupId?: number;
 }

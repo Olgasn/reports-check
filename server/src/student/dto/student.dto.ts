@@ -21,7 +21,7 @@ export class StudentDto {
 
   @ApiProperty()
   @Expose()
-  num: number;
+  num: string;
 
   @ApiProperty()
   @Type(() => GroupDto)

@@ -1,15 +1,19 @@
-import { CheckResult, Thunk, ThunkInit } from '@@types';
+import { ICheckResult, Thunk, ThunkInit } from '@@types';
 import { createSlice } from '@reduxjs/toolkit';
-import { checkReports } from './reports.thunk';
+import { checkReports, getLabChecks } from './reports.thunk';
 
 interface State {
-  results: CheckResult[];
+  results: ICheckResult[];
   checkReportsThunk: Thunk;
+  labChecks: { labId: number; results: ICheckResult[] }[];
+  getLabChecksThunk: Thunk;
 }
 
 const state: State = {
   results: [],
+  labChecks: [],
   checkReportsThunk: ThunkInit(),
+  getLabChecksThunk: ThunkInit(),
 };
 
 export const reportsSlice = createSlice({
@@ -31,6 +35,21 @@ export const reportsSlice = createSlice({
       .addCase(checkReports.rejected, (state, action) => {
         state.checkReportsThunk.status = 'rejected';
         state.checkReportsThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
+      .addCase(getLabChecks.pending, (state) => {
+        state.getLabChecksThunk.status = 'pending';
+      })
+      .addCase(getLabChecks.fulfilled, (state, action) => {
+        state.getLabChecksThunk.status = 'succeeded';
+
+        const { labId, result } = action.payload;
+
+        state.labChecks.push({ labId, results: result });
+      })
+      .addCase(getLabChecks.rejected, (state, action) => {
+        state.getLabChecksThunk.status = 'rejected';
+        state.getLabChecksThunk.error = action.error.message ?? 'Unknown Error';
       });
   },
 });

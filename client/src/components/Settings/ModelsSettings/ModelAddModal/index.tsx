@@ -17,6 +17,9 @@ import * as yup from 'yup';
 interface FormInput {
   name: string;
   value: string;
+  temperature: number;
+  top_p: number;
+  max_tokens: number;
   key: number;
 }
 
@@ -29,6 +32,9 @@ const schema = yup.object({
     .string()
     .required('Обязательный параметр')
     .min(6, 'Значение должен быть не менее 6 символов'),
+  top_p: yup.number().min(0.0).max(1.0).required('Обязательный параметр'),
+  temperature: yup.number().min(0.0).max(1.0).required('Обязательный параметр'),
+  max_tokens: yup.number().min(1).required('Обязательный параметр'),
   key: yup.number().required('Необходимо выбрать элемент'),
 });
 
@@ -52,6 +58,9 @@ export const ModelAddModal: FC<Props> = ({ isShow, handleClose }) => {
     defaultValues: {
       name: '',
       value: '',
+      max_tokens: 100000,
+      top_p: 1.0,
+      temperature: 1.0,
     },
   });
 
@@ -94,6 +103,21 @@ export const ModelAddModal: FC<Props> = ({ isShow, handleClose }) => {
               <HeadingText>Значение</HeadingText>
               <Form.Control {...register('value')} />
               {errors.value && <ErrorDiv>{errors.value.message}</ErrorDiv>}
+            </InputDiv>
+            <InputDiv>
+              <HeadingText>Temperature</HeadingText>
+              <Form.Control {...register('temperature')} />
+              {errors.temperature && <ErrorDiv>{errors.temperature.message}</ErrorDiv>}
+            </InputDiv>
+            <InputDiv>
+              <HeadingText>Top p</HeadingText>
+              <Form.Control {...register('top_p')} />
+              {errors.top_p && <ErrorDiv>{errors.top_p.message}</ErrorDiv>}
+            </InputDiv>
+            <InputDiv>
+              <HeadingText>Max Tokens</HeadingText>
+              <Form.Control {...register('max_tokens')} />
+              {errors.max_tokens && <ErrorDiv>{errors.max_tokens.message}</ErrorDiv>}
             </InputDiv>
             <InputDiv>
               <HeadingText>Ключ API</HeadingText>

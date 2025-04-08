@@ -28,6 +28,16 @@ export class PromptService {
     return this.promptRepo.find();
   }
 
+  preparePrompt(answer: string, task: string, content: string) {
+    let template = this.template;
+
+    template = template.replace('@PROMPT_TEXT', content);
+    template = template.replace('@LAB_TASK', task);
+    template = template.replace('@STUDENT_ANSWER', answer);
+
+    return template;
+  }
+
   async findOne(id: number) {
     const prompt = await this.promptRepo.findOne({ where: { id } });
 

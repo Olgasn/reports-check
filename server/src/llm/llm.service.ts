@@ -1,11 +1,20 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import OpenAI from 'openai';
+import { ModelsConfig } from 'src/types/config.types';
 
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
+  private readonly url: string;
+
+  constructor(private readonly configService: ConfigService) {
+    const { openRouterUrl } = this.configService.get<ModelsConfig>('models')!;
+
+    this.url = openRouterUrl;
+  }
 
   wait(ms: number) {
     return new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
@@ -13,7 +22,7 @@ export class LlmService {
 
   async completion(content: string, model: string, key: string) {
     const openai = new OpenAI({
-      baseURL: 'https://openrouter.ai/api/v1',
+      baseURL: this.url,
       apiKey: key,
     });
 

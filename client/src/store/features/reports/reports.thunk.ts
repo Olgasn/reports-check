@@ -1,8 +1,17 @@
-import { CheckData, createAppAsyncThunk } from '@@types';
+import { createAppAsyncThunk, ICheckData } from '@@types';
 import { reportsApi } from '@api';
 
-export const checkReports = createAppAsyncThunk('reports/checkReports', async (data: CheckData) => {
-  const result = await reportsApi.checkReports(data);
+export const checkReports = createAppAsyncThunk(
+  'reports/checkReports',
+  async (data: ICheckData) => {
+    const result = await reportsApi.checkReports(data);
 
-  return result;
+    return result;
+  }
+);
+
+export const getLabChecks = createAppAsyncThunk('reports/getLabChecks', async (labId: number) => {
+  const result = await reportsApi.getLabChecks(labId);
+
+  return { labId, result };
 });

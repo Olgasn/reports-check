@@ -19,6 +19,9 @@ interface FormInput {
   name: string;
   value: string;
   key: number;
+  temperature: number;
+  top_p: number;
+  max_tokens: number;
 }
 
 const schema = yup.object({
@@ -30,6 +33,9 @@ const schema = yup.object({
     .string()
     .required('Обязательный параметр')
     .min(6, 'Значение должен быть не менее 6 символов'),
+  top_p: yup.number().min(0.0).max(1.0).required('Обязательный параметр'),
+  temperature: yup.number().min(0.0).max(1.0).required('Обязательный параметр'),
+  max_tokens: yup.number().min(1).required('Обязательный параметр'),
   key: yup.number().required('Необходимо выбрать элемент'),
 });
 
@@ -55,6 +61,9 @@ export const ModelEditModal: FC<Props> = ({ isShow, handleClose, item }) => {
       name: item.name,
       value: item.value,
       key: item.key.id,
+      max_tokens: 100000,
+      top_p: 1.0,
+      temperature: 1.0,
     },
   });
 
@@ -65,7 +74,15 @@ export const ModelEditModal: FC<Props> = ({ isShow, handleClose, item }) => {
       return;
     }
 
-    const model = { id: item.id, key, name: data.name, value: data.value };
+    const model = {
+      id: item.id,
+      key,
+      name: data.name,
+      value: data.value,
+      top_p: data.top_p,
+      temperature: data.temperature,
+      max_tokens: data.max_tokens,
+    };
 
     dispatch(editModel(model));
 
@@ -84,6 +101,9 @@ export const ModelEditModal: FC<Props> = ({ isShow, handleClose, item }) => {
     setValue('name', item.name);
     setValue('value', item.value);
     setValue('key', item.key.id);
+    setValue('top_p', item.top_p);
+    setValue('temperature', item.temperature);
+    setValue('max_tokens', item.max_tokens);
   }, [item]);
 
   return (
@@ -104,6 +124,21 @@ export const ModelEditModal: FC<Props> = ({ isShow, handleClose, item }) => {
               <HeadingText>Значение</HeadingText>
               <Form.Control {...register('value')} />
               {errors.value && <ErrorDiv>{errors.value.message}</ErrorDiv>}
+            </InputDiv>
+            <InputDiv>
+              <HeadingText>Temperature</HeadingText>
+              <Form.Control {...register('temperature')} />
+              {errors.temperature && <ErrorDiv>{errors.temperature.message}</ErrorDiv>}
+            </InputDiv>
+            <InputDiv>
+              <HeadingText>Top p</HeadingText>
+              <Form.Control {...register('top_p')} />
+              {errors.top_p && <ErrorDiv>{errors.top_p.message}</ErrorDiv>}
+            </InputDiv>
+            <InputDiv>
+              <HeadingText>Max Tokens</HeadingText>
+              <Form.Control {...register('max_tokens')} />
+              {errors.max_tokens && <ErrorDiv>{errors.max_tokens.message}</ErrorDiv>}
             </InputDiv>
             <InputDiv>
               <HeadingText>Ключ API</HeadingText>

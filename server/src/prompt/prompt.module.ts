@@ -7,5 +7,6 @@ import { CourseModule } from 'src/course/course.module';
   controllers: [PromptController],
   providers: [PromptService],
   imports: [CourseModule],
+  exports: [PromptService],
 })
 export class PromptModule {}

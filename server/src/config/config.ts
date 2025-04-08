@@ -6,6 +6,7 @@ import * as path from 'node:path';
 export const config = (): Config => {
   const env = cleanEnv(process.env, {
     DATABASE: str(),
+    OPEN_ROUTER_URL: str(),
   });
 
   const template = fs.readFileSync(path.join(process.cwd(), './prompt.template'), 'utf-8');
@@ -16,6 +17,9 @@ export const config = (): Config => {
     },
     prompt: {
       template,
+    },
+    models: {
+      openRouterUrl: env.OPEN_ROUTER_URL,
     },
   };
 

@@ -9,4 +9,7 @@ export interface Model {
   name: string;
   value: string;
   key: ApiKey;
+  top_p: number;
+  temperature: number;
+  max_tokens: number;
 }
