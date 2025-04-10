@@ -1,13 +1,6 @@
 import { ILab } from './lab.types';
 import { Model } from './settings.types';
-
-export interface IStudent {
-  id: number;
-  name: string;
-  surname: string;
-  middlename: string;
-  num: string;
-}
+import { IStudent } from './student.types';
 
 export interface ICheckResult {
   id: number;

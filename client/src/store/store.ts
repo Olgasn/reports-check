@@ -1,5 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { courseSlice, labsSlice, reportsSlice, settingsSlice } from './features';
+import {
+  courseSlice,
+  groupSlice,
+  labsSlice,
+  reportsSlice,
+  settingsSlice,
+  studentSlice,
+} from './features';
 
 export const store = configureStore({
   reducer: {
@@ -7,6 +14,8 @@ export const store = configureStore({
     reports: reportsSlice.reducer,
     course: courseSlice.reducer,
     labs: labsSlice.reducer,
+    students: studentSlice.reducer,
+    groups: groupSlice.reducer,
   },
 });
 
