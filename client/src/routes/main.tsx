@@ -1,6 +1,7 @@
 import { App } from '@components/App';
 import { Course } from '@components/Course';
 import { WithCourse } from '@components/CourseOne/WithCourse';
+import { Groups } from '@components/Groups';
 import { WithLab } from '@components/LabCheck/WithLab';
 import { Settings } from '@components/Settings';
 import { Tests } from '@components/Tests';
@@ -30,6 +31,10 @@ export const Routes: RouteObject[] = [
       {
         path: '/check-lab/:id',
         element: <WithLab />,
+      },
+      {
+        path: '/groups',
+        element: <Groups />,
       },
     ],
   },

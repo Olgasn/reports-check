@@ -19,7 +19,7 @@ import { StudentDto } from 'src/student/dto/student.dto';
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
-  @Get('id')
+  @Get(':id')
   @Serialize(GroupDto)
   @ApiOkResponse({ type: GroupDto })
   @ApiBadRequestResponse({ description: 'Incorrect data' })
@@ -43,7 +43,7 @@ export class GroupController {
     return this.groupService.create(createGroupDto);
   }
 
-  @Patch('id')
+  @Patch(':id')
   @Serialize(GroupDto)
   @ApiOkResponse({ type: GroupDto })
   @ApiBadRequestResponse({ description: 'Incorrect data' })
@@ -52,7 +52,7 @@ export class GroupController {
     return this.groupService.update(id, updateGroupDto);
   }
 
-  @Delete('id')
+  @Delete(':id')
   @ApiOkResponse({ description: 'Group deleted' })
   @ApiBadRequestResponse({ description: 'Incorrect data' })
   @ApiNotFoundResponse({ description: 'Group not found' })

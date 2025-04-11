@@ -1,4 +1,4 @@
-import { ICreateGroup, IGroup, IUpdateGroup } from '@@types';
+import { ICreateGroup, IGroup, IStudent, IUpdateGroup } from '@@types';
 import { api } from './api';
 
 export const getGroup = async (id: number) => {

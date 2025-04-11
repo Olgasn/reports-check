@@ -1,10 +1,9 @@
 import { FC, useState } from 'react';
 import { BtnClose, MenuStyled } from './styled';
-import { faCircleCheck } from '@fortawesome/free-regular-svg-icons';
 import {
-  faFlaskVial,
   faGear,
   faGraduationCap,
+  faLayerGroup,
   faReply,
   faShare,
 } from '@fortawesome/free-solid-svg-icons';
@@ -24,6 +23,7 @@ export const Menu: FC = () => {
         <FontAwesomeIcon icon={isOpen ? faReply : faShare} />
       </BtnClose>
       <LinkItem to="/courses" icon={faGraduationCap} isOpen={isOpen} text="Курсы" />
+      <LinkItem to="/groups" icon={faLayerGroup} isOpen={isOpen} text="Группы" />
       <LinkItem to="/settings" icon={faGear} isOpen={isOpen} text="Настройки" />
     </MenuStyled>
   );

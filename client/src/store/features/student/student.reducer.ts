@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import {
   createStudent,
   deleteStudent,
+  getGroupStudents,
   getStudent,
   getStudents,
   updateStudent,
@@ -11,21 +12,25 @@ import {
 interface State {
   student: IStudent | null;
   students: IStudent[];
+  groupStudents: { groupId: number; students: IStudent[] }[];
   getStudentThunk: Thunk;
   getStudentsThunk: Thunk;
   createStudentThunk: Thunk;
   updateStudentThunk: Thunk;
   deleteStudentThunk: Thunk;
+  getGroupStudentsThunk: Thunk;
 }
 
 const state: State = {
   student: null,
   students: [],
+  groupStudents: [],
   getStudentThunk: ThunkInit(),
   getStudentsThunk: ThunkInit(),
   createStudentThunk: ThunkInit(),
   updateStudentThunk: ThunkInit(),
   deleteStudentThunk: ThunkInit(),
+  getGroupStudentsThunk: ThunkInit(),
 };
 
 export const studentSlice = createSlice({
@@ -34,6 +39,21 @@ export const studentSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(getGroupStudents.pending, (state) => {
+        state.getGroupStudentsThunk.status = 'pending';
+      })
+      .addCase(getGroupStudents.fulfilled, (state, action) => {
+        state.getGroupStudentsThunk.status = 'succeeded';
+
+        const { groupId, students } = action.payload;
+
+        state.groupStudents.push({ groupId, students });
+      })
+      .addCase(getGroupStudents.rejected, (state, action) => {
+        state.getGroupStudentsThunk.status = 'rejected';
+        state.getGroupStudentsThunk.error = action.error.message ?? 'Unknown Error';
+      })
+
       .addCase(getStudent.pending, (state) => {
         state.getStudentThunk.status = 'pending';
       })

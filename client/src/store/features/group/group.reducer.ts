@@ -1,5 +1,5 @@
 import { IGroup, Thunk, ThunkInit } from '@@types';
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createGroup, deleteGroup, getGroup, getGroups, updateGroup } from './group.thunk';
 
 interface State {
@@ -25,7 +25,11 @@ const state: State = {
 export const groupSlice = createSlice({
   name: 'group',
   initialState: state,
-  reducers: {},
+  reducers: {
+    setGroup(state, action: PayloadAction<IGroup | null>) {
+      state.group = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getGroup.pending, (state) => {
@@ -104,3 +108,5 @@ export const groupSlice = createSlice({
       });
   },
 });
+
+export const groupActions = groupSlice.actions;

@@ -18,9 +18,10 @@ export interface Action {
 interface DropdownProps {
   actions: Action[];
   itemId: number;
+  sx?: Record<string, unknown>;
 }
 
-export const Dropdowns: FC<DropdownProps> = ({ actions, itemId }) => {
+export const Dropdowns: FC<DropdownProps> = ({ actions, itemId, sx }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<SVGSVGElement>(null);
@@ -68,7 +69,7 @@ export const Dropdowns: FC<DropdownProps> = ({ actions, itemId }) => {
 
   return (
     <DropdownContainer ref={dropdownRef}>
-      <DropdownBtn onClick={toggleDropdown} icon={faEllipsisVertical} ref={buttonRef} />
+      <DropdownBtn onClick={toggleDropdown} icon={faEllipsisVertical} ref={buttonRef} style={sx} />
 
       {isOpen && (
         <DropdownContent isRight={isRightAligned}>

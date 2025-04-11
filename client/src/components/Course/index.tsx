@@ -1,20 +1,19 @@
 import { TopHeader } from '@components/TopHeader';
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import { CourseItem } from './CourseItem';
 import { CourseDivItems, CourseLineDiv, HeadDiv } from './styled';
 import { split } from '@utils';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, getCourses, RootState, setAddModal, setEditModal } from '@store';
+import { AppDispatch, RootState, setAddModal, setEditModal } from '@store';
 import { ModalBtn } from '@components/Settings/KeysSettings/KeyEditModal/styled';
 import { CourseAddModal } from './AddCourse';
 import { EditCourseModal } from './EditCourse';
+import { useCourses } from '@hooks';
 
 export const Course: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-
-  const { courses, addModalOpen, course, editModalOpen } = useSelector(
-    (state: RootState) => state.course
-  );
+  const courses = useCourses();
+  const { addModalOpen, course, editModalOpen } = useSelector((state: RootState) => state.course);
 
   const handleEditModalClose = () => {
     dispatch(setEditModal(false));
@@ -27,10 +26,6 @@ export const Course: FC = () => {
   const handleAddModalOpen = () => {
     dispatch(setAddModal(true));
   };
-
-  useEffect(() => {
-    dispatch(getCourses());
-  }, []);
 
   const coursesSplitted = split(courses, 3);
 

@@ -28,3 +28,9 @@ export const updateStudent = async (id: number, data: IUpdateStudent) => {
 export const deleteStudent = async (id: number) => {
   await api.delete(`/students/${id}`);
 };
+
+export const getGroupStudents = async (groupId: number) => {
+  const response = await api.get<IStudent[]>(`/groups/${groupId}/students`);
+
+  return response.data;
+};

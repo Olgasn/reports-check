@@ -4,11 +4,11 @@ import styled, { css } from 'styled-components';
 
 export const DropdownContainer = styled.div`
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
 `;
 
 export const DropdownBtn = styled(FontAwesomeIcon)`
-  margin-left: 15px;
   color: ${COLORS.TEXT};
   width: 10px;
 
@@ -34,6 +34,7 @@ export const DropdownContent = styled.div<DropdownContentProps>`
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     padding: 10px 15px;
+    width: max-content;
   `}
 `;
 
@@ -63,4 +64,5 @@ export const DropdownItem = styled.div`
 
 export const DropdownIcon = styled(FontAwesomeIcon)`
   margin-right: 5px;
+  width: 15px;
 `;

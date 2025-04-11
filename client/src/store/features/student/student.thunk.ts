@@ -37,3 +37,12 @@ export const deleteStudent = createAppAsyncThunk('student/deleteStudent', async 
 
   return id;
 });
+
+export const getGroupStudents = createAppAsyncThunk(
+  'student/getGroupStudents',
+  async (groupId: number) => {
+    const students = await studentsApi.getGroupStudents(groupId);
+
+    return { groupId, students };
+  }
+);
