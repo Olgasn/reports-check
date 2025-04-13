@@ -11,6 +11,7 @@ import { Prompt } from './entities/prompt.entity';
 export class PromptService {
   private readonly promptRepo: Repository<Prompt>;
   private readonly template: string;
+  private readonly templateMultiple: string;
 
   constructor(
     private readonly dataSource: DataSource,
@@ -19,13 +20,26 @@ export class PromptService {
   ) {
     this.promptRepo = this.dataSource.getRepository(Prompt);
 
-    const { template } = this.configService.get<PromptConfig>('prompt')!;
+    const { template, templateMultiple } = this.configService.get<PromptConfig>('prompt')!;
 
     this.template = template;
+    this.templateMultiple = templateMultiple;
   }
 
   findMany() {
     return this.promptRepo.find();
+  }
+
+  prepareMultiplePrompt(data: { task: string; answer: string; content: string; checks: string[] }) {
+    const { task, answer, content, checks } = data;
+    let template = this.templateMultiple;
+
+    template = template.replace('@PROMPT_TEXT', content);
+    template = template.replace('@LAB_TASK', task);
+    template = template.replace('@STUDENT_ANSWER', answer);
+    template = template.replace(' @MODELS_CHECK_RESULT', checks.join(', '));
+
+    return template;
   }
 
   preparePrompt(answer: string, task: string, content: string) {

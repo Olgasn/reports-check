@@ -92,7 +92,9 @@ export class LlmService {
       }
 
       return result;
-    } catch {
+    } catch (error: any) {
+      console.log(error);
+
       if (count >= 5) {
         this.logger.warn(`Превышено максимальное количество запросов к [${model.name}]`);
 

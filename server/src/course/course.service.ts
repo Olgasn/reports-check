@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, FindOptionsRelations, Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -12,12 +12,10 @@ export class CourseService {
     this.courseRepo = this.dataSource.getRepository(Course);
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, relations: FindOptionsRelations<Course> = { prompt: true }) {
     const course = await this.courseRepo.findOne({
       where: { id },
-      relations: {
-        prompt: true,
-      },
+      relations,
     });
 
     if (!course) {

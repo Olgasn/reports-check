@@ -11,6 +11,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Serialize } from 'src/common/decorators/serialize.decorator';
 import { CheckDto } from 'src/check/dto/check.dto';
 import { CheckReportDto } from './dto/check-report.dto';
+import { CheckGrDto } from 'src/check/dto/check-gr.dto';
+import { CheckReportMulDto } from './dto/check-report-mul.dto';
 @ApiTags('Report')
 @Controller('reports')
 export class ReportsController {
@@ -30,11 +32,25 @@ export class ReportsController {
     return this.reportsService.checkReports(checkReportDto);
   }
 
-  @Get('/lab-checks/:labId')
+  @Post('check-multiple')
   @Serialize(CheckDto)
+  @UseInterceptors(FileInterceptor('reportsZip'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOkResponse({ type: [CheckDto] })
+  async checkMultiple(
+    @Body() checkReportDto: CheckReportMulDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    checkReportDto.reportsZip = file;
+
+    return this.reportsService.checkReportByMultipleModels(checkReportDto);
+  }
+
+  @Get('/lab-checks/:labId')
+  @Serialize(CheckGrDto)
   @ApiNotFoundResponse({ description: 'Lab not found' })
   @ApiBadRequestResponse({ description: 'Incorrect data' })
-  @ApiOkResponse({ type: [CheckDto] })
+  @ApiOkResponse({ type: [CheckGrDto] })
   async findLabChecks(@Param('labId') labId: number) {
     return this.reportsService.getLabChecks(labId);
   }

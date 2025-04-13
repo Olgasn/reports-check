@@ -10,6 +10,7 @@ export interface DbConfig {
 
 export interface PromptConfig {
   template: string;
+  templateMultiple: string;
 }
 
 export interface ModelsConfig {

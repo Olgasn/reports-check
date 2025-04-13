@@ -5,6 +5,7 @@ import { StudentService } from 'src/student/student.service';
 import { ModelService } from 'src/model/model.service';
 import { LabService } from 'src/lab/lab.service';
 import { CreateCheckDto } from './dto/create-check.dto';
+import { CheckGrDto } from './dto/check-gr.dto';
 
 @Injectable()
 export class CheckService {
@@ -41,6 +42,51 @@ export class CheckService {
     const check = await this.checkRepo.save(checkPlain);
 
     return check;
+  }
+
+  async getLabChecks(labId: number) {
+    const lab = await this.labService.findOne(labId, {
+      checks: {
+        lab: true,
+        student: {
+          group: true,
+        },
+      },
+    });
+
+    const checks = lab.checks;
+
+    const groups: Record<string, CheckGrDto> = {};
+
+    for (const check of checks) {
+      const group = check.student.group;
+
+      if (!groups[group.id]) {
+        groups[group.id] = { group, results: [] };
+      }
+
+      const st = groups[group.id].results.find((gr) => gr.student.id === check.student.id);
+
+      if (!st) {
+        groups[group.id].results.push({
+          student: check.student,
+          checks: [check],
+        });
+      } else {
+        groups[group.id].results = groups[group.id].results.map((gr) => {
+          if (gr.student.id === check.student.id) {
+            return {
+              student: gr.student,
+              checks: [...gr.checks, check],
+            };
+          }
+
+          return gr;
+        });
+      }
+    }
+
+    return Object.values(groups);
   }
 
   async findByLabs(labId: number) {

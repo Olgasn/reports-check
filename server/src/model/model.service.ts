@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Model } from './entities/model.entity';
 import { KeyService } from 'src/key/key.service';
 import { CreateModelDto } from './dto/create-model.dto';
@@ -15,6 +15,19 @@ export class ModelService {
     private readonly keyService: KeyService,
   ) {
     this.modelRepo = this.dataSource.getRepository(Model);
+  }
+
+  async findByIds(ids: number[]) {
+    const models = await this.modelRepo.find({
+      where: {
+        id: In(ids),
+      },
+      relations: {
+        key: true,
+      },
+    });
+
+    return models;
   }
 
   async findOne(id: number) {

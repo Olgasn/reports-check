@@ -1,7 +1,7 @@
 import { Lab } from 'src/lab/entities/lab.entity';
 import { Model } from 'src/model/entities/model.entity';
 import { Student } from 'src/student/entities/student.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 
 @Entity('checks')
 export class Check {
@@ -22,6 +22,9 @@ export class Check {
 
   @Column({ default: '' })
   report: string;
+
+  @CreateDateColumn()
+  date: Date;
 
   @ManyToOne(() => Lab, (lab) => lab.checks)
   lab: Lab;
