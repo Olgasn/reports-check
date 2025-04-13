@@ -17,4 +17,10 @@ export class CheckReportDto {
   @IsNumber()
   @IsPositive()
   labId: number;
+
+  @ApiProperty()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  groupId: number;
 }

@@ -10,7 +10,6 @@ import { ReportsService } from './reports.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Serialize } from 'src/common/decorators/serialize.decorator';
 import { CheckDto } from 'src/check/dto/check.dto';
-import { CheckReportDto } from './dto/check-report.dto';
 import { CheckGrDto } from 'src/check/dto/check-gr.dto';
 import { CheckReportMulDto } from './dto/check-report-mul.dto';
 @ApiTags('Report')
@@ -23,27 +22,22 @@ export class ReportsController {
   @UseInterceptors(FileInterceptor('reportsZip'))
   @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: [CheckDto] })
-  async uploadArchive(
-    @Body() checkReportDto: CheckReportDto,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    checkReportDto.reportsZip = file;
-
-    return this.reportsService.checkReports(checkReportDto);
-  }
-
-  @Post('check-multiple')
-  @Serialize(CheckDto)
-  @UseInterceptors(FileInterceptor('reportsZip'))
-  @ApiConsumes('multipart/form-data')
-  @ApiOkResponse({ type: [CheckDto] })
-  async checkMultiple(
+  uploadArchive(
     @Body() checkReportDto: CheckReportMulDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     checkReportDto.reportsZip = file;
 
-    return this.reportsService.checkReportByMultipleModels(checkReportDto);
+    if (checkReportDto.modelsId.length >= 2) {
+      return this.reportsService.checkReportByMultipleModels(checkReportDto);
+    } else {
+      return this.reportsService.checkReports({
+        labId: checkReportDto.labId,
+        modelId: checkReportDto.modelsId[0],
+        reportsZip: checkReportDto.reportsZip,
+        groupId: checkReportDto.groupId,
+      });
+    }
   }
 
   @Get('/lab-checks/:labId')

@@ -6,8 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import Form from 'react-bootstrap/esm/Form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
-import { useFileSelect } from '@hooks';
+import { Controller, useForm } from 'react-hook-form';
+import { useFileSelect, useGroups } from '@hooks';
 import {
   CheckResultsDiv,
   FormBtn,
@@ -23,19 +23,31 @@ import { LabTask } from '@components/CourseOne/Lab/LabTask';
 import { TaskModal } from '@components/CourseOne/Lab/TaskModal';
 import { Action, Dropdowns } from '@components/Settings/Dropdowns';
 import { faEye } from '@fortawesome/free-regular-svg-icons';
-import { CircularProgress } from '@mui/material';
+import {
+  Box,
+  Chip,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  OutlinedInput,
+  Select,
+} from '@mui/material';
 import { CheckInfo } from './CheckInfo';
+import { ErrorDiv } from '@components/Settings/KeysSettings/KeyEditModal/styled';
 
 interface Props {
   lab: ILab;
 }
 
 interface FormInput {
-  modelId: number;
+  modelId: number[];
+  groupId: number;
 }
 
 const schema = yup.object({
-  modelId: yup.number().required('Необходимо выбрать элемент'),
+  modelId: yup.array().of(yup.number().required()).required(),
+  groupId: yup.number().required('Необходимо выбрать элемент'),
 });
 
 export const LabCheck: FC<Props> = ({ lab }) => {
@@ -50,12 +62,22 @@ export const LabCheck: FC<Props> = ({ lab }) => {
   };
 
   const dispatch = useDispatch<AppDispatch>();
+  const groups = useGroups();
   const { models } = useSelector((state: RootState) => state.settings);
   const { results, checkReportsThunk } = useSelector((state: RootState) => state.reports);
 
-  const { register, handleSubmit } = useForm<FormInput>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    trigger,
+    setError,
+  } = useForm<FormInput>({
     resolver: yupResolver(schema),
-    defaultValues: {},
+    defaultValues: {
+      modelId: [],
+    },
   });
 
   const reports = useFileSelect();
@@ -67,11 +89,20 @@ export const LabCheck: FC<Props> = ({ lab }) => {
       return;
     }
 
+    const { modelId, groupId } = data;
+
+    if (!modelId.length) {
+      setError('modelId', { type: 'custom', message: 'Выберите хотя бы одну модель!' });
+
+      return;
+    }
+
     dispatch(
       checkReports({
-        modelId: data.modelId,
+        modelsId: modelId,
         labId: lab.id,
         reportsZip: reports.file,
+        groupId,
       })
     );
   };
@@ -112,9 +143,50 @@ export const LabCheck: FC<Props> = ({ lab }) => {
       <FormStyled onSubmit={handleSubmit(onSubmit)}>
         <FormItem>
           <FormHeading>Модель</FormHeading>
-          <FormDesc>Выберите модель, которая будет проводить проверку.</FormDesc>
-          <Form.Select {...register('modelId', { valueAsNumber: true })}>
-            {models.map(({ id, name }) => (
+          <FormDesc>Выберите модели, которые будут проводить проверку.</FormDesc>
+
+          <Controller
+            name="modelId"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth>
+                <InputLabel id="model-multiple-chip-label">Модели</InputLabel>
+                <Select
+                  {...field}
+                  multiple
+                  labelId="model-multiple-chip-label"
+                  input={<OutlinedInput label="Модели" />}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(selected as number[]).map((value) => {
+                        const model = models.find((m) => m.id === value);
+                        return <Chip key={value} label={model?.name || value} />;
+                      })}
+                    </Box>
+                  )}
+                >
+                  {models.map(({ id, name }) => (
+                    <MenuItem key={id} value={id}>
+                      {name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.modelId && <ErrorDiv>{errors.modelId.message}</ErrorDiv>}
+              </FormControl>
+            )}
+          />
+        </FormItem>
+
+        <hr />
+
+        <FormItem>
+          <FormHeading>Группа</FormHeading>
+          <FormDesc>
+            Выберите группу, к которой причислены студенты (Если студентов нет в базе, они будут
+            зачислены в указанную группу).
+          </FormDesc>
+          <Form.Select {...register('groupId', { valueAsNumber: true })}>
+            {groups.map(({ id, name }) => (
               <option value={id} key={id}>
                 {name}
               </option>

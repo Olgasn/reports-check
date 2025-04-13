@@ -51,6 +51,7 @@ export class CheckService {
         student: {
           group: true,
         },
+        model: true,
       },
     });
 

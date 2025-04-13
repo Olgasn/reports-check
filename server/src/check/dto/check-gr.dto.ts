@@ -2,6 +2,7 @@ import { StudentDto } from 'src/student/dto/student.dto';
 import { GroupDto } from 'src/group/dto/group.dto';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
+import { ModelDto } from 'src/model/dto/model.dto';
 
 export class StudentCheckDto extends OmitType(StudentDto, ['group']) {}
 
@@ -25,6 +26,11 @@ export class CheckItemDto {
   @ApiProperty()
   @Expose()
   date: Date;
+
+  @ApiProperty()
+  @Type(() => ModelDto)
+  @Expose()
+  model: ModelDto;
 }
 
 export class GroupCheckDto {

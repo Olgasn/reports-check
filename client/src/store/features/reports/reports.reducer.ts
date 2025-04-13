@@ -1,9 +1,9 @@
-import { ICheckResult, Thunk, ThunkInit } from '@@types';
+import { ICheck, ICheckResult, Thunk, ThunkInit } from '@@types';
 import { createSlice } from '@reduxjs/toolkit';
 import { checkReports, getLabChecks } from './reports.thunk';
 
 interface State {
-  results: ICheckResult[];
+  results: ICheck[];
   checkReportsThunk: Thunk;
   labChecks: { labId: number; results: ICheckResult[] }[];
   getLabChecksThunk: Thunk;

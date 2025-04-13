@@ -8,6 +8,7 @@ import { StudentModule } from 'src/student/student.module';
 import { LabModule } from 'src/lab/lab.module';
 import { CheckModule } from 'src/check/check.module';
 import { PromptModule } from 'src/prompt/prompt.module';
+import { GroupModule } from 'src/group/group.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PromptModule } from 'src/prompt/prompt.module';
     LabModule,
     CheckModule,
     PromptModule,
+    GroupModule,
   ],
   providers: [ReportsService],
   controllers: [ReportsController],

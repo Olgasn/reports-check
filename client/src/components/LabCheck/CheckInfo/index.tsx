@@ -1,25 +1,15 @@
-import { ICheckResult } from '@@types';
-import { FC, useState } from 'react';
+import { ICheck } from '@@types';
+import { FC } from 'react';
 import { CheckCellDiv, CheckInfoDiv, ReportDiv } from './styled';
 import { Accordion, AccordionSummary, Typography, AccordionDetails } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
-  data: ICheckResult;
+  data: ICheck;
 }
 
 export const CheckInfo: FC<Props> = ({ data }) => {
-  const [reportVisible, setReportVisible] = useState(false);
-
-  const handleReportOpen = () => {
-    setReportVisible(true);
-  };
-
-  const handleReportClose = () => {
-    setReportVisible(false);
-  };
-
   const studentStr = `${data.student.name} ${data.student.surname} ${data.student.middlename}`;
 
   return (
@@ -54,8 +44,6 @@ export const CheckInfo: FC<Props> = ({ data }) => {
               {ind + 1}. {adv}
             </div>
           ))}
-
-          <ReportDiv>{data.report}</ReportDiv>
         </AccordionDetails>
       </Accordion>
     </CheckInfoDiv>

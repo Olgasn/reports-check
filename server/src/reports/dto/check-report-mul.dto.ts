@@ -24,5 +24,5 @@ export class CheckReportMulDto {
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  modelReviewId: number;
+  groupId: number;
 }

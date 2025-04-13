@@ -8,7 +8,11 @@ export const prepareFormData = (data: object) => {
       continue;
     }
 
-    if (value instanceof File || typeof value === 'string') {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        formData.append(key, item.toString());
+      }
+    } else if (value instanceof File || typeof value === 'string') {
       formData.append(key, value);
     } else if (typeof value === 'number') {
       formData.append(key, value.toString());

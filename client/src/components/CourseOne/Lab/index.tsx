@@ -9,7 +9,6 @@ import { LabTask } from './LabTask';
 import { faCircleCheck, faFileLines } from '@fortawesome/free-regular-svg-icons';
 import { TaskModal } from './TaskModal';
 import { useNavigate } from 'react-router';
-import { LabCheckModal } from './LabCheckModal';
 
 interface Props {
   item: ILab;
@@ -19,22 +18,12 @@ interface Props {
 export const Lab: FC<Props> = ({ item, courseId }) => {
   const navigate = useNavigate();
   const [taskVisible, setTaskVisible] = useState(false);
-  const [resultVisible, setResultVisible] = useState(false);
-
   const handleTaskClose = () => {
     setTaskVisible(false);
   };
 
   const handleTaskOpen = () => {
     setTaskVisible(true);
-  };
-
-  const handleResultOpen = () => {
-    setResultVisible(true);
-  };
-
-  const handleResultClose = () => {
-    setResultVisible(false);
   };
 
   const dispatch = useDispatch<AppDispatch>();
@@ -84,7 +73,7 @@ export const Lab: FC<Props> = ({ item, courseId }) => {
       text: 'Результаты',
       icon: faSquarePollVertical,
       cb: () => {
-        handleResultOpen();
+        navigate(`/labs/${item.id}/results`);
       },
     },
   ];
@@ -106,13 +95,6 @@ export const Lab: FC<Props> = ({ item, courseId }) => {
         isShow={taskVisible}
         handleClose={handleTaskClose}
         content={item.content}
-        name={item.name}
-      />
-
-      <LabCheckModal
-        isShow={resultVisible}
-        handleClose={handleResultClose}
-        labId={item.id}
         name={item.name}
       />
     </LabDiv>
