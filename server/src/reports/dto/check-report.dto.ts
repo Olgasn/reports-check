@@ -23,4 +23,12 @@ export class CheckReportDto {
   @IsNumber()
   @IsPositive()
   groupId: number;
+
+  @ApiProperty({
+    type: [Number],
+  })
+  @Type(() => Number)
+  @IsNumber({}, { each: true })
+  @IsPositive({ each: true })
+  studentsId: number[] = [];
 }

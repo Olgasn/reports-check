@@ -36,6 +36,7 @@ export class ReportsController {
         modelId: checkReportDto.modelsId[0],
         reportsZip: checkReportDto.reportsZip,
         groupId: checkReportDto.groupId,
+        studentsId: checkReportDto.studentsId,
       });
     }
   }

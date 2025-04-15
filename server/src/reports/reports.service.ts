@@ -35,8 +35,9 @@ export class ReportsService {
   }
 
   async checkReportByMultipleModels(checkReportDto: CheckReportMulDto) {
-    const { labId, modelsId, reportsZip } = checkReportDto;
+    const { labId, modelsId, reportsZip, studentsId } = checkReportDto;
     const reviewModelId = modelsId.at(-1);
+    const students = await this.studentService.findByIds(studentsId);
 
     if (!reviewModelId) {
       throw new BadRequestException('Incorrect data');
@@ -49,7 +50,10 @@ export class ReportsService {
     const { content } = lab.course.prompt;
     const task = lab.content;
 
-    const reportsData = await this.fileService.parseArchive(reportsZip.buffer);
+    const repData = await this.fileService.parseArchive(reportsZip.buffer);
+    const reportsData = students.length
+      ? repData.filter((report) => students.some((st) => st.num === report.num))
+      : repData;
 
     const promises: Promise<CheckResult[]>[] = [];
 
@@ -149,7 +153,8 @@ export class ReportsService {
   }
 
   async checkReports(checkReportDto: CheckReportDto) {
-    const { labId, modelId, reportsZip, groupId } = checkReportDto;
+    const { labId, modelId, reportsZip, groupId, studentsId } = checkReportDto;
+    const students = await this.studentService.findByIds(studentsId);
 
     const lab = await this.labService.findOne(labId, { course: { prompt: true } });
     const model = await this.modelService.findOne(modelId);
@@ -157,7 +162,10 @@ export class ReportsService {
     const { content } = lab.course.prompt;
     const task = lab.content;
 
-    const reportsData = await this.fileService.parseArchive(reportsZip.buffer);
+    const repData = await this.fileService.parseArchive(reportsZip.buffer);
+    const reportsData = students.length
+      ? repData.filter((report) => students.some((st) => st.num === report.num))
+      : repData;
 
     const promises = reportsData.map(async (report) =>
       this.checkOneReport({ report, task, content, model, groupId }),

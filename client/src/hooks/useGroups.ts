@@ -1,4 +1,5 @@
 import { AppDispatch, getGroups, getGroupStudents, RootState } from '@store';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 export const useGroups = () => {
@@ -20,15 +21,11 @@ export const useGroupStudents = (groupId: number) => {
 
   const group = groupStudents.find((gs) => gs.groupId === groupId);
 
-  if (!group && getGroupStudentsThunk.status === 'idle') {
-    dispatch(getGroupStudents(groupId));
+  useEffect(() => {
+    if (!group) {
+      dispatch(getGroupStudents(groupId));
+    }
+  }, [groupId, group]);
 
-    return [];
-  }
-
-  if (getGroupStudentsThunk.status === 'rejected') {
-    return [];
-  }
-
-  return group ? group.students : [];
+  return group?.students || [];
 };

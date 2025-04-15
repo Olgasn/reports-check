@@ -1,13 +1,13 @@
-import { ILab } from '@@types';
+import { IGroup, ILab, IStudent } from '@@types';
 import { TopHeader } from '@components/TopHeader';
 import { AppDispatch, checkReports, RootState } from '@store';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Form from 'react-bootstrap/esm/Form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Controller, useForm } from 'react-hook-form';
-import { useFileSelect, useGroups } from '@hooks';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useFileSelect, useGroups, useGroupStudents } from '@hooks';
 import {
   CheckResultsDiv,
   FormBtn,
@@ -38,19 +38,22 @@ import { ErrorDiv } from '@components/Settings/KeysSettings/KeyEditModal/styled'
 
 interface Props {
   lab: ILab;
+  groups: IGroup[];
 }
 
 interface FormInput {
   modelId: number[];
+  studentsId: number[];
   groupId: number;
 }
 
 const schema = yup.object({
   modelId: yup.array().of(yup.number().required()).required(),
+  studentsId: yup.array().of(yup.number().required()).required(),
   groupId: yup.number().required('Необходимо выбрать элемент'),
 });
 
-export const LabCheck: FC<Props> = ({ lab }) => {
+export const LabCheck: FC<Props> = ({ lab, groups }) => {
   const [taskVisible, setTaskVisible] = useState(false);
 
   const handleTaskClose = () => {
@@ -62,7 +65,6 @@ export const LabCheck: FC<Props> = ({ lab }) => {
   };
 
   const dispatch = useDispatch<AppDispatch>();
-  const groups = useGroups();
   const { models } = useSelector((state: RootState) => state.settings);
   const { results, checkReportsThunk } = useSelector((state: RootState) => state.reports);
 
@@ -71,15 +73,22 @@ export const LabCheck: FC<Props> = ({ lab }) => {
     handleSubmit,
     control,
     formState: { errors },
-    trigger,
     setError,
   } = useForm<FormInput>({
     resolver: yupResolver(schema),
     defaultValues: {
       modelId: [],
+      studentsId: [],
+      groupId: 1,
     },
   });
 
+  const watchedGroupId = useWatch({
+    control,
+    name: 'groupId',
+  });
+
+  const students = useGroupStudents(watchedGroupId);
   const reports = useFileSelect();
 
   const onSubmit = (data: FormInput) => {
@@ -89,7 +98,7 @@ export const LabCheck: FC<Props> = ({ lab }) => {
       return;
     }
 
-    const { modelId, groupId } = data;
+    const { modelId, groupId, studentsId } = data;
 
     if (!modelId.length) {
       setError('modelId', { type: 'custom', message: 'Выберите хотя бы одну модель!' });
@@ -103,6 +112,7 @@ export const LabCheck: FC<Props> = ({ lab }) => {
         labId: lab.id,
         reportsZip: reports.file,
         groupId,
+        studentsId,
       })
     );
   };
@@ -192,6 +202,45 @@ export const LabCheck: FC<Props> = ({ lab }) => {
               </option>
             ))}
           </Form.Select>
+        </FormItem>
+
+        <hr />
+
+        <FormItem>
+          <FormHeading>Студенты</FormHeading>
+          <FormDesc>Выберите студенты, отчеты которых будут проверены.</FormDesc>
+
+          <Controller
+            name="studentsId"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth>
+                <InputLabel id="students-multiple-chip-label">Студенты</InputLabel>
+                <Select
+                  {...field}
+                  multiple
+                  labelId="students-multiple-chip-label"
+                  input={<OutlinedInput label="Студенты" />}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {(selected as number[]).map((value) => {
+                        const student = students.find((m) => m.id === value);
+
+                        return <Chip key={value} label={student?.name || value} />;
+                      })}
+                    </Box>
+                  )}
+                >
+                  {students.map(({ id, name, surname, middlename }) => (
+                    <MenuItem key={id} value={id}>
+                      {name} {surname} {middlename}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.studentsId && <ErrorDiv>{errors.studentsId.message}</ErrorDiv>}
+              </FormControl>
+            )}
+          />
         </FormItem>
 
         <hr />

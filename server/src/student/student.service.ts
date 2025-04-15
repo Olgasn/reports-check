@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { GroupService } from 'src/group/group.service';
 import { CreateStudentDto } from './dto/create-student.dto';
@@ -21,6 +21,14 @@ export class StudentService {
     const student = await this.studentRepo.findOne({ where: { num } });
 
     return student;
+  }
+
+  async findByIds(ids: number[]) {
+    return this.studentRepo.find({
+      where: {
+        id: In(ids),
+      },
+    });
   }
 
   async findOne(id: number) {

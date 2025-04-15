@@ -34,6 +34,7 @@ export interface ICheckData {
   reportsZip: File;
   labId: number;
   modelsId: number[];
+  studentsId: number[];
   groupId: number;
 }
 

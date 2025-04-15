@@ -11,6 +11,14 @@ export class CheckReportMulDto {
   @IsPositive({ each: true })
   modelsId: number[];
 
+  @ApiProperty({
+    type: [Number],
+  })
+  @Type(() => Number)
+  @IsNumber({}, { each: true })
+  @IsPositive({ each: true })
+  studentsId: number[] = [];
+
   @ApiProperty({ type: 'string', format: 'binary', required: true })
   reportsZip: Express.Multer.File;
 
