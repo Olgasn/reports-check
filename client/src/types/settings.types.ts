@@ -3,17 +3,27 @@ export enum Providers {
   Ollama = 'ollama',
 }
 
-export interface ApiKey {
+export interface IKey {
   id: number;
   name: string;
   value: string;
 }
 
-export interface Model extends ICreateModel {
-  id: number;
-
-  key: ApiKey;
+export interface ICreateKey {
+  name: string;
+  value: string;
 }
+
+export interface IUpdateKey extends ICreateKey {
+  id: number;
+}
+
+export interface IModel extends ICreateModel {
+  id: number;
+  key: IKey;
+}
+
+export type IUpdateModel = ICreateModel;
 
 export interface ICreateModel {
   name: string;

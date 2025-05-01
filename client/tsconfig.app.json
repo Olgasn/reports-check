@@ -23,12 +23,12 @@
     "noUncheckedSideEffectImports": true,
 
     "paths": {
-      "@components/*": ["./src/components/*"],
       "@store": ["./src/store"],
       "@constants": ["./src/constants"],
       "@@types": ["./src/types"],
       "@routes": ["./src/routes"],
       "@api": ["./src/api"],
+      "@components": ["./src/components"],
       "@fonts/*": ["./src/assets/fonts/*"],
       "@hooks": ["./src/hooks"],
       "@utils": ["./src/utils"]

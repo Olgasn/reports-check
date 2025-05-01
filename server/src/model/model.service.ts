@@ -77,14 +77,14 @@ export class ModelService {
     const { name, value, keyId, top_p, temperature, max_tokens, provider } = updateModelDto;
     const model = await this.findOne(id);
 
-    Object.assign(model, { name, value, top_p, temperature, max_tokens });
+    Object.assign(model, { name, value, top_p, temperature, max_tokens, provider });
 
     if (!keyId && provider === Providers.OpenRouter) {
       throw new BadRequestException('Для OpenRouter модели вы должны задать ключ API.');
     }
 
     if (keyId) {
-      const key = await this.keyService.findOne(id);
+      const key = await this.keyService.findOne(keyId);
 
       model.key = key;
     }

@@ -1,18 +1,16 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-
-import { store } from '@store';
+import { queryClient } from '@api';
+import { Routes } from '@routes';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Provider } from 'react-redux';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Routes } from '@routes';
 
 const router = createBrowserRouter(Routes);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
-    </Provider>
+    </QueryClientProvider>
   </StrictMode>
 );
