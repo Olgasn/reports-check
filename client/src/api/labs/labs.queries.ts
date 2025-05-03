@@ -17,6 +17,6 @@ export const useLabs = () =>
 
 export const useCourseLabs = (courseId: number) =>
   useQuery<ILab[]>({
-    queryKey: [QUERY_KEYS.LABS],
+    queryKey: [QUERY_KEYS.LABS, courseId],
     queryFn: () => api.get(`/courses/${courseId}/labs`).then((res) => res.data),
   });

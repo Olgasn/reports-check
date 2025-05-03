@@ -22,6 +22,8 @@ export const Menu: FC = () => {
         onClick={toggleOpen}
         sx={{
           color: darken(0.3, 'white'),
+          width: '60px',
+          height: '60px',
         }}
       >
         {isOpen ? <RedoOutlinedIcon /> : <UndoOutlinedIcon />}

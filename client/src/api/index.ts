@@ -13,3 +13,4 @@ export * from './reports/reports.mutations';
 export * from './reports/reports.queries';
 export * from './students/students.mutations';
 export * from './students/students.queries';
+export * from './prompts/prompts.mutations';

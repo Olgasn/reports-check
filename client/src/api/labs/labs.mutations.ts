@@ -2,10 +2,21 @@ import { ICreateLab, IEditLab, ILab } from '@@types';
 import { api, queryClient } from '@api';
 import { QUERY_KEYS } from '@constants';
 import { useMutation } from '@tanstack/react-query';
+import { prepareFormData } from '@utils';
 
 export const useCreateLab = () =>
   useMutation<ILab, Error, ICreateLab>({
-    mutationFn: (payload) => api.post('/labs', payload).then((res) => res.data),
+    mutationFn: (payload) => {
+      const data = prepareFormData(payload);
+
+      return api
+        .post('/labs', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((res) => res.data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LABS] });
     },
@@ -13,7 +24,17 @@ export const useCreateLab = () =>
 
 export const useUpdateLab = () =>
   useMutation<ILab, Error, { id: number; data: IEditLab }>({
-    mutationFn: ({ id, data }) => api.patch(`/labs/${id}`, data).then((res) => res.data),
+    mutationFn: ({ id, data }) => {
+      const payload = prepareFormData(data);
+
+      return api
+        .patch(`/labs/${id}`, payload, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((res) => res.data);
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LABS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LABS, variables.id] });

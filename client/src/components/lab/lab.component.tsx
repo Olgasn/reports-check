@@ -1,0 +1,74 @@
+import { FC, useMemo } from 'react';
+import { LabProps } from './lab.types';
+import { getLabActions } from './lab.constants';
+import { Box, Divider } from '@mui/material';
+import { PopoverMenu } from '@components';
+import { LabTask } from './lab-task';
+import { LabDesc, LabDiv, LabHeaderText } from './lab.styled';
+import { useModalControls } from '@hooks';
+import { TaskModal } from './task-modal';
+import { toast } from 'react-toastify';
+import { useDeleteLab } from '@api';
+import { EditLabModal } from './edit-lab-modal';
+
+export const Lab: FC<LabProps> = ({ item }) => {
+  const deleteSuccess = () => toast.success('Лабораторная успешно удалена');
+  const deleteError = () => toast.error('Не удалось удалить лабораторную');
+
+  const { mutate: deleteLab } = useDeleteLab();
+
+  const taskModalControls = useModalControls();
+  const editControls = useModalControls();
+
+  const actions = useMemo(
+    () =>
+      getLabActions({
+        checkCb: () => {},
+        deleteCb: () => {
+          const confirmed = window.confirm('Вы действительно хотите удалить элемент?');
+
+          if (!confirmed) {
+            return;
+          }
+
+          deleteLab(item.id, {
+            onSuccess: deleteSuccess,
+            onError: deleteError,
+          });
+        },
+        editCb: () => {
+          editControls.handleOpen();
+        },
+        resultCb: () => {},
+        openCb: () => {
+          taskModalControls.handleOpen();
+        },
+      }),
+    [item]
+  );
+
+  return (
+    <LabDiv>
+      <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+        <LabHeaderText>{item.name}</LabHeaderText>
+
+        <PopoverMenu actions={actions} elemId={item.id} />
+      </Box>
+
+      <Divider flexItem sx={{ my: 2 }} />
+
+      <LabDesc>{item.description}</LabDesc>
+
+      <LabTask filename={item.filename} filesize={item.filesize} sx={{ mt: 2 }} />
+
+      <TaskModal
+        title={item.name}
+        task={item.content}
+        isOpen={taskModalControls.open}
+        onClose={taskModalControls.handleClose}
+      />
+
+      <EditLabModal item={item} isOpen={editControls.open} onClose={editControls.handleClose} />
+    </LabDiv>
+  );
+};

@@ -7,7 +7,7 @@ export const PARAMS = {
   LARGE_FONT_SIZE: '20px',
 
   QUERY_STORE_TIME: 5 * 60 * 1000,
-  TOAST_SHOW_TIME: 5000,
+  TOAST_SHOW_TIME: 2000,
   API_URL: import.meta.env.VITE_API_URL,
 };
 
@@ -19,4 +19,5 @@ export const QUERY_KEYS = {
   MODELS: 'models',
   REPORTS: 'reports',
   STUDENTS: 'students',
+  PROMPTS: 'prompts',
 };

@@ -36,12 +36,7 @@ export const PopoverMenu: FC<PopoverMenuProps> = ({ actions, elemId }) => {
           horizontal: 'left',
         }}
       >
-        <Box
-          display="flex"
-          flexDirection="column"
-          justifyContent="start"
-          sx={{ mx: '5px', mt: '5px' }}
-        >
+        <Box display="flex" flexDirection="column" justifyContent="start">
           {actions.map(({ text, icon, cb }, index) => (
             <PopoverBtn
               key={index}

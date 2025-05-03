@@ -15,24 +15,47 @@ export const GlobalStyled = createGlobalStyle`
         background-color: ${COLORS.BG};
         margin: 0;
         padding: 0;
+        max-height: 100vh;
+    }
+
+    ::-webkit-scrollbar {
+        background-color: #fff !important;
+        width: 12px !important;
+        background: none;
+    }
+
+    ::-webkit-scrollbar-track {
+        background-color: #fff !important;
+        background: none;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: ${COLORS.SECONDARY} !important;
+        border-radius: 16px !important;
+        border: 4px solid #fff !important;
+        background: none;
+    }
+
+    ::-webkit-scrollbar-button {
+        display:none !important;
+        background-color: none;
     }
 `;
 
 export const RootDiv = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  max-height: 100vh;
 `;
 
 export const MainDiv = styled.main`
-  flex-grow: 1;
   display: flex;
   flex-direction: row;
+  min-height: 100vh;
 `;
 
 export const ContainerDiv = styled.div`
   width: 100%;
   padding: 10px 20px;
-  max-height: 100vh;
   overflow-y: auto;
 `;

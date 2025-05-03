@@ -30,8 +30,6 @@ export const KeysSettings: FC = () => {
 
           const item = data.find((it) => it.id === id);
 
-          console.log(item);
-
           if (!item) {
             return;
           }

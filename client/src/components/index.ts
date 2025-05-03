@@ -7,3 +7,8 @@ export * from './settings';
 export * from './keys-settings';
 export * from './modal';
 export * from './models-settings';
+export * from './courses';
+export * from './course';
+export * from './prompt';
+export * from './lab';
+export * from './file-select';

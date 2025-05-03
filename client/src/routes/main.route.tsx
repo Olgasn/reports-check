@@ -1,4 +1,4 @@
-import { App, Settings } from '@components';
+import { App, Course, Courses, Settings } from '@components';
 import { RouteObject } from 'react-router-dom';
 
 export const Routes: RouteObject[] = [
@@ -9,6 +9,14 @@ export const Routes: RouteObject[] = [
       {
         path: '/settings',
         element: <Settings />,
+      },
+      {
+        path: '/courses',
+        element: <Courses />,
+      },
+      {
+        path: '/courses/:id',
+        element: <Course />,
       },
     ],
   },
