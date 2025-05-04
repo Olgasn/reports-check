@@ -12,3 +12,7 @@ export * from './course';
 export * from './prompt';
 export * from './lab';
 export * from './file-select';
+export * from './avatar';
+export * from './check-results';
+export * from './student-check';
+export * from './student-result-modal';

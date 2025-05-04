@@ -1,6 +1,6 @@
 import { IGroup } from './group.types';
 import { ILab } from './lab.types';
-import { Model } from './settings.types';
+import { IModel } from './settings.types';
 import { IStudent } from './student.types';
 
 export interface ICheckStudent {
@@ -17,7 +17,7 @@ export interface ICheckItem {
   disadvantages: string;
   review: string;
   date: string;
-  model: Model;
+  model: IModel;
 }
 
 export interface IGroupCheck {
@@ -45,7 +45,7 @@ export interface ICheck {
   review: string;
   grade: number;
   student: IStudent;
-  model: Model;
+  model: IModel;
   lab: ILab;
   report: string;
 }

@@ -4,6 +4,7 @@ import { useFileSelect } from '@hooks';
 import { Box, Button, TextField } from '@mui/material';
 import { COLORS } from '@constants';
 import { formatFileSize } from '@utils';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
 export const FileSelect: FC<FileSelectProps> = ({ onChange, sx }) => {
   const fileControls = useFileSelect();
@@ -24,8 +25,13 @@ export const FileSelect: FC<FileSelectProps> = ({ onChange, sx }) => {
   }, [fileControls.file]);
 
   return (
-    <Box display="flex" flexDirection="column" sx={sx}>
-      <TextField size="small" value={filename || 'Файл не выбран'} />
+    <Box display="flex" flexDirection="row" sx={sx} flexGrow={1}>
+      <TextField
+        size="small"
+        value={filename || 'Файл не выбран'}
+        sx={{ flexGrow: 1 }}
+        label="Выбранный файл"
+      />
 
       <input
         type="file"
@@ -36,13 +42,14 @@ export const FileSelect: FC<FileSelectProps> = ({ onChange, sx }) => {
 
       <Button
         variant="contained"
+        startIcon={<FileDownloadOutlinedIcon />}
         sx={{
           background: COLORS.SECONDARY,
           textTransform: 'unset',
         }}
         onClick={fileControls.handleBtnClick}
       >
-        Выбрать
+        Загрузить
       </Button>
     </Box>
   );

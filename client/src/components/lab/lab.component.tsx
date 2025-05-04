@@ -10,10 +10,13 @@ import { TaskModal } from './task-modal';
 import { toast } from 'react-toastify';
 import { useDeleteLab } from '@api';
 import { EditLabModal } from './edit-lab-modal';
+import { useNavigate } from 'react-router';
 
 export const Lab: FC<LabProps> = ({ item }) => {
   const deleteSuccess = () => toast.success('Лабораторная успешно удалена');
   const deleteError = () => toast.error('Не удалось удалить лабораторную');
+
+  const navigate = useNavigate();
 
   const { mutate: deleteLab } = useDeleteLab();
 
@@ -39,7 +42,9 @@ export const Lab: FC<LabProps> = ({ item }) => {
         editCb: () => {
           editControls.handleOpen();
         },
-        resultCb: () => {},
+        resultCb: () => {
+          navigate(`/labs/${item.id}/checks`);
+        },
         openCb: () => {
           taskModalControls.handleOpen();
         },

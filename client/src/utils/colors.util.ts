@@ -1,3 +1,5 @@
+import { SxProps } from '@mui/material';
+
 export const textToColor = (text: string) => {
   let hash = 0;
   let i;
@@ -17,7 +19,7 @@ export const textToColor = (text: string) => {
   return color;
 };
 
-export const stringAvatar = (name: string) => {
+export const stringAvatar = (name: string, sx?: SxProps) => {
   let text = name;
   const splitted = text.split(' ');
 
@@ -32,6 +34,7 @@ export const stringAvatar = (name: string) => {
   return {
     sx: {
       bgcolor,
+      ...sx,
     },
     children: text,
   };
