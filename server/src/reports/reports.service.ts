@@ -14,6 +14,8 @@ import { Model } from 'src/model/entities/model.entity';
 import { Check } from 'src/check/entities/check.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { GroupService } from 'src/group/group.service';
+import { WsGateway } from 'src/ws/ws.gateway';
+import { GetChecksDto } from 'src/check/dto/get-checks.dto';
 
 @Injectable()
 export class ReportsService {
@@ -28,15 +30,58 @@ export class ReportsService {
     private readonly studentService: StudentService,
     private readonly promptService: PromptService,
     private readonly groupService: GroupService,
+    private readonly wsGateway: WsGateway,
   ) {}
 
   async getLabChecks(labId: number) {
     return this.checkService.getLabChecks(labId);
   }
 
+  async getChecks(dto: GetChecksDto) {
+    return this.checkService.getByIds(dto.ids);
+  }
+
+  handleCheckReports(checkReportDto: CheckReportMulDto) {
+    const cb = async () => {
+      if (checkReportDto.modelsId.length >= 2) {
+        return this.checkReportByMultipleModels(checkReportDto);
+      } else {
+        return this.checkReports({
+          labId: checkReportDto.labId,
+          modelId: checkReportDto.modelsId[0],
+          reportsZip: checkReportDto.reportsZip,
+          groupId: checkReportDto.groupId,
+          studentsId: checkReportDto.studentsId,
+        });
+      }
+    };
+
+    const func = async () => {
+      try {
+        const results = await cb();
+        const ids = results.map((check) => check.id);
+
+        const data = {
+          ids,
+          status: 'success',
+        };
+
+        this.wsGateway.sendToUser('report-processed', JSON.stringify(data));
+      } catch {
+        this.wsGateway.sendToUser('report-processed', {
+          status: 'error',
+        });
+      }
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    setImmediate(func);
+  }
+
   async checkReportByMultipleModels(checkReportDto: CheckReportMulDto) {
     const { labId, modelsId, reportsZip, studentsId } = checkReportDto;
     const reviewModelId = modelsId.at(-1);
+
     const students = await this.studentService.findByIds(studentsId);
 
     if (!reviewModelId) {
@@ -154,6 +199,7 @@ export class ReportsService {
 
   async checkReports(checkReportDto: CheckReportDto) {
     const { labId, modelId, reportsZip, groupId, studentsId } = checkReportDto;
+
     const students = await this.studentService.findByIds(studentsId);
 
     const lab = await this.labService.findOne(labId, { course: { prompt: true } });

@@ -1,4 +1,4 @@
-import { App, CheckResults, Course, Courses, Settings } from '@components';
+import { App, CheckResults, Course, Courses, LabCheck, Settings } from '@components';
 import { RouteObject } from 'react-router-dom';
 
 export const Routes: RouteObject[] = [
@@ -21,6 +21,10 @@ export const Routes: RouteObject[] = [
       {
         path: '/labs/:id/checks',
         element: <CheckResults />,
+      },
+      {
+        path: '/labs/:id/check',
+        element: <LabCheck />,
       },
     ],
   },

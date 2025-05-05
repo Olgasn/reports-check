@@ -16,3 +16,8 @@ export * from './avatar';
 export * from './check-results';
 export * from './student-check';
 export * from './student-result-modal';
+export * from './lab-check';
+export * from './ws-wrapper';
+export * from './notifications-modal';
+export * from './check-modal';
+export * from './result-item';

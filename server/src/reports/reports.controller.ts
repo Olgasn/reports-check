@@ -12,6 +12,8 @@ import { Serialize } from 'src/common/decorators/serialize.decorator';
 import { CheckDto } from 'src/check/dto/check.dto';
 import { CheckGrDto } from 'src/check/dto/check-gr.dto';
 import { CheckReportMulDto } from './dto/check-report-mul.dto';
+import { GetChecksDto } from 'src/check/dto/get-checks.dto';
+
 @ApiTags('Report')
 @Controller('reports')
 export class ReportsController {
@@ -28,17 +30,9 @@ export class ReportsController {
   ) {
     checkReportDto.reportsZip = file;
 
-    if (checkReportDto.modelsId.length >= 2) {
-      return this.reportsService.checkReportByMultipleModels(checkReportDto);
-    } else {
-      return this.reportsService.checkReports({
-        labId: checkReportDto.labId,
-        modelId: checkReportDto.modelsId[0],
-        reportsZip: checkReportDto.reportsZip,
-        groupId: checkReportDto.groupId,
-        studentsId: checkReportDto.studentsId,
-      });
-    }
+    this.reportsService.handleCheckReports(checkReportDto);
+
+    return { message: 'Проверка началась' };
   }
 
   @Get('/lab-checks/:labId')
@@ -48,5 +42,11 @@ export class ReportsController {
   @ApiOkResponse({ type: [CheckGrDto] })
   async findLabChecks(@Param('labId') labId: number) {
     return this.reportsService.getLabChecks(labId);
+  }
+
+  @Post('/checks')
+  @Serialize(CheckDto)
+  async getChecks(@Body() dto: GetChecksDto) {
+    return this.reportsService.getChecks(dto);
   }
 }

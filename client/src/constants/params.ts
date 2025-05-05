@@ -9,6 +9,7 @@ export const PARAMS = {
   QUERY_STORE_TIME: 5 * 60 * 1000,
   TOAST_SHOW_TIME: 2000,
   API_URL: import.meta.env.VITE_API_URL,
+  WS_URL: import.meta.env.VITE_WS_URL,
 };
 
 export const QUERY_KEYS = {

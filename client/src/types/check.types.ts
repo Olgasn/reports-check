@@ -48,4 +48,14 @@ export interface ICheck {
   model: IModel;
   lab: ILab;
   report: string;
+  date: string;
+}
+
+export interface IWsCheckResult {
+  status: 'error' | 'success';
+  ids?: string[];
+}
+
+export interface IGetChecks {
+  ids: number[];
 }

@@ -17,6 +17,6 @@ export const useStudents = () =>
 
 export const useGroupStudents = (groupId: number) =>
   useQuery<IStudent[]>({
-    queryKey: [QUERY_KEYS.STUDENTS],
+    queryKey: [QUERY_KEYS.STUDENTS, groupId],
     queryFn: () => api.get(`/groups/${groupId}/students`).then((res) => res.data),
   });

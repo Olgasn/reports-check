@@ -6,7 +6,7 @@ import { COLORS } from '@constants';
 import { formatFileSize } from '@utils';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 
-export const FileSelect: FC<FileSelectProps> = ({ onChange, sx }) => {
+export const FileSelect: FC<FileSelectProps> = ({ onChange, sx, textFieldSx, accept }) => {
   const fileControls = useFileSelect();
   const [filename, setFilename] = useState('');
 
@@ -29,7 +29,7 @@ export const FileSelect: FC<FileSelectProps> = ({ onChange, sx }) => {
       <TextField
         size="small"
         value={filename || 'Файл не выбран'}
-        sx={{ flexGrow: 1 }}
+        sx={{ flexGrow: 1, ...textFieldSx }}
         label="Выбранный файл"
       />
 
@@ -38,6 +38,7 @@ export const FileSelect: FC<FileSelectProps> = ({ onChange, sx }) => {
         hidden
         ref={fileControls.fileInputRef}
         onChange={fileControls.handleFileChange}
+        accept={accept}
       />
 
       <Button

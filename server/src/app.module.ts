@@ -14,6 +14,7 @@ import { LabModule } from './lab/lab.module';
 import { PromptModule } from './prompt/prompt.module';
 import { CheckModule } from './check/check.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { WsModule } from './ws/ws.module';
 
 @Module({
   imports: [
@@ -39,8 +40,8 @@ import { MulterModule } from '@nestjs/platform-express';
     LabModule,
     PromptModule,
     CheckModule,
+    WsModule,
   ],
   controllers: [],
-  providers: [],
 })
 export class AppModule {}

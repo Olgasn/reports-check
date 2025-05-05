@@ -43,4 +43,8 @@ export class CheckDto {
   @Type(() => StudentDto)
   @Expose()
   student: StudentDto;
+
+  @ApiProperty()
+  @Expose()
+  date: string;
 }

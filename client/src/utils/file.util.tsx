@@ -13,7 +13,7 @@ export const prepareFormData = (data: object) => {
 
     if (Array.isArray(value)) {
       for (const item of value) {
-        formData.append(key, item.toString());
+        formData.append(`${key}[]`, item.toString());
       }
     } else if (value instanceof File || typeof value === 'string') {
       formData.append(key, value);

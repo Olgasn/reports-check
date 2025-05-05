@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Check } from './entities/check.entity';
 import { StudentService } from 'src/student/student.service';
 import { ModelService } from 'src/model/model.service';
@@ -18,6 +18,18 @@ export class CheckService {
     private readonly labService: LabService,
   ) {
     this.checkRepo = this.dataSource.getRepository(Check);
+  }
+
+  async getByIds(ids: number[]) {
+    return this.checkRepo.find({
+      where: {
+        id: In(ids),
+      },
+      relations: {
+        student: true,
+        model: true,
+      },
+    });
   }
 
   async create(createCheckDto: CreateCheckDto) {

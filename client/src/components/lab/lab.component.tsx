@@ -26,7 +26,9 @@ export const Lab: FC<LabProps> = ({ item }) => {
   const actions = useMemo(
     () =>
       getLabActions({
-        checkCb: () => {},
+        checkCb: () => {
+          navigate(`/labs/${item.id}/check`);
+        },
         deleteCb: () => {
           const confirmed = window.confirm('Вы действительно хотите удалить элемент?');
 
