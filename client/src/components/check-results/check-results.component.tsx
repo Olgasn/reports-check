@@ -35,6 +35,7 @@ export const CheckResults: FC = () => {
               background: index === groupIndex ? COLORS.SECONDARY : undefined,
               color: index === groupIndex ? 'white' : undefined,
             }}
+            onClick={() => setGroupIndex(index)}
           />
         ))}
       </Box>

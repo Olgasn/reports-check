@@ -21,3 +21,5 @@ export * from './ws-wrapper';
 export * from './notifications-modal';
 export * from './check-modal';
 export * from './result-item';
+export * from './groups';
+export * from './students';
