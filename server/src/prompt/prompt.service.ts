@@ -12,6 +12,7 @@ export class PromptService {
   private readonly promptRepo: Repository<Prompt>;
   private readonly template: string;
   private readonly templateMultiple: string;
+  private readonly templatePrev: string;
 
   constructor(
     private readonly dataSource: DataSource,
@@ -20,14 +21,36 @@ export class PromptService {
   ) {
     this.promptRepo = this.dataSource.getRepository(Prompt);
 
-    const { template, templateMultiple } = this.configService.get<PromptConfig>('prompt')!;
+    const { template, templateMultiple, templatePrev } =
+      this.configService.get<PromptConfig>('prompt')!;
 
     this.template = template;
     this.templateMultiple = templateMultiple;
+    this.templatePrev = templatePrev;
   }
 
   findMany() {
     return this.promptRepo.find();
+  }
+
+  preparePrevPrompt(data: {
+    review: string;
+    grade: string;
+    advantages: string;
+    disadvantages: string;
+    promptTxt: string;
+    report: string;
+  }) {
+    let template = this.templatePrev;
+
+    template = template.replace('@PROMPT', data.promptTxt);
+    template = template.replace('@PREV_REVIEW', data.review);
+    template = template.replace('@PREV_GRADE', data.grade);
+    template = template.replace('@PREV_ADVANTAGES', data.advantages);
+    template = template.replace('@PREV_DISADVANTAGES', data.disadvantages);
+    template = template.replace('@PREV_REPORT', data.report);
+
+    return template;
   }
 
   prepareMultiplePrompt(data: { task: string; answer: string; content: string; checks: string[] }) {

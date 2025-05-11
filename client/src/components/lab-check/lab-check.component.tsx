@@ -1,6 +1,6 @@
 import { useCheckReports, useGroups, useGroupStudents, useLab, useModels } from '@api';
 import { Action, FileSelect, LabTask, PopoverMenu, TaskModal, TopHeader } from '@components';
-import { Box, Button, Divider } from '@mui/material';
+import { Box, Button, Checkbox, Divider, FormControlLabel } from '@mui/material';
 import { FC, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -11,7 +11,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { LabCheckFormData, LabCheckSchema } from './lab-check.validation';
 import { MultiSelect } from './multi-select';
 import { Select } from './select';
-import { COLORS } from '@constants';
+import { COLORS, PARAMS } from '@constants';
 import { toast } from 'react-toastify';
 
 export const LabCheck: FC = () => {
@@ -21,6 +21,7 @@ export const LabCheck: FC = () => {
   const taskControls = useModalControls();
 
   const [file, setFile] = useState<File | null>(null);
+  const [check, setCheck] = useState(false);
 
   const { control, handleSubmit, setError } = useForm({
     resolver: yupResolver(LabCheckSchema),
@@ -58,6 +59,7 @@ export const LabCheck: FC = () => {
       reportsZip: file,
       groupId,
       studentsId,
+      checkPrev: check,
     };
 
     checkReports(reqData, {
@@ -154,6 +156,15 @@ export const LabCheck: FC = () => {
                 label="Студенты"
               />
             </Box>
+
+            <FormControlLabel
+              control={<Checkbox checked={check} onChange={(e) => setCheck(e.target.checked)} />}
+              label="Учитывать предыдущую проверку"
+              sx={{
+                fontSize: PARAMS.MEDIUM_FONT_SIZE,
+                color: COLORS.TEXT,
+              }}
+            />
           </Box>
 
           <Divider flexItem sx={{ my: 2 }} />

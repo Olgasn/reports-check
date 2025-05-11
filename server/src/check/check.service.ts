@@ -32,6 +32,19 @@ export class CheckService {
     });
   }
 
+  async findLastCheck(studentId: number) {
+    return this.checkRepo.findOne({
+      where: {
+        student: {
+          id: studentId,
+        },
+      },
+      order: {
+        date: 'DESC',
+      },
+    });
+  }
+
   async create(createCheckDto: CreateCheckDto) {
     const { review, advantages, disadvantages, studentId, labId, modelId, grade, report } =
       createCheckDto;
@@ -99,7 +112,9 @@ export class CheckService {
       }
     }
 
-    return Object.values(groups);
+    const result = Object.values(groups);
+
+    return result;
   }
 
   async findByLabs(labId: number) {

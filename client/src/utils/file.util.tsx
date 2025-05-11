@@ -19,6 +19,10 @@ export const prepareFormData = (data: object) => {
       formData.append(key, value);
     } else if (typeof value === 'number') {
       formData.append(key, value.toString());
+    } else if (typeof value === 'boolean') {
+      if (!value) continue;
+
+      formData.append(key, String(value));
     } else {
       throw new Error('Unsupported form data type');
     }

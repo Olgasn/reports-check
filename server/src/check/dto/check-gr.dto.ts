@@ -25,6 +25,10 @@ export class CheckItemDto {
 
   @ApiProperty()
   @Expose()
+  report: string;
+
+  @ApiProperty()
+  @Expose()
   date: Date;
 
   @ApiProperty()

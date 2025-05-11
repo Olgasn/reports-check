@@ -1,7 +1,7 @@
 import { useLab, useLabChecks } from '@api';
 import { StudentCheck, TopHeader } from '@components';
-import { COLORS } from '@constants';
-import { Box, Chip, Divider } from '@mui/material';
+import { COLORS, PARAMS } from '@constants';
+import { Box, Chip, Divider, Typography } from '@mui/material';
 import { FC, useState } from 'react';
 import { useParams } from 'react-router';
 
@@ -16,6 +16,21 @@ export const CheckResults: FC = () => {
 
   if (!checks || !lab) {
     return null;
+  }
+
+  if (!checks.length) {
+    return (
+      <Box>
+        <Typography
+          sx={{
+            color: COLORS.TEXT,
+            fontSize: PARAMS.MEDIUM_FONT_SIZE,
+          }}
+        >
+          По данном работе нет результатов.
+        </Typography>
+      </Box>
+    );
   }
 
   const groupChecks = checks[groupIndex];

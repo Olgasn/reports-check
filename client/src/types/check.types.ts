@@ -18,6 +18,7 @@ export interface ICheckItem {
   review: string;
   date: string;
   model: IModel;
+  report: string;
 }
 
 export interface IGroupCheck {
@@ -36,6 +37,7 @@ export interface ICheckData {
   modelsId: number[];
   studentsId: number[];
   groupId: number;
+  checkPrev?: boolean;
 }
 
 export interface ICheck {

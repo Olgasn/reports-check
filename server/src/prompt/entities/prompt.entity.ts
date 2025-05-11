@@ -9,7 +9,9 @@ export class Prompt {
   @Column()
   content: string;
 
-  @OneToOne(() => Course)
+  @OneToOne(() => Course, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn()
   course: Course;
 }

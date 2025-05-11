@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNumber, IsPositive } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsPositive } from 'class-validator';
 
 export class CheckReportDto {
   @ApiProperty({ type: 'string', format: 'binary', required: true })
@@ -31,4 +31,10 @@ export class CheckReportDto {
   @IsNumber({}, { each: true })
   @IsPositive({ each: true })
   studentsId: number[] = [];
+
+  @ApiProperty()
+  @Type(() => Boolean)
+  @IsOptional()
+  @IsBoolean()
+  checkPrev: boolean;
 }

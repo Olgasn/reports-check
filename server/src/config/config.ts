@@ -14,6 +14,7 @@ export const config = (): Config => {
     path.join(process.cwd(), './prompt-multiple.template'),
     'utf-8',
   );
+  const templatePrev = fs.readFileSync(path.join(process.cwd(), './prompt-prev.template'), 'utf-8');
 
   const conf: Config = {
     db: {
@@ -22,6 +23,7 @@ export const config = (): Config => {
     prompt: {
       template,
       templateMultiple,
+      templatePrev,
     },
     models: {
       openRouterUrl: env.OPEN_ROUTER_URL,

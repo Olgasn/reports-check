@@ -26,12 +26,18 @@ export class Check {
   @CreateDateColumn()
   date: Date;
 
-  @ManyToOne(() => Lab, (lab) => lab.checks)
+  @ManyToOne(() => Lab, (lab) => lab.checks, {
+    onDelete: 'CASCADE',
+  })
   lab: Lab;
 
-  @ManyToOne(() => Model, (model) => model.checks)
+  @ManyToOne(() => Model, (model) => model.checks, {
+    onDelete: 'CASCADE',
+  })
   model: Model;
 
-  @ManyToOne(() => Student, (student) => student.checks)
+  @ManyToOne(() => Student, (student) => student.checks, {
+    onDelete: 'CASCADE',
+  })
   student: Student;
 }

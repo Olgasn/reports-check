@@ -41,6 +41,26 @@ export class ReportsService {
     return this.checkService.getByIds(dto.ids);
   }
 
+  async preparePrompt(standardFn: () => string, usePrev?: boolean, stId?: number) {
+    const prompt = standardFn();
+
+    if (!usePrev || !stId) {
+      return prompt;
+    }
+
+    const prevCheck = await this.checkService.findLastCheck(stId);
+
+    if (!prevCheck) {
+      return prompt;
+    }
+
+    return this.promptService.preparePrevPrompt({
+      ...prevCheck,
+      grade: String(prevCheck.grade),
+      promptTxt: prompt,
+    });
+  }
+
   handleCheckReports(checkReportDto: CheckReportMulDto) {
     const cb = async () => {
       if (checkReportDto.modelsId.length >= 2) {
@@ -52,6 +72,7 @@ export class ReportsService {
           reportsZip: checkReportDto.reportsZip,
           groupId: checkReportDto.groupId,
           studentsId: checkReportDto.studentsId,
+          checkPrev: checkReportDto.checkPrev,
         });
       }
     };
@@ -59,6 +80,7 @@ export class ReportsService {
     const func = async () => {
       try {
         const results = await cb();
+
         const ids = results.map((check) => check.id);
 
         const data = {
@@ -79,7 +101,7 @@ export class ReportsService {
   }
 
   async checkReportByMultipleModels(checkReportDto: CheckReportMulDto) {
-    const { labId, modelsId, reportsZip, studentsId } = checkReportDto;
+    const { labId, modelsId, reportsZip, studentsId, checkPrev } = checkReportDto;
     const reviewModelId = modelsId.at(-1);
 
     const students = await this.studentService.findByIds(studentsId);
@@ -104,7 +126,7 @@ export class ReportsService {
 
     for (const model of models) {
       const checkPromises = reportsData.map((report) =>
-        this.checkOneReport({ report, task, content, model, groupId: 1 }),
+        this.checkOneReport({ report, task, content, model, groupId: 1, checkPrev }),
       );
 
       promises.push(Promise.all(checkPromises));
@@ -198,7 +220,7 @@ export class ReportsService {
   }
 
   async checkReports(checkReportDto: CheckReportDto) {
-    const { labId, modelId, reportsZip, groupId, studentsId } = checkReportDto;
+    const { labId, modelId, reportsZip, groupId, studentsId, checkPrev } = checkReportDto;
 
     const students = await this.studentService.findByIds(studentsId);
 
@@ -214,10 +236,11 @@ export class ReportsService {
       : repData;
 
     const promises = reportsData.map(async (report) =>
-      this.checkOneReport({ report, task, content, model, groupId }),
+      this.checkOneReport({ report, task, content, model, groupId, checkPrev }),
     );
 
     const resultPromises = await Promise.allSettled(promises);
+
     const results = resultPromises
       .filter((pr) => pr.status === 'fulfilled')
       .map((pr) => pr.value)
@@ -249,8 +272,9 @@ export class ReportsService {
     content: string;
     model: Model;
     groupId: number;
+    checkPrev: boolean;
   }) {
-    const { report, task, content, model, groupId } = data;
+    const { report, task, content, model, groupId, checkPrev } = data;
 
     const studentStr = `${report.name} ${report.surname} ${report.middlename}`;
 
@@ -258,7 +282,11 @@ export class ReportsService {
 
     this.logger.log(`Начал провека отчета студента [${studentStr}] моделью [${model.name}]`);
 
-    const prompt = this.promptService.preparePrompt(report.content, task, content);
+    const prompt = await this.preparePrompt(
+      () => this.promptService.preparePrompt(report.content, task, content),
+      checkPrev,
+      studentFound?.id,
+    );
 
     const result = await this.llmService.query(prompt, model);
 

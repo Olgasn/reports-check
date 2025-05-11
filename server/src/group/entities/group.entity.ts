@@ -10,10 +10,14 @@ export class Group {
   @Column()
   name: string;
 
-  @OneToMany(() => Student, (student) => student.group)
+  @OneToMany(() => Student, (student) => student.group, {
+    onDelete: 'CASCADE',
+  })
   students: Student[];
 
-  @ManyToMany(() => Course, (course) => course.groups)
+  @ManyToMany(() => Course, (course) => course.groups, {
+    onDelete: 'CASCADE',
+  })
   @JoinTable()
   courses: Course[];
 }

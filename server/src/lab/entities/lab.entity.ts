@@ -22,9 +22,13 @@ export class Lab {
   @Column()
   content: string;
 
-  @ManyToOne(() => Course, (course) => course.labs)
+  @ManyToOne(() => Course, (course) => course.labs, {
+    onDelete: 'CASCADE',
+  })
   course: Course;
 
-  @OneToMany(() => Check, (check) => check.lab)
+  @OneToMany(() => Check, (check) => check.lab, {
+    onDelete: 'CASCADE',
+  })
   checks: Check[];
 }

@@ -23,12 +23,16 @@ export class Model {
   @Column({ default: null })
   max_tokens: number;
 
-  @ManyToOne(() => Key, (key) => key.models)
+  @ManyToOne(() => Key, (key) => key.models, {
+    onDelete: 'CASCADE',
+  })
   key: Key;
 
   @Column({ default: Providers.OpenRouter })
   provider: Providers;
 
-  @OneToMany(() => Check, (check) => check.model)
+  @OneToMany(() => Check, (check) => check.model, {
+    onDelete: 'CASCADE',
+  })
   checks: Check[];
 }

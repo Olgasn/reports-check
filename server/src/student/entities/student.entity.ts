@@ -20,9 +20,13 @@ export class Student {
   @Column()
   num: string;
 
-  @ManyToOne(() => Group, (group) => group.students)
+  @ManyToOne(() => Group, (group) => group.students, {
+    onDelete: 'CASCADE',
+  })
   group: Group;
 
-  @OneToMany(() => Lab, (lab) => lab.checks)
+  @OneToMany(() => Lab, (lab) => lab.checks, {
+    onDelete: 'CASCADE',
+  })
   checks: Check[];
 }

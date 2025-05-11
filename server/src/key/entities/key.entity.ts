@@ -12,6 +12,8 @@ export class Key {
   @Column()
   value: string;
 
-  @OneToMany(() => Model, (model) => model.key)
+  @OneToMany(() => Model, (model) => model.key, {
+    onDelete: 'CASCADE',
+  })
   models: Model[];
 }

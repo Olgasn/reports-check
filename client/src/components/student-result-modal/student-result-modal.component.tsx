@@ -1,6 +1,8 @@
 import { FC } from 'react';
 import { StudentResultModalProps } from './student-result-modal.types';
-import { Modal, ResultItem } from '@components';
+import { Modal, ResultItem, TaskModal } from '@components';
+import { Box, Button } from '@mui/material';
+import { useModalControls } from '@hooks';
 
 export const StudentResultModal: FC<StudentResultModalProps> = ({
   isOpen,
@@ -8,7 +10,30 @@ export const StudentResultModal: FC<StudentResultModalProps> = ({
   data,
   studentStr,
 }) => {
-  const modalBody = <ResultItem {...data} />;
+  const taskControls = useModalControls();
+
+  console.log(data);
+
+  const handleTaskOpen = () => {
+    taskControls.handleOpen();
+  };
+
+  const modalBody = (
+    <Box display="flex" flexDirection="column">
+      <ResultItem {...data} />
+
+      <Button variant="outlined" sx={{ mt: 2 }} onClick={handleTaskOpen}>
+        Отчет
+      </Button>
+
+      <TaskModal
+        isOpen={taskControls.open}
+        onClose={taskControls.handleClose}
+        title={`Результаты студента ${studentStr}`}
+        task={data.report}
+      />
+    </Box>
+  );
 
   const modalTitle = `Результаты студента ${studentStr}`;
 
