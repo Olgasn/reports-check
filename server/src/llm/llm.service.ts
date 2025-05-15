@@ -1,53 +1,51 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import OpenAI from 'openai';
 import { Model } from 'src/model/entities/model.entity';
-import { ModelsConfig } from 'src/types/config.types';
-import { Providers } from 'src/types/reports.types';
 import ollama from 'ollama';
+import { LlmInterfaces } from 'src/types/reports.types';
 
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
-  private readonly url: string;
-
-  constructor(private readonly configService: ConfigService) {
-    const { openRouterUrl } = this.configService.get<ModelsConfig>('models')!;
-
-    this.url = openRouterUrl;
-  }
 
   wait(ms: number) {
     return new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
   }
 
   completion(content: string, model: Model) {
-    switch (model.provider) {
-      case Providers.OpenRouter:
-        return this.handleOpenRouter(content, model);
-      case Providers.Ollama:
+    switch (model.llmInterface) {
+      case LlmInterfaces.OpenAi:
+        return this.handleOpenAi(content, model);
+
+      case LlmInterfaces.Ollama:
         return this.handleOllama(content, model);
-      default:
-        return null;
     }
   }
 
-  private async handleOpenRouter(content: string, model: Model) {
+  private async handleOpenAi(content: string, model: Model) {
+    if (!model.provider || !model.key) {
+      throw new Error('No provider or key specified for the model');
+    }
+
+    const {
+      value: modelName,
+      provider: { url: baseURL },
+      key: { value: apiKey },
+    } = model;
+
     const openai = new OpenAI({
-      baseURL: this.url,
-      apiKey: model.key.value,
+      baseURL,
+      apiKey,
     });
 
-    const isGemini = model.value.toLowerCase().includes('gemini');
-
     const completion = await openai.chat.completions.create({
-      model: model.value,
+      model: modelName,
       messages: [
         {
           role: 'user',
-          content: isGemini ? [{ type: 'text', text: content }] : content,
+          content,
         },
       ],
       top_p: model.top_p,
@@ -59,12 +57,14 @@ export class LlmService {
   }
 
   private async handleOllama(content: string, model: Model) {
+    const { value: modelName, top_p, temperature } = model;
+
     const response = await ollama.chat({
-      model: model.value,
+      model: modelName,
       messages: [{ role: 'user', content }],
       options: {
-        top_p: model.top_p,
-        temperature: model.temperature,
+        top_p,
+        temperature,
       },
     });
 
@@ -86,23 +86,23 @@ export class LlmService {
 
         this.logger.warn(`Пустой ответ от модели [${model.name}]. Выполнение повторного запроса`);
 
-        await this.wait(20000);
+        await this.wait(10000);
 
         return this.query(content, model, count + 1);
       }
 
       return result;
-    } catch (error: any) {
-      console.log(error);
-
+    } catch (error: unknown) {
       if (count >= 5) {
         this.logger.warn(`Превышено максимальное количество запросов к [${model.name}]`);
 
         throw new BadRequestException('Не получилось выполнить проверку.');
       }
 
+      console.log(error);
+
       this.logger.warn(
-        `не удалось получить ответ от [${model.name}]. Выполнение повторного запроса`,
+        `Не удалось получить ответ от [${model.name}]. Выполнение повторного запроса`,
       );
 
       await this.wait(20000);
@@ -120,6 +120,7 @@ export class LlmService {
     }
 
     const jsonString = jsonMatch[1].trim();
+
     let jsonData: unknown;
 
     try {

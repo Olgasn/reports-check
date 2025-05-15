@@ -1,11 +1,15 @@
 import { App, CheckResults, Course, Courses, Groups, LabCheck, Settings } from '@components';
-import { RouteObject } from 'react-router-dom';
+import { Navigate, RouteObject } from 'react-router-dom';
 
 export const Routes: RouteObject[] = [
   {
     path: '/',
     element: <App />,
     children: [
+      {
+        index: true,
+        element: <Navigate to="/courses" replace />,
+      },
       {
         path: '/settings',
         element: <Settings />,

@@ -17,7 +17,8 @@ export const useCreateLab = () =>
         })
         .then((res) => res.data);
     },
-    onSuccess: () => {
+    onSuccess: (data, payload) => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COURSE_LABS, payload.courseId] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LABS] });
     },
   });

@@ -3,7 +3,7 @@ import { AddModalProps } from './add-modal.types';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { AddModalFormData, AddModalSchema } from './add-modal.validation';
-import { useCreateModel, useKeys } from '@api';
+import { useCreateModel, useKeys, useProviders } from '@api';
 import {
   Box,
   Button,
@@ -18,47 +18,80 @@ import {
 import { Modal } from '@components';
 import { COLORS } from '@constants';
 import { toast } from 'react-toastify';
-import { Providers } from '@@types';
+import { LlmInterfaces } from '@@types';
 
 export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
-  const { data } = useKeys();
-  const [provider, setProvider] = useState<Providers>(Providers.OpenRouter);
+  const { data: keys } = useKeys();
+  const { data: providers } = useProviders();
+
+  const [llmInterface, setLlmInterface] = useState<LlmInterfaces>(LlmInterfaces.OpenAi);
+  const [keyIndex, setKeyIndex] = useState(0);
+  const [providerIndex, setProviderIndex] = useState(0);
+
+  const providerLabelId = useId();
+  const llmInterfaceLabelid = useId();
+  const keyLabelId = useId();
+
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const { mutate: createModel } = useCreateModel();
+
+  const { control, handleSubmit, reset } = useForm({
+    resolver: yupResolver(AddModalSchema),
+  });
+
+  const modalClose = () => {
+    reset();
+    setKeyIndex(0);
+    setProviderIndex(0);
+    setLlmInterface(LlmInterfaces.OpenAi);
+    handleClose();
+  };
 
   const onSuccess = () => {
     toast.success('Модель успешно добавлена');
 
-    handleClose();
+    modalClose();
   };
 
   const onError = () => {
     toast.error('Не удалось добавить модель');
 
-    handleClose();
+    modalClose();
   };
 
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const { mutate: createModel } = useCreateModel();
-
-  const { control, handleSubmit } = useForm({
-    resolver: yupResolver(AddModalSchema),
-  });
-
   const onSubmit = (data: AddModalFormData) => {
-    createModel(
-      {
-        keyId: data.key,
-        name: data.name,
-        value: data.value,
-        provider,
-        top_p: data.top_p,
-        temperature: data.temperature,
-        max_tokens: data.max_tokens,
-      },
-      {
-        onSuccess,
-        onError,
+    const reqData = {
+      llmInterface,
+      ...data,
+    };
+
+    switch (llmInterface) {
+      case LlmInterfaces.Ollama:
+        {
+          createModel(reqData, {
+            onSuccess,
+            onError,
+          });
+        }
+        break;
+
+      case LlmInterfaces.OpenAi: {
+        if (!keys || !providers) {
+          return;
+        }
+
+        const { id: keyId } = keys[keyIndex];
+        const { id: providerId } = providers[providerIndex];
+
+        createModel(
+          { ...reqData, keyId, providerId },
+          {
+            onSuccess,
+            onError,
+          }
+        );
       }
-    );
+    }
   };
 
   const handleClickSubmit = () => {
@@ -67,121 +100,168 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
     current?.requestSubmit();
   };
 
-  const handleProviderChange = (e: SelectChangeEvent<Providers>) =>
-    setProvider(e.target.value as Providers);
+  const handleLlmInterfaceChange = (e: SelectChangeEvent<LlmInterfaces>) =>
+    setLlmInterface(e.target.value as LlmInterfaces);
 
-  if (!data) {
+  const handleKeyChange = (e: SelectChangeEvent<number>) => setKeyIndex(Number(e.target.value));
+
+  const handleProviderChange = (e: SelectChangeEvent<number>) =>
+    setProviderIndex(Number(e.target.value));
+
+  if (!keys || !providers) {
     return null;
   }
 
+  const hasErrors = llmInterface === LlmInterfaces.OpenAi && (!keys.length || !providers.length);
+
   const modalBody = (
     <form onSubmit={handleSubmit(onSubmit)} ref={formRef}>
-      <Box display="flex" flexDirection="column">
-        <Controller
-          name="name"
-          control={control}
-          render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              label="Название"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
+      <Box display="flex" flexDirection="row">
+        <Box display="flex" flexDirection="column" gap={2}>
+          <Controller
+            name="name"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Название"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+
+          <Controller
+            name="value"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Значение"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+        </Box>
+
+        <Box display="flex" flexDirection="column" gap={2} sx={{ ml: 3 }}>
+          <Controller
+            name="temperature"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Температура"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                size="small"
+                sx={{ width: '300px' }}
+              />
+            )}
+          />
+
+          <Controller
+            name="top_p"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Top_p"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                size="small"
+                sx={{ width: '300px' }}
+              />
+            )}
+          />
+
+          <Controller
+            name="max_tokens"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Max tokens"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                size="small"
+                sx={{ width: '300px' }}
+              />
+            )}
+          />
+        </Box>
+
+        <Box display="flex" flexDirection="column" gap={2} sx={{ ml: 3 }}>
+          <FormControl fullWidth>
+            <InputLabel id={llmInterfaceLabelid}>Интерфейс</InputLabel>
+            <Select
+              value={llmInterface}
+              onChange={handleLlmInterfaceChange}
               size="small"
-            />
-          )}
-        />
+              labelId={llmInterfaceLabelid}
+              label="Интерфейс"
+              sx={{ width: '300px' }}
+            >
+              <MenuItem value={LlmInterfaces.Ollama}>{LlmInterfaces.Ollama}</MenuItem>
+              <MenuItem value={LlmInterfaces.OpenAi}>{LlmInterfaces.OpenAi}</MenuItem>
+            </Select>
+          </FormControl>
 
-        <Controller
-          name="value"
-          control={control}
-          render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              label="Значение"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
-              sx={{
-                mt: 2,
-              }}
-              size="small"
-            />
-          )}
-        />
+          {llmInterface === LlmInterfaces.OpenAi && (
+            <>
+              <FormControl fullWidth>
+                <InputLabel id={keyLabelId}>Ключ</InputLabel>
+                <Select
+                  labelId={keyLabelId}
+                  value={keyIndex}
+                  onChange={handleKeyChange}
+                  size="small"
+                  disabled={hasErrors}
+                  label="Ключ"
+                  sx={{ width: '300px' }}
+                >
+                  {keys.map(({ id, name }, index) => (
+                    <MenuItem value={index} key={id}>
+                      {name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-        <Controller
-          name="temperature"
-          control={control}
-          render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              label="Температура"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
-              sx={{
-                mt: 2,
-              }}
-              size="small"
-            />
-          )}
-        />
+              <FormControl fullWidth>
+                <InputLabel id={providerLabelId}>Провайдер</InputLabel>
+                <Select
+                  labelId={providerLabelId}
+                  value={providerIndex}
+                  onChange={handleProviderChange}
+                  size="small"
+                  disabled={hasErrors}
+                  label="Провайдер"
+                  sx={{ width: '300px' }}
+                >
+                  {providers.map(({ id, name }, index) => (
+                    <MenuItem value={index} key={id}>
+                      {name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-        <Controller
-          name="top_p"
-          control={control}
-          render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              label="Top_p"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
-              sx={{
-                mt: 2,
-              }}
-              size="small"
-            />
+              <FormControl error={hasErrors}>
+                {hasErrors && (
+                  <FormHelperText>
+                    Для работы с OpenAi моделями нужно создать ключи и провайдеры
+                  </FormHelperText>
+                )}
+              </FormControl>
+            </>
           )}
-        />
-
-        <Controller
-          name="max_tokens"
-          control={control}
-          render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              label="Max tokens"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
-              sx={{
-                mt: 2,
-              }}
-              size="small"
-            />
-          )}
-        />
-
-        <FormControl fullWidth>
-          <Select value={provider} onChange={handleProviderChange} size="small" sx={{ mt: 2 }}>
-            <MenuItem value={Providers.Ollama}>{Providers.Ollama}</MenuItem>
-            <MenuItem value={Providers.OpenRouter}>{Providers.OpenRouter}</MenuItem>
-          </Select>
-        </FormControl>
-
-        <Controller
-          name="key"
-          control={control}
-          render={({ field, fieldState: { error } }) => (
-            <FormControl fullWidth error={!!error}>
-              <Select {...field} size="small" sx={{ mt: 2 }}>
-                {data.map(({ id, name }) => (
-                  <MenuItem value={id} key={id}>
-                    {name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {error && <FormHelperText>{error.message}</FormHelperText>}
-            </FormControl>
-          )}
-        />
+        </Box>
       </Box>
     </form>
   );
@@ -195,6 +275,7 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
           flexGrow: 1,
         }}
         onClick={handleClickSubmit}
+        disabled={hasErrors}
       >
         Создать
       </Button>
@@ -205,10 +286,10 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
     <Modal
       body={modalBody}
       open={isShow}
-      onClose={handleClose}
+      onClose={modalClose}
       title="Добавление модели"
       footer={modalFooter}
-      sx={{ width: '500px' }}
+      sx={{ width: 'auto' }}
     />
   );
 };

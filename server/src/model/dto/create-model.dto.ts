@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsEnum, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
-import { Providers } from 'src/types/reports.types';
+import { LlmInterfaces } from 'src/types/reports.types';
 
 export class CreateModelDto {
   @ApiProperty()
@@ -18,19 +18,19 @@ export class CreateModelDto {
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  top_p: number;
+  top_p?: number;
 
   @ApiProperty()
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  temperature: number;
+  temperature?: number;
 
   @ApiProperty()
   @Type(() => Number)
   @IsNumber()
   @IsPositive()
-  max_tokens: number;
+  max_tokens?: number;
 
   @ApiProperty()
   @IsOptional()
@@ -39,10 +39,17 @@ export class CreateModelDto {
   @IsPositive()
   keyId?: number;
 
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  providerId?: number;
+
   @ApiProperty({
-    enum: Providers,
-    example: Providers.OpenRouter,
+    enum: LlmInterfaces,
+    example: LlmInterfaces.OpenAi,
   })
-  @IsEnum(Providers)
-  provider: Providers;
+  @IsEnum(LlmInterfaces)
+  llmInterface: LlmInterfaces;
 }

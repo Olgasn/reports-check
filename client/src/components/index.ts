@@ -23,3 +23,4 @@ export * from './check-modal';
 export * from './result-item';
 export * from './groups';
 export * from './students';
+export * from './providers-settings';

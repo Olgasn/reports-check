@@ -1,6 +1,7 @@
 import { Check } from 'src/check/entities/check.entity';
 import { Key } from 'src/key/entities/key.entity';
-import { Providers } from 'src/types/reports.types';
+import { Provider } from 'src/provider/entities/provider.entity';
+import { LlmInterfaces } from 'src/types/reports.types';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('models')
@@ -20,16 +21,21 @@ export class Model {
   @Column('float', { default: 1.0 })
   temperature: number;
 
-  @Column({ default: null })
+  @Column({ default: 10000 })
   max_tokens: number;
 
   @ManyToOne(() => Key, (key) => key.models, {
     onDelete: 'CASCADE',
   })
-  key: Key;
+  key: Key | null;
 
-  @Column({ default: Providers.OpenRouter })
-  provider: Providers;
+  @ManyToOne(() => Provider, (provider) => provider.models, {
+    onDelete: 'CASCADE',
+  })
+  provider: Provider | null;
+
+  @Column()
+  llmInterface: LlmInterfaces;
 
   @OneToMany(() => Check, (check) => check.model, {
     onDelete: 'CASCADE',

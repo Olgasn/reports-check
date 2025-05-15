@@ -92,7 +92,7 @@ export const LabCheck: FC = () => {
     []
   );
 
-  if (!lab || !models || !groups) {
+  if (!lab || !models || !groups || !groupStudents) {
     return null;
   }
 

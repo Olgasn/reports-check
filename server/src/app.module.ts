@@ -15,6 +15,7 @@ import { PromptModule } from './prompt/prompt.module';
 import { CheckModule } from './check/check.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { WsModule } from './ws/ws.module';
+import { ProviderModule } from './provider/provider.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { WsModule } from './ws/ws.module';
     PromptModule,
     CheckModule,
     WsModule,
+    ProviderModule,
   ],
   controllers: [],
 })

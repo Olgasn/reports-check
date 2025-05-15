@@ -9,9 +9,9 @@ export interface ReportCheck {
   content: string;
 }
 
-export enum Providers {
-  OpenRouter = 'openrouter',
-  Ollama = 'ollama',
+export enum LlmInterfaces {
+  Ollama = 'Ollama',
+  OpenAi = 'OpenAi',
 }
 
 export interface CheckResult {

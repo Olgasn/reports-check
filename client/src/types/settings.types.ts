@@ -1,6 +1,6 @@
-export enum Providers {
-  OpenRouter = 'openrouter',
-  Ollama = 'ollama',
+export enum LlmInterfaces {
+  Ollama = 'Ollama',
+  OpenAi = 'OpenAi',
 }
 
 export interface IKey {
@@ -8,6 +8,16 @@ export interface IKey {
   name: string;
   value: string;
 }
+
+export interface IProvider {
+  id: number;
+  name: string;
+  url: string;
+}
+
+export type ICreateProvider = Pick<IProvider, 'name' | 'url'>;
+
+export type IUpdateProvider = ICreateProvider;
 
 export interface ICreateKey {
   name: string;
@@ -20,7 +30,8 @@ export interface IUpdateKey extends ICreateKey {
 
 export interface IModel extends ICreateModel {
   id: number;
-  key: IKey;
+  key: IKey | null;
+  provider: IProvider | null;
 }
 
 export type IUpdateModel = ICreateModel;
@@ -29,8 +40,9 @@ export interface ICreateModel {
   name: string;
   value: string;
   top_p: number;
-  keyId: number;
+  keyId?: number;
+  providerId?: number;
   temperature: number;
   max_tokens: number;
-  provider: Providers;
+  llmInterface: LlmInterfaces;
 }
