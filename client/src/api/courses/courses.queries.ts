@@ -1,7 +1,8 @@
-import { ICourse } from '@@types';
+import { useQuery } from '@tanstack/react-query';
+
+import { ICourse, ICoursePagination, IPaginated } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useQuery } from '@tanstack/react-query';
 
 export const useCourse = (id: number) =>
   useQuery<ICourse>({
@@ -9,8 +10,8 @@ export const useCourse = (id: number) =>
     queryFn: () => api.get(`/courses/${id}`).then((res) => res.data),
   });
 
-export const useCourses = () =>
-  useQuery<ICourse[]>({
-    queryKey: [QUERY_KEYS.COURSES],
-    queryFn: () => api.get('/courses').then((res) => res.data),
+export const useCourses = (data: ICoursePagination) =>
+  useQuery<IPaginated<ICourse>>({
+    queryKey: [QUERY_KEYS.COURSES, data],
+    queryFn: () => api.get('/courses', { params: data }).then((res) => res.data),
   });

@@ -5,3 +5,4 @@ export * from './prompt.types';
 export * from './lab.types.ts';
 export * from './group.types.ts';
 export * from './student.types.ts';
+export * from './common.types.ts';

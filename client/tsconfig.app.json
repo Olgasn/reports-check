@@ -28,7 +28,8 @@
       "@@types": ["./src/types"],
       "@routes": ["./src/routes"],
       "@api": ["./src/api"],
-      "@components": ["./src/components"],
+      "@shared": ["./src/components/shared"],
+      "@features": ["./src/components/features"],
       "@fonts/*": ["./src/assets/fonts/*"],
       "@hooks": ["./src/hooks"],
       "@utils": ["./src/utils"]

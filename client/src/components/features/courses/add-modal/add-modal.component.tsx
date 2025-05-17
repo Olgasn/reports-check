@@ -1,0 +1,113 @@
+import { FC, useRef } from 'react';
+
+import { Box, TextField, Button } from '@mui/material';
+
+import { useCreateCourse } from '@api';
+import { COLORS } from '@constants';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Modal } from '@shared';
+import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
+
+import { AddModalProps } from './add-modal.types';
+import { AddModalFormData, AddModalSchema } from './add-modal.validation';
+
+export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
+  const onSuccess = () => {
+    toast.success('Курс успешно добавлен');
+
+    handleClose();
+  };
+
+  const onError = () => {
+    toast.error('Не удалось создать курс');
+
+    handleClose();
+  };
+
+  const formRef = useRef<HTMLFormElement | null>(null);
+
+  const { mutate: createCourse } = useCreateCourse();
+
+  const { control, handleSubmit } = useForm({
+    resolver: yupResolver(AddModalSchema),
+  });
+
+  const onSubmit = (data: AddModalFormData) => {
+    createCourse(data, {
+      onSuccess,
+      onError,
+    });
+  };
+
+  const handleClickSubmit = () => {
+    const { current } = formRef;
+
+    current?.requestSubmit();
+  };
+
+  const modalBody = (
+    <form onSubmit={handleSubmit(onSubmit)} ref={formRef}>
+      <Box display="flex" flexDirection="column">
+        <Controller
+          name="name"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              label="Название курса"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+              size="small"
+            />
+          )}
+        />
+
+        <Controller
+          name="description"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              label="Описание курса"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+              multiline={true}
+              rows={4}
+              sx={{
+                mt: 2,
+              }}
+              size="small"
+            />
+          )}
+        />
+      </Box>
+    </form>
+  );
+
+  const modalFooter = (
+    <Box display="flex" flexDirection="row">
+      <Button
+        variant="contained"
+        sx={{
+          background: COLORS.MENU_BG,
+          flexGrow: 1,
+        }}
+        onClick={handleClickSubmit}
+      >
+        Создать
+      </Button>
+    </Box>
+  );
+
+  return (
+    <Modal
+      body={modalBody}
+      open={isShow}
+      onClose={handleClose}
+      title="Создание курса"
+      footer={modalFooter}
+      sx={{ width: '500px' }}
+    />
+  );
+};

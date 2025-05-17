@@ -14,6 +14,10 @@ export class SerializeInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
+        if (!dtoClass) {
+          return data;
+        }
+
         if (Array.isArray(data)) {
           const result = data.map((item) =>
             plainToInstance(dtoClass, item, {

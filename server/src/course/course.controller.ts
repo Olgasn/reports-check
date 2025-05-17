@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CourseService } from './course.service';
 import {
   ApiBadRequestResponse,
@@ -12,6 +12,8 @@ import { CourseDto } from './dto/course.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { LabDto } from 'src/lab/dto/lab.dto';
+import { CoursePaginatedDto } from './dto/course-paginated.dto';
+import { SearchCourseDto } from './dto/search-course.dto';
 
 @ApiTags('Course')
 @Controller('courses')
@@ -37,10 +39,9 @@ export class CourseController {
   }
 
   @Get()
-  @Serialize(CourseDto)
-  @ApiOkResponse({ type: [CourseDto] })
-  findMany() {
-    return this.courseService.findMany();
+  @ApiOkResponse({ type: CoursePaginatedDto })
+  findMany(@Query() searchDto: SearchCourseDto) {
+    return this.courseService.findMany(searchDto);
   }
 
   @Post()

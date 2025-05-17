@@ -1,8 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, FindOptionsRelations, Repository } from 'typeorm';
+import { DataSource, FindOptionsRelations, ILike, Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { SearchCourseDto } from './dto/search-course.dto';
+import { CoursePaginatedDto } from './dto/course-paginated.dto';
 
 @Injectable()
 export class CourseService {
@@ -25,12 +27,20 @@ export class CourseService {
     return course;
   }
 
-  findMany() {
-    return this.courseRepo.find({
-      relations: {
-        prompt: true,
+  async findMany(dto: SearchCourseDto) {
+    const { pageSize, offset, name } = dto;
+
+    const [items, count] = await this.courseRepo.findAndCount({
+      skip: offset,
+      take: pageSize,
+      where: {
+        name: ILike(`%${name}%`),
       },
     });
+
+    console.log(items);
+
+    return new CoursePaginatedDto(items, count, dto);
   }
 
   create(createCourseDto: CreateCourseDto) {

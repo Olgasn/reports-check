@@ -1,4 +1,5 @@
-import { App, CheckResults, Course, Courses, Groups, LabCheck, Settings } from '@components';
+import { CheckResults, Course, Courses, Groups, LabCheck, Settings } from '@features';
+import { App } from '@shared';
 import { Navigate, RouteObject } from 'react-router-dom';
 
 export const Routes: RouteObject[] = [

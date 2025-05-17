@@ -1,3 +1,4 @@
+import { IPagination } from './common.types';
 import { IPrompt } from './prompt.types';
 
 export interface ICourse {
@@ -5,6 +6,10 @@ export interface ICourse {
   name: string;
   description: string;
   prompt: IPrompt | null;
+}
+
+export interface ICoursePagination extends IPagination {
+  name: string;
 }
 
 export interface ICreateCourse {
