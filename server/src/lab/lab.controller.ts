@@ -35,7 +35,7 @@ export class LabController {
   @ApiNotFoundResponse({ description: 'Lab not found' })
   @ApiBadRequestResponse({ description: 'Incorrect data' })
   findOne(@Param('id') id: number) {
-    return this.labService.findOne(id);
+    return this.labService.findOne(id, { course: true });
   }
 
   @Get()

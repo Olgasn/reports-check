@@ -19,3 +19,18 @@ export interface ISearchStudents extends IPagination {
   search?: string;
   groupId: number;
 }
+
+export interface IStudentParsed {
+  name: string;
+  surname: string;
+  middlename: string;
+  id: string;
+}
+
+export interface IStudentsParsed {
+  students: IStudentParsed[];
+}
+
+export interface IStudentParse {
+  reportsZip: File;
+}

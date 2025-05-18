@@ -113,7 +113,7 @@ export const Groups: FC = () => {
         />
 
         <FormControl>
-          <InputLabel id={groupLabelId}>Провайдер</InputLabel>
+          <InputLabel id={groupLabelId}>Группа</InputLabel>
           <Select
             labelId={groupLabelId}
             value={groupIndex}

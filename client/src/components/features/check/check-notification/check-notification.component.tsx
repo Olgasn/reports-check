@@ -8,7 +8,7 @@ import { Avatar } from '@shared';
 
 import { CheckNotificationProps } from './check-notification.types';
 
-export const CheckNotification: FC<CheckNotificationProps> = ({ student, status }) => {
+export const CheckNotification: FC<CheckNotificationProps> = ({ student, status, model }) => {
   const getRightComponent = () => {
     switch (status) {
       case 'checked': {
@@ -30,7 +30,7 @@ export const CheckNotification: FC<CheckNotificationProps> = ({ student, status 
   return (
     <Paper sx={{ px: 2, py: 1 }}>
       <Box display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
-        <Avatar text={student} />
+        <Avatar text={student} additionalText={model} />
 
         {rightComponent}
       </Box>

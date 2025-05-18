@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { CourseDto } from 'src/course/dto/course.dto';
 
 export class LabDto {
   @ApiProperty()
@@ -25,4 +26,9 @@ export class LabDto {
   @ApiProperty()
   @Expose()
   content: string;
+
+  @ApiProperty()
+  @Type(() => CourseDto)
+  @Expose()
+  course: CourseDto;
 }

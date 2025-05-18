@@ -1,7 +1,7 @@
 import { IGroup } from './group.types';
 import { ILab } from './lab.types';
 import { IModel } from './settings.types';
-import { IStudent } from './student.types';
+import { IStudent, IStudentParsed } from './student.types';
 
 export interface ICheckStudent {
   id: number;
@@ -35,7 +35,7 @@ export interface ICheckData {
   reportsZip: File;
   labId: number;
   modelsId: number[];
-  studentsId: number[];
+  studentsId: IStudentParsed[];
   groupId: number;
   checkPrev?: boolean;
 }

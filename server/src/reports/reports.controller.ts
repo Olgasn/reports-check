@@ -13,11 +13,23 @@ import { CheckDto } from 'src/check/dto/check.dto';
 import { CheckGrDto } from 'src/check/dto/check-gr.dto';
 import { CheckReportMulDto } from './dto/check-report-mul.dto';
 import { GetChecksDto } from 'src/check/dto/get-checks.dto';
+import { StudentParseDto, StudentsParsedDto } from './dto/students-parsed.dto';
 
 @ApiTags('Report')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
+
+  @Post('/parse-from-file')
+  @Serialize(StudentsParsedDto)
+  @UseInterceptors(FileInterceptor('reportsZip'))
+  @ApiConsumes('multipart/form-data')
+  parseStudentsFromArchive(
+    @Body() parseStudentsDto: StudentParseDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.reportsService.parseStudentsFile(file);
+  }
 
   @Post()
   @Serialize(CheckDto)

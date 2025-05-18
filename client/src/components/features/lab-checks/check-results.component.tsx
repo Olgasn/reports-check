@@ -4,7 +4,7 @@ import { Box, Chip, Divider, Typography } from '@mui/material';
 
 import { useLab, useLabChecks } from '@api';
 import { COLORS, PARAMS } from '@constants';
-import { StudentCheck, TopHeader } from '@shared';
+import { CheckResultsCrumb, StudentCheck, TopHeader } from '@shared';
 import { useParams } from 'react-router';
 
 export const CheckResults: FC = () => {
@@ -39,6 +39,15 @@ export const CheckResults: FC = () => {
 
   return (
     <Box>
+      <CheckResultsCrumb
+        labId={lab.id}
+        labName={lab.name}
+        courseName={lab.course.name}
+        courseId={lab.course.id}
+      />
+
+      <Divider flexItem sx={{ my: 2 }} />
+
       <TopHeader text={lab.name} subText={lab.description} />
 
       <Divider flexItem sx={{ my: 2 }} />

@@ -1,3 +1,5 @@
+import { ICourse } from './course.types';
+
 export interface ILab {
   id: number;
   name: string;
@@ -5,6 +7,7 @@ export interface ILab {
   filename: string;
   filesize: number;
   content: string;
+  course: ICourse;
 }
 
 export interface ICreateLab {

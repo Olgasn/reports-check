@@ -15,6 +15,7 @@ import { Check } from 'src/check/entities/check.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { GetChecksDto } from 'src/check/dto/get-checks.dto';
 import { NotificationService } from 'src/notification/notification.service';
+import { isSimilarStudents } from './reports.utils';
 
 @Injectable()
 export class ReportsService {
@@ -30,6 +31,10 @@ export class ReportsService {
     private readonly promptService: PromptService,
     private readonly notificationService: NotificationService,
   ) {}
+
+  parseStudentsFile(zip: Express.Multer.File) {
+    return this.fileService.parseStudentsFromFile(zip.buffer);
+  }
 
   async getLabChecks(labId: number) {
     return this.checkService.getLabChecks(labId);
@@ -87,10 +92,8 @@ export class ReportsService {
   }
 
   async checkReportByMultipleModels(checkReportDto: CheckReportMulDto) {
-    const { labId, modelsId, reportsZip, checkPrev } = checkReportDto;
+    const { labId, modelsId, reportsZip, checkPrev, studentsId } = checkReportDto;
     const reviewModelId = modelsId.at(-1);
-
-    //const students = await this.studentService.findByIds(studentsId);
 
     if (!reviewModelId) {
       throw new BadRequestException('Incorrect data');
@@ -104,7 +107,9 @@ export class ReportsService {
     const task = lab.content;
 
     const repData = await this.fileService.parseArchive(reportsZip.buffer);
-    const reportsData = repData;
+    const reportsData = studentsId.length
+      ? repData.filter((rp) => studentsId.some((st) => isSimilarStudents(rp, st)))
+      : repData;
 
     const promises: Promise<CheckResult[]>[] = [];
 
@@ -116,9 +121,13 @@ export class ReportsService {
       promises.push(Promise.all(checkPromises));
     }
 
-    const results = await Promise.all(promises);
+    const resultPromises = await Promise.allSettled(promises);
 
     const reviewData: { student: Student; result: string[]; answer: string }[] = [];
+
+    const results = resultPromises
+      .filter((resultPromise) => resultPromise.status === 'fulfilled')
+      .map((resultPromise) => resultPromise.value);
 
     for (let i = 0; i < results[0].length; i++) {
       const check: string[] = [];
@@ -204,9 +213,7 @@ export class ReportsService {
   }
 
   async checkReports(checkReportDto: CheckReportDto) {
-    const { labId, modelId, reportsZip, groupId, checkPrev } = checkReportDto;
-
-    //const students = await this.studentService.findByIds(studentsId);
+    const { labId, modelId, reportsZip, groupId, checkPrev, studentsId } = checkReportDto;
 
     const lab = await this.labService.findOne(labId, { course: { prompt: true } });
     const model = await this.modelService.findOne(modelId);
@@ -215,7 +222,9 @@ export class ReportsService {
     const task = lab.content;
     const repData = await this.fileService.parseArchive(reportsZip.buffer);
 
-    const reportsData = repData;
+    const reportsData = studentsId.length
+      ? repData.filter((rp) => studentsId.some((st) => isSimilarStudents(rp, st)))
+      : repData;
 
     const promises = reportsData.map(async (report) => {
       return this.checkOneReport({
@@ -241,14 +250,7 @@ export class ReportsService {
     }
 
     for (const result of results) {
-      if (
-        !repData.some(
-          (rp) =>
-            rp.name === result.student.name &&
-            rp.surname === result.student.surname &&
-            rp.middlename === result.student.middlename,
-        )
-      ) {
+      if (!repData.some((rp) => isSimilarStudents(rp, result.student))) {
         const studentStr = `${result.student.name} ${result.student.surname} ${result.student.middlename}`;
 
         this.notificationService.reportOneFailed({

@@ -1,7 +1,8 @@
+import { useQuery } from '@tanstack/react-query';
+
 import { ILab } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useQuery } from '@tanstack/react-query';
 
 export const useLab = (id: number) =>
   useQuery<ILab>({

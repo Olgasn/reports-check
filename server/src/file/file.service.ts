@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as pdf from 'pdf-parse';
 import * as mammoth from 'mammoth';
 import { ReportCheck } from 'src/types/reports.types';
+import { StudentParsedDto, StudentsParsedDto } from 'src/reports/dto/students-parsed.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class FileService {
@@ -20,6 +22,52 @@ export class FileService {
     fs.writeFileSync(fullpath, data.content, { encoding: 'utf-8' });
 
     return fullpath;
+  }
+
+  async parseStudentsFromFile(zipBuffer: Buffer) {
+    const dir = path.join(process.cwd(), 'temp');
+
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const extractDir = path.join(dir, `extracted_${Date.now()}`);
+
+    try {
+      if (!fs.existsSync(extractDir)) {
+        fs.mkdirSync(extractDir, { recursive: true });
+      }
+
+      const students: StudentParsedDto[] = [];
+
+      Object.keys(zip.files).forEach((filename) => {
+        const file = zip.files[filename];
+
+        if (!file.dir) {
+          const [surname, name, middlename] = filename.split('_')[0].split(' ');
+
+          const st = new StudentParsedDto();
+
+          st.name = name;
+          st.surname = surname;
+          st.middlename = middlename;
+          st.id = uuidv4();
+
+          students.push(st);
+        }
+      });
+
+      const parsedStudents = new StudentsParsedDto();
+
+      parsedStudents.students = students;
+
+      return parsedStudents;
+    } finally {
+      if (fs.existsSync(dir)) {
+        fs.rmSync(dir, { recursive: true, force: true });
+      }
+    }
   }
 
   async parseArchive(zipBuffer: Buffer) {
@@ -105,9 +153,7 @@ export class FileService {
 
     const content = await this.parseFile(targetFile, buffer);
 
-    const replaced = content.replaceAll(' ', '').replaceAll('\n', ' ');
-
-    return replaced;
+    return content;
   }
 
   async parseFile(name: string, content: Buffer) {

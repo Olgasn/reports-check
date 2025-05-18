@@ -5,7 +5,7 @@ import { Box, Button, Divider } from '@mui/material';
 import { useCourse, useCourseLabs, useDeleteCourse } from '@api';
 import { COLORS } from '@constants';
 import { useModalControls } from '@hooks';
-import { getDefaultActions, PopoverMenu, TopHeader } from '@shared';
+import { CourseCrumb, getDefaultActions, PopoverMenu, TopHeader } from '@shared';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'react-toastify';
 
@@ -75,6 +75,10 @@ export const Course: FC = () => {
 
   return (
     <Box display="flex" flexDirection="column">
+      <CourseCrumb courseName={course.name} />
+
+      <Divider flexItem sx={{ my: 2 }} />
+
       <Box display="flex" flexDirection="row" justifyContent="space-between">
         <TopHeader text={course.name} subText={course.description} />
 

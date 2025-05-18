@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsNumber, IsOptional, IsPositive } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  ValidateNested,
+} from 'class-validator';
+import { StudentParsedDto } from './students-parsed.dto';
 
 export class CheckReportDto {
   @ApiProperty({ type: 'string', format: 'binary', required: true })
@@ -24,13 +32,11 @@ export class CheckReportDto {
   @IsPositive()
   groupId: number;
 
-  @ApiProperty({
-    type: [Number],
-  })
-  @Type(() => Number)
-  @IsNumber({}, { each: true })
-  @IsPositive({ each: true })
-  studentsId: number[] = [];
+  @ApiProperty({ type: [StudentParsedDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StudentParsedDto)
+  studentsId: StudentParsedDto[] = [];
 
   @ApiProperty()
   @Type(() => Boolean)

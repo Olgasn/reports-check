@@ -1,34 +1,13 @@
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import TextSnippetOutlinedIcon from '@mui/icons-material/TextSnippetOutlined';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import TextSnippetOutlinedIcon from '@mui/icons-material/TextSnippetOutlined';
+import { serialize } from 'object-to-formdata';
 
 export const prepareFormData = (data: object) => {
-  const formData = new FormData();
-
-  for (const [key, value] of Object.entries(data)) {
-    if (!value && typeof value !== 'boolean') {
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        formData.append(`${key}[]`, item.toString());
-      }
-    } else if (value instanceof File || typeof value === 'string') {
-      formData.append(key, value);
-    } else if (typeof value === 'number') {
-      formData.append(key, value.toString());
-    } else if (typeof value === 'boolean') {
-      if (!value) continue;
-
-      formData.append(key, String(value));
-    } else {
-      throw new Error('Unsupported form data type');
-    }
-  }
-
-  return formData;
+  return serialize(data, {
+    indices: true,
+  });
 };
 
 export const formatFileSize = (bytes: number, decimals = 2) => {

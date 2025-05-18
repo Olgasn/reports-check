@@ -1,4 +1,4 @@
-import { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import {
   Box,
@@ -10,7 +10,8 @@ import {
   Paper,
 } from '@mui/material';
 
-import { useCheckReports, useGroups, useLab, useModels } from '@api';
+import { ICheckData, IStudentParsed } from '@@types';
+import { useCheckReports, useGroups, useLab, useModels, useStudentsParseFromArchive } from '@api';
 import { COLORS, PARAMS } from '@constants';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useModalControls } from '@hooks';
@@ -18,6 +19,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import {
   Action,
   FileSelect,
+  LabCrumb,
   LabTask,
   MultiSelect,
   PopoverMenu,
@@ -40,13 +42,14 @@ export const LabCheck: FC = () => {
   const taskControls = useModalControls();
 
   const [file, setFile] = useState<File | null>(null);
-  const [check, setCheck] = useState(false);
+  const [check, setCheck] = useState<boolean>(false);
+  const [students, setStudents] = useState<IStudentParsed[]>([]);
 
-  const { control, handleSubmit, setError } = useForm({
+  const { control, handleSubmit, setError, setValue } = useForm({
     resolver: yupResolver(LabCheckSchema),
     defaultValues: {
       modelId: [],
-      studentsId: [],
+      studentIds: [],
       groupId: 1,
     },
   });
@@ -59,6 +62,26 @@ export const LabCheck: FC = () => {
   const { data: lab } = useLab(labId);
   const { data: models } = useModels();
   const { data: groups } = useGroups();
+  const { mutate: parseStudentsFromArchive } = useStudentsParseFromArchive();
+
+  useEffect(() => {
+    if (!file) {
+      return;
+    }
+
+    parseStudentsFromArchive(
+      { reportsZip: file },
+      {
+        onSuccess(data) {
+          setValue('studentIds', []);
+          setStudents(data);
+        },
+        onError() {
+          toast.error('Не удалось извлечь студентов из архива, проверьте содержимое архива');
+        },
+      }
+    );
+  }, [file]);
 
   const checkOnSuccess = () => {
     dispatch(setCheckStatus({ labId, status: 'started' }));
@@ -82,7 +105,7 @@ export const LabCheck: FC = () => {
       return;
     }
 
-    const { modelId, groupId, studentsId } = data;
+    const { modelId, groupId, studentIds } = data;
 
     if (!modelId.length) {
       setError('modelId', { type: 'custom', message: 'Выберите хотя бы одну модель!' });
@@ -90,14 +113,21 @@ export const LabCheck: FC = () => {
       return;
     }
 
-    const reqData = {
+    const studentsFiltered = studentIds
+      .map((studentId) => students.find((student) => student.id === studentId) ?? null)
+      .filter((item) => item !== null);
+
+    const reqData: ICheckData = {
       modelsId: modelId,
       labId: lab.id,
       reportsZip: file,
       groupId,
-      studentsId,
-      checkPrev: check,
+      studentsId: studentsFiltered,
     };
+
+    if (check) {
+      reqData.checkPrev = check;
+    }
 
     checkReports(reqData, {
       onSuccess: checkOnSuccess,
@@ -124,6 +154,15 @@ export const LabCheck: FC = () => {
 
   return (
     <Box>
+      <LabCrumb
+        labId={lab.id}
+        labName={lab.name}
+        courseName={lab.course.name}
+        courseId={lab.course.id}
+      />
+
+      <Divider flexItem sx={{ my: 2 }} />
+
       <TopHeader text="Проверка отчетов" subText="Здесь вы можете проверить отчеты студентов." />
 
       <Divider flexItem sx={{ my: 2 }} />
@@ -178,6 +217,18 @@ export const LabCheck: FC = () => {
                 subText="Выберите студентов, отчеты которых будут проверены."
               />
 
+              <Box sx={{ mt: 2, mb: 1 }}>
+                <MultiSelect
+                  name="studentIds"
+                  control={control}
+                  options={students}
+                  valueKey="id"
+                  labelKey="surname"
+                  label="Студенты"
+                  disabled={Boolean(!students.length)}
+                />
+              </Box>
+
               <FormControlLabel
                 control={<Checkbox checked={check} onChange={(e) => setCheck(e.target.checked)} />}
                 label="Учитывать предыдущую проверку"
@@ -185,6 +236,7 @@ export const LabCheck: FC = () => {
                   fontSize: PARAMS.MEDIUM_FONT_SIZE,
                   color: COLORS.TEXT,
                 }}
+                disabled={Boolean(!students.length)}
               />
             </Box>
 
