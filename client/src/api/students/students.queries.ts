@@ -1,7 +1,8 @@
-import { IStudent } from '@@types';
+import { useQuery } from '@tanstack/react-query';
+
+import { IPaginated, ISearchStudents, IStudent } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useQuery } from '@tanstack/react-query';
 
 export const useStudent = (id: number) =>
   useQuery<IStudent>({
@@ -15,8 +16,9 @@ export const useStudents = () =>
     queryFn: () => api.get('/students').then((res) => res.data),
   });
 
-export const useGroupStudents = (groupId: number) =>
-  useQuery<IStudent[]>({
-    queryKey: [QUERY_KEYS.STUDENTS, groupId],
-    queryFn: () => api.get(`/groups/${groupId}/students`).then((res) => res.data),
+export const useGroupStudents = (pagination: ISearchStudents) =>
+  useQuery<IPaginated<IStudent>>({
+    queryKey: [QUERY_KEYS.STUDENTS, pagination],
+    queryFn: () =>
+      api.get(`/groups/search-students`, { params: pagination }).then((res) => res.data),
   });

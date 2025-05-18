@@ -11,6 +11,7 @@ import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupOpDto } from './dto/group-op.dto';
 import { StudentService } from 'src/student/student.service';
+import { StudentsSearchDto } from 'src/student/dto/students-search.dto';
 
 @Injectable()
 export class GroupService {
@@ -91,9 +92,9 @@ export class GroupService {
     await this.groupRepo.save(group);
   }
 
-  async getGroupStudents(groupId: number) {
-    await this.findOne(groupId);
+  async getGroupStudents(dto: StudentsSearchDto) {
+    await this.findOne(dto.groupId);
 
-    return this.studentService.findMany({ group: { id: groupId } });
+    return this.studentService.searchStudents(dto);
   }
 }

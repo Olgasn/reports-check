@@ -84,7 +84,7 @@ export class FileService {
   parseFolderName(folderName: string) {
     const data = folderName.split('_');
     const [info, num] = data;
-    const [name, surname, middlename] = info.split(' ');
+    const [surname, name, middlename] = info.split(' ');
 
     return {
       name,
@@ -103,24 +103,26 @@ export class FileService {
     const filePath = path.join(folderPath, targetFile);
     const buffer = fs.readFileSync(filePath);
 
-    switch (path.extname(targetFile).toLowerCase()) {
-      case '.pdf':
-        return this.extractPDF(buffer);
-      case '.docx':
-        return this.extractDOCX(buffer);
-      default:
-        return '';
-    }
+    const content = await this.parseFile(targetFile, buffer);
+
+    const replaced = content.replaceAll(' ', '').replaceAll('\n', ' ');
+
+    return replaced;
   }
 
   async parseFile(name: string, content: Buffer) {
     switch (path.extname(name).toLowerCase()) {
-      case '.pdf':
+      case '.pdf': {
         return this.extractPDF(content);
-      case '.docx':
+      }
+
+      case '.docx': {
         return this.extractDOCX(content);
-      default:
+      }
+
+      default: {
         return content.toString('utf-8');
+      }
     }
   }
 

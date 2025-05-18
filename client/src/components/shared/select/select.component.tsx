@@ -1,5 +1,3 @@
-import { Controller, FieldValues } from 'react-hook-form';
-import { SelectProps } from './select.types';
 import {
   Box,
   FormControl,
@@ -8,6 +6,10 @@ import {
   FormHelperText,
   Select as SelectMui,
 } from '@mui/material';
+
+import { Controller, FieldValues } from 'react-hook-form';
+
+import { SelectProps } from './select.types';
 
 export const Select = <T extends FieldValues, K>({
   name,
@@ -33,6 +35,7 @@ export const Select = <T extends FieldValues, K>({
               label={label}
               {...selectProps}
               sx={{ background: 'white' }}
+              value={field.value}
             >
               {data.map((item) => (
                 <MenuItem value={item[valueKey] as string | number} key={String(item[valueKey])}>

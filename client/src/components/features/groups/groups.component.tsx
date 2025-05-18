@@ -1,11 +1,19 @@
-import { FC, useMemo, useState } from 'react';
+import { ChangeEvent, FC, useEffect, useId, useMemo, useState } from 'react';
 
-import { Box, Chip, Divider } from '@mui/material';
+import {
+  Box,
+  Divider,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+} from '@mui/material';
 
 import { IGroup } from '@@types';
 import { useDeleteGroup, useGroups } from '@api';
-import { COLORS } from '@constants';
-import { useModalControls } from '@hooks';
+import { useDebounce, useModalControls } from '@hooks';
 import { PopoverMenu, TopHeader } from '@shared';
 import { toast } from 'react-toastify';
 
@@ -20,7 +28,11 @@ export const Groups: FC = () => {
 
   const { mutate: deleteGroup } = useDeleteGroup();
 
-  const [groupIndex, setGroupIndex] = useState(-1);
+  const [groupIndex, setGroupIndex] = useState(0);
+  const [search, setSearch] = useState('');
+
+  const searchDebounced = useDebounce(search, 2000);
+
   const [group, setGroup] = useState<IGroup | null>(null);
 
   const { data: groups } = useGroups();
@@ -54,6 +66,30 @@ export const Groups: FC = () => {
     [group]
   );
 
+  const groupLabelId = useId();
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  };
+
+  const handleGroupChange = (e: SelectChangeEvent<number>) => {
+    if (!groups) {
+      return;
+    }
+
+    const index = Number(e.target.value);
+
+    setGroupIndex(index);
+
+    const group = groups[index];
+
+    setGroup(group);
+  };
+
+  useEffect(() => {
+    handleGroupChange({ target: { value: 0 } } as SelectChangeEvent<number>);
+  }, [groups]);
+
   if (!groups) {
     return null;
   }
@@ -68,26 +104,36 @@ export const Groups: FC = () => {
 
       <Divider flexItem sx={{ my: 2 }} />
 
-      <Box display="flex" flexDirection="row" gap={1}>
-        {groups.map((group, index) => (
-          <Chip
-            label={group.name}
-            key={group.id}
-            sx={{
-              background: index === groupIndex ? COLORS.SECONDARY : undefined,
-              color: index === groupIndex ? 'white' : undefined,
-            }}
-            onClick={() => {
-              setGroupIndex(index);
-              setGroup(group);
-            }}
-          />
-        ))}
+      <Box display="flex" flexDirection="row" gap={2}>
+        <TextField
+          onChange={handleSearchChange}
+          label="Фамилия студента"
+          size="small"
+          sx={{ bgcolor: 'white', flexGrow: 1 }}
+        />
+
+        <FormControl>
+          <InputLabel id={groupLabelId}>Провайдер</InputLabel>
+          <Select
+            labelId={groupLabelId}
+            value={groupIndex}
+            onChange={handleGroupChange}
+            size="small"
+            label="Группа"
+            sx={{ width: '200px', bgcolor: 'white' }}
+          >
+            {groups.map(({ id, name }, index) => (
+              <MenuItem value={index} key={id}>
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
 
       <Divider flexItem sx={{ my: 2 }} />
 
-      {group && <Students groupId={group.id} />}
+      {group && <Students groupId={group.id} search={searchDebounced} />}
 
       <AddGroupModal isShow={addGroupControls.open} handleClose={addGroupControls.handleClose} />
 

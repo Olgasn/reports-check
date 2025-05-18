@@ -9,7 +9,7 @@ import { LabModule } from 'src/lab/lab.module';
 import { CheckModule } from 'src/check/check.module';
 import { PromptModule } from 'src/prompt/prompt.module';
 import { GroupModule } from 'src/group/group.module';
-import { WsModule } from 'src/ws/ws.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { WsModule } from 'src/ws/ws.module';
     CheckModule,
     PromptModule,
     GroupModule,
-    WsModule,
+    NotificationModule,
   ],
   providers: [ReportsService],
   controllers: [ReportsController],

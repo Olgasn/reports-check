@@ -92,20 +92,6 @@ export const AddStudentModal: FC<AddStudentModalProps> = ({ isOpen, onClose, gro
             />
           )}
         />
-
-        <Controller
-          name="num"
-          control={control}
-          render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              label="Номер зачетки"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
-              size="small"
-            />
-          )}
-        />
       </Box>
     </form>
   );

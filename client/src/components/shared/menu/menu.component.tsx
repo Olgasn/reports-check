@@ -1,21 +1,26 @@
 import { FC, useState } from 'react';
+
 import { Badge, IconButton, Tooltip } from '@mui/material';
-import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
-import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
-import { MenuStyled, NotificationsBtn } from './menu.styled';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import { darken } from 'polished';
-import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
+
 import { useModalControls } from '@hooks';
-import { MenuItem, NotificationsModal, useNotifications } from '@shared';
+import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
+import { MenuItem, NotificationsModal } from '@shared';
+import { RootState } from '@store';
+import { darken } from 'polished';
+import { useSelector } from 'react-redux';
+
+import { MenuStyled, NotificationsBtn } from './menu.styled';
 
 export const Menu: FC = () => {
   const notificationControls = useModalControls();
 
   const [isOpen, setIsOpen] = useState(false);
-  const notifications = useNotifications();
+  const { notifications } = useSelector((state: RootState) => state.notifications);
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);

@@ -20,11 +20,6 @@ export class CreateStudentDto {
   middlename: string;
 
   @ApiProperty()
-  @Type(() => Number)
-  @IsNumber()
-  num: string;
-
-  @ApiProperty()
   @Optional()
   @Type(() => Number)
   @IsNumber()

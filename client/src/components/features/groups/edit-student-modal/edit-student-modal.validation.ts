@@ -14,10 +14,6 @@ export const EditStudentSchema = yup.object({
     .string()
     .required('Обязательный параметр')
     .min(2, 'Название должен быть не менее 2 символов'),
-  num: yup
-    .string()
-    .required('Обязательный параметр')
-    .min(2, 'Название должен быть не менее 2 символов'),
 });
 
 export type EditStudentFormData = InferType<typeof EditStudentSchema>;

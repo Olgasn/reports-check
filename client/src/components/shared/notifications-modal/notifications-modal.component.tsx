@@ -1,18 +1,22 @@
 import { FC, useMemo, useState } from 'react';
-import { NotificationsModalProps } from './notifications-modal.types';
-import { useNotifications } from '../ws-wrapper';
+
 import { Box, Button, Divider } from '@mui/material';
-import { Modal } from '../modal';
-import { NotText } from './notifications-modal.styled';
+
 import { COLORS } from '@constants';
 import { useModalControls } from '@hooks';
+import { CheckModal, Modal } from '@shared';
+import { RootState } from '@store';
+import { useSelector } from 'react-redux';
+
+import { NotText } from './notifications-modal.styled';
+import { NotificationsModalProps } from './notifications-modal.types';
 
 export const NotificationsModal: FC<NotificationsModalProps> = ({ isOpen, handleClose }) => {
   const [ids, setIds] = useState<null | number[]>(null);
 
   const checkControls = useModalControls();
 
-  const notifications = useNotifications();
+  const { notifications } = useSelector((state: RootState) => state.notifications);
 
   const handleCheckClose = () => {
     setIds(null);
@@ -71,6 +75,8 @@ export const NotificationsModal: FC<NotificationsModalProps> = ({ isOpen, handle
           overflowY: 'auto',
         }}
       />
+
+      {ids && <CheckModal isOpen={checkControls.open} onClose={handleCheckClose} ids={ids} />}
     </>
   );
 };

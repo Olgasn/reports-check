@@ -13,9 +13,8 @@ import { CheckResult, ReportCheck } from 'src/types/reports.types';
 import { Model } from 'src/model/entities/model.entity';
 import { Check } from 'src/check/entities/check.entity';
 import { Student } from 'src/student/entities/student.entity';
-import { GroupService } from 'src/group/group.service';
-import { WsGateway } from 'src/ws/ws.gateway';
 import { GetChecksDto } from 'src/check/dto/get-checks.dto';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class ReportsService {
@@ -29,8 +28,7 @@ export class ReportsService {
     private readonly labService: LabService,
     private readonly studentService: StudentService,
     private readonly promptService: PromptService,
-    private readonly groupService: GroupService,
-    private readonly wsGateway: WsGateway,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getLabChecks(labId: number) {
@@ -61,38 +59,26 @@ export class ReportsService {
     });
   }
 
-  handleCheckReports(checkReportDto: CheckReportMulDto) {
-    const cb = async () => {
-      if (checkReportDto.modelsId.length >= 2) {
-        return this.checkReportByMultipleModels(checkReportDto);
-      } else {
-        return this.checkReports({
-          labId: checkReportDto.labId,
-          modelId: checkReportDto.modelsId[0],
-          reportsZip: checkReportDto.reportsZip,
-          groupId: checkReportDto.groupId,
-          studentsId: checkReportDto.studentsId,
-          checkPrev: checkReportDto.checkPrev,
-        });
-      }
-    };
+  handleCheck(checkReportDto: CheckReportMulDto) {
+    if (checkReportDto.modelsId.length >= 2) {
+      return this.checkReportByMultipleModels(checkReportDto);
+    }
 
+    return this.checkReports({ ...checkReportDto, modelId: checkReportDto.modelsId[0] });
+  }
+
+  handleCheckReports(checkReportDto: CheckReportMulDto) {
     const func = async () => {
       try {
-        const results = await cb();
+        this.notificationService.checkStarted();
+
+        const results = await this.handleCheck(checkReportDto);
 
         const ids = results.map((check) => check.id);
 
-        const data = {
-          ids,
-          status: 'success',
-        };
-
-        this.wsGateway.sendToUser('report-processed', JSON.stringify(data));
+        this.notificationService.reportsChecked(ids, checkReportDto.labId);
       } catch {
-        this.wsGateway.sendToUser('report-processed', {
-          status: 'error',
-        });
+        this.notificationService.checkFailed();
       }
     };
 
@@ -101,10 +87,10 @@ export class ReportsService {
   }
 
   async checkReportByMultipleModels(checkReportDto: CheckReportMulDto) {
-    const { labId, modelsId, reportsZip, studentsId, checkPrev } = checkReportDto;
+    const { labId, modelsId, reportsZip, checkPrev } = checkReportDto;
     const reviewModelId = modelsId.at(-1);
 
-    const students = await this.studentService.findByIds(studentsId);
+    //const students = await this.studentService.findByIds(studentsId);
 
     if (!reviewModelId) {
       throw new BadRequestException('Incorrect data');
@@ -118,15 +104,13 @@ export class ReportsService {
     const task = lab.content;
 
     const repData = await this.fileService.parseArchive(reportsZip.buffer);
-    const reportsData = students.length
-      ? repData.filter((report) => students.some((st) => st.num === report.num))
-      : repData;
+    const reportsData = repData;
 
     const promises: Promise<CheckResult[]>[] = [];
 
     for (const model of models) {
       const checkPromises = reportsData.map((report) =>
-        this.checkOneReport({ report, task, content, model, groupId: 1, checkPrev }),
+        this.checkOneReport({ report, task, content, model, groupId: 1, checkPrev, labId: lab.id }),
       );
 
       promises.push(Promise.all(checkPromises));
@@ -220,31 +204,61 @@ export class ReportsService {
   }
 
   async checkReports(checkReportDto: CheckReportDto) {
-    const { labId, modelId, reportsZip, groupId, studentsId, checkPrev } = checkReportDto;
+    const { labId, modelId, reportsZip, groupId, checkPrev } = checkReportDto;
 
-    const students = await this.studentService.findByIds(studentsId);
+    //const students = await this.studentService.findByIds(studentsId);
 
     const lab = await this.labService.findOne(labId, { course: { prompt: true } });
     const model = await this.modelService.findOne(modelId);
 
     const { content } = lab.course.prompt;
     const task = lab.content;
-
     const repData = await this.fileService.parseArchive(reportsZip.buffer);
-    const reportsData = students.length
-      ? repData.filter((report) => students.some((st) => st.num === report.num))
-      : repData;
 
-    const promises = reportsData.map(async (report) =>
-      this.checkOneReport({ report, task, content, model, groupId, checkPrev }),
-    );
+    const reportsData = repData;
+
+    const promises = reportsData.map(async (report) => {
+      return this.checkOneReport({
+        report,
+        task,
+        content,
+        model,
+        groupId,
+        checkPrev,
+        labId: lab.id,
+      });
+    });
 
     const resultPromises = await Promise.allSettled(promises);
+    const results: CheckResult[] = [];
 
-    const results = resultPromises
-      .filter((pr) => pr.status === 'fulfilled')
-      .map((pr) => pr.value)
-      .filter((pr) => !!pr);
+    for (const result of resultPromises) {
+      if (result.status === 'fulfilled') {
+        results.push(result.value);
+
+        continue;
+      }
+    }
+
+    for (const result of results) {
+      if (
+        !repData.some(
+          (rp) =>
+            rp.name === result.student.name &&
+            rp.surname === result.student.surname &&
+            rp.middlename === result.student.middlename,
+        )
+      ) {
+        const studentStr = `${result.student.name} ${result.student.surname} ${result.student.middlename}`;
+
+        this.notificationService.reportOneFailed({
+          student: studentStr,
+          model: model.name,
+          id: result.student.id,
+          labId: lab.id,
+        });
+      }
+    }
 
     const checks: Check[] = [];
 
@@ -273,13 +287,32 @@ export class ReportsService {
     model: Model;
     groupId: number;
     checkPrev: boolean;
+    labId: number;
   }) {
-    const { report, task, content, model, groupId, checkPrev } = data;
+    const { report, task, content, model, groupId, checkPrev, labId } = data;
 
     const studentStr = `${report.name} ${report.surname} ${report.middlename}`;
 
-    const studentFound = await this.studentService.findByNum(report.num);
+    const studentFound = await this.studentService.findRawStudent(
+      report.name,
+      report.surname,
+      report.middlename,
+    );
 
+    let student = studentFound;
+
+    if (!student) {
+      const { name, surname, middlename } = report;
+
+      student = await this.studentService.create({ name, surname, middlename, groupId });
+    }
+
+    this.notificationService.reportOneStarted({
+      student: studentStr,
+      model: model.name,
+      id: student.id,
+      labId,
+    });
     this.logger.log(`Начал провека отчета студента [${studentStr}] моделью [${model.name}]`);
 
     const prompt = await this.preparePrompt(
@@ -296,17 +329,15 @@ export class ReportsService {
       content: result,
     });
 
+    this.notificationService.reportOneChecked({
+      student: studentStr,
+      model: model.name,
+      id: student.id,
+      labId,
+    });
     this.logger.log(`Отчет студента [${studentStr}] был проверен моделью [${model.name}]`);
 
     const resultDto = await this.llmService.extractData(CheckResultDto, result);
-
-    let student = studentFound;
-
-    if (!student) {
-      const { name, surname, middlename, num } = report;
-
-      student = await this.studentService.create({ name, surname, middlename, num, groupId });
-    }
 
     const check: CheckResult = {
       student,

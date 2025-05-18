@@ -17,3 +17,4 @@ export * from './task-modal';
 export * from './lab-task';
 export * from './student-check';
 export * from './student-result-modal';
+export * from './check-modal';

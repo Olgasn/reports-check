@@ -26,7 +26,7 @@ export class PaginatedDto<T, K> {
 
   constructor(dto: ClassConstructor<T>, items: K[], count: number, paginationDto: PaginationDto) {
     this.items = items.map((item) => plainToInstance(dto, item, { excludeExtraneousValues: true }));
-    this.total = count;
+    this.total = Math.ceil(count / paginationDto.pageSize);
 
     const { offset, page, pageSize } = paginationDto;
 

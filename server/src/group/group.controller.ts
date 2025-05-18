@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { GroupService } from './group.service';
 import {
   ApiBadRequestResponse,
@@ -12,12 +12,21 @@ import { Serialize } from 'src/common/decorators/serialize.decorator';
 import { GroupDto } from './dto/group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupOpDto } from './dto/group-op.dto';
-import { StudentDto } from 'src/student/dto/student.dto';
+import { StudentsSearchDto } from 'src/student/dto/students-search.dto';
+import { StudentsPaginatedDto } from 'src/student/dto/students-paginated.dto';
 
 @ApiTags('Group')
 @Controller('groups')
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
+
+  @Get('/search-students')
+  @ApiOkResponse({ type: [StudentsPaginatedDto] })
+  @ApiNotFoundResponse({ description: 'Group not found' })
+  @ApiBadRequestResponse({ description: 'Incorrect data' })
+  getStudents(@Query() searchDto: StudentsSearchDto) {
+    return this.groupService.getGroupStudents(searchDto);
+  }
 
   @Get(':id')
   @Serialize(GroupDto)
@@ -84,14 +93,5 @@ export class GroupController {
     groupOpDto.studentId = studentId;
 
     return this.groupService.removeMember(groupOpDto);
-  }
-
-  @Get(':groupId/students')
-  @Serialize(StudentDto)
-  @ApiOkResponse({ type: StudentDto })
-  @ApiNotFoundResponse({ description: 'Group not found' })
-  @ApiBadRequestResponse({ description: 'Incorrect data' })
-  getStudents(@Param('groupId') groupId: number) {
-    return this.groupService.getGroupStudents(groupId);
   }
 }

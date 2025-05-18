@@ -1,3 +1,4 @@
+import { IPagination } from './common.types';
 import { IGroup } from './group.types';
 
 export interface IStudent extends Omit<ICreateStudent, 'groupId'> {
@@ -9,8 +10,12 @@ export interface ICreateStudent {
   name: string;
   surname: string;
   middlename: string;
-  num: string;
   groupId: number;
 }
 
 export type IUpdateStudent = ICreateStudent;
+
+export interface ISearchStudents extends IPagination {
+  search?: string;
+  groupId: number;
+}

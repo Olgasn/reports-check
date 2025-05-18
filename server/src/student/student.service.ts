@@ -1,9 +1,11 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
+import { DataSource, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { GroupService } from 'src/group/group.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { StudentsSearchDto } from './dto/students-search.dto';
+import { StudentsPaginatedDto } from './dto/students-paginated.dto';
 
 @Injectable()
 export class StudentService {
@@ -17,16 +19,20 @@ export class StudentService {
     this.studentRepo = this.dataSource.getRepository(Student);
   }
 
-  async findByNum(num: string) {
-    const student = await this.studentRepo.findOne({ where: { num } });
-
-    return student;
-  }
-
   async findByIds(ids: number[]) {
     return this.studentRepo.find({
       where: {
         id: In(ids),
+      },
+    });
+  }
+
+  async findRawStudent(name: string, surname: string, middlename: string) {
+    return this.studentRepo.findOne({
+      where: {
+        name,
+        surname,
+        middlename,
       },
     });
   }
@@ -50,9 +56,26 @@ export class StudentService {
     return this.studentRepo.find({ where: cond, relations: { group: true } });
   }
 
+  async searchStudents(searchStudentDto: StudentsSearchDto) {
+    const { offset, pageSize, search, groupId } = searchStudentDto;
+
+    const [items, count] = await this.studentRepo.findAndCount({
+      skip: offset,
+      take: pageSize,
+      where: {
+        surname: ILike(`%${search}%`),
+        group: {
+          id: groupId,
+        },
+      },
+    });
+
+    return new StudentsPaginatedDto(items, count, searchStudentDto);
+  }
+
   async create(createStudentDto: CreateStudentDto) {
-    const { name, surname, middlename, num, groupId } = createStudentDto;
-    const studentPlain = this.studentRepo.create({ name, surname, middlename, num });
+    const { name, surname, middlename, groupId } = createStudentDto;
+    const studentPlain = this.studentRepo.create({ name, surname, middlename });
 
     if (groupId) {
       const group = await this.groupService.findOne(groupId);

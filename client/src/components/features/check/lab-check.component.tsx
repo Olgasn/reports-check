@@ -1,8 +1,16 @@
 import { FC, useMemo, useState } from 'react';
 
-import { Box, Button, Checkbox, Divider, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Divider,
+  FormControlLabel,
+  LinearProgress,
+  Paper,
+} from '@mui/material';
 
-import { useCheckReports, useGroups, useGroupStudents, useLab, useModels } from '@api';
+import { useCheckReports, useGroups, useLab, useModels } from '@api';
 import { COLORS, PARAMS } from '@constants';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useModalControls } from '@hooks';
@@ -17,17 +25,18 @@ import {
   TaskModal,
   TopHeader,
 } from '@shared';
-import { useForm, useWatch } from 'react-hook-form';
+import { AppDispatch, cleanCheckNotifications, setCheckStatus } from '@store';
+import { useForm } from 'react-hook-form';
+import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 
-import { LabTaskBox } from './lab-check.styled';
+import { CheckNotification } from './check-notification';
+import { useLabCheckData } from './lab-check.hook';
 import { LabCheckFormData, LabCheckSchema } from './lab-check.validation';
 
 export const LabCheck: FC = () => {
-  const checkOnSuccess = () => toast.success('Отчеты отправлены на проверку');
-  const checkOnError = () => toast.error('Не удалос выполнить проверку. Попробуйте еще раз');
-
+  const dispatch = useDispatch<AppDispatch>();
   const taskControls = useModalControls();
 
   const [file, setFile] = useState<File | null>(null);
@@ -43,6 +52,24 @@ export const LabCheck: FC = () => {
   });
 
   const { mutate: checkReports } = useCheckReports();
+
+  const { id } = useParams();
+  const labId = Number(id);
+
+  const { data: lab } = useLab(labId);
+  const { data: models } = useModels();
+  const { data: groups } = useGroups();
+
+  const checkOnSuccess = () => {
+    dispatch(setCheckStatus({ labId, status: 'started' }));
+    dispatch(cleanCheckNotifications({ labId }));
+
+    toast.success('Отчеты отправлены на проверку');
+  };
+
+  const checkOnError = () => {
+    toast.error('Не удалось выполнить проверку. Попробуйте еще раз');
+  };
 
   const onSubmit = (data: LabCheckFormData) => {
     if (!lab) {
@@ -78,18 +105,7 @@ export const LabCheck: FC = () => {
     });
   };
 
-  const watchedGroupId = useWatch({
-    control,
-    name: 'groupId',
-  });
-
-  const { id } = useParams();
-  const labId = Number(id);
-
-  const { data: lab } = useLab(labId);
-  const { data: models } = useModels();
-  const { data: groups } = useGroups();
-  const { data: groupStudents } = useGroupStudents(watchedGroupId);
+  const { notifications: checkNotifications, status: checkStatus } = useLabCheckData(labId);
 
   const actions = useMemo(
     (): Action[] => [
@@ -102,7 +118,7 @@ export const LabCheck: FC = () => {
     []
   );
 
-  if (!lab || !models || !groups || !groupStudents) {
+  if (!lab || !models || !groups) {
     return null;
   }
 
@@ -116,105 +132,135 @@ export const LabCheck: FC = () => {
 
       <Divider flexItem sx={{ my: 2 }} />
 
-      <LabTaskBox display="flex" flexDirection="row" justifyContent="space-between">
-        <LabTask filename={lab.filename} filesize={lab.filesize} />
+      <Paper sx={{ py: 1, px: 2 }}>
+        <Box display="flex" justifyContent="space-between">
+          <LabTask filename={lab.filename} filesize={lab.filesize} />
 
-        <PopoverMenu actions={actions} elemId={lab.id} />
+          <PopoverMenu actions={actions} elemId={lab.id} />
 
-        <TaskModal
-          onClose={taskControls.handleClose}
-          isOpen={taskControls.open}
-          task={lab.content}
-          title={lab.name}
-        />
-      </LabTaskBox>
+          <TaskModal
+            onClose={taskControls.handleClose}
+            isOpen={taskControls.open}
+            task={lab.content}
+            title={lab.name}
+          />
+        </Box>
+      </Paper>
 
       <Divider flexItem sx={{ my: 2 }} />
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Box display="flex" flexDirection="column" justifyContent="center">
-          <Box display="flex" flexDirection="column">
-            <TopHeader text="Модель" subText="Выберите модели, которые будут проводить проверку." />
-
-            <Box sx={{ mt: 2 }}>
-              <MultiSelect
-                name="modelId"
-                control={control}
-                options={models}
-                valueKey="id"
-                labelKey="name"
-                label="Модели"
+      <Box display="flex" flexDirection="row">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Box display="flex" flexDirection="column" justifyContent="center">
+            <Box display="flex" flexDirection="column">
+              <TopHeader
+                text="Модель"
+                subText="Выберите модели, которые будут проводить проверку."
               />
-            </Box>
-          </Box>
-
-          <Divider flexItem sx={{ my: 2 }} />
-
-          <Box display="flex" flexDirection="column">
-            <TopHeader
-              text="Студенты"
-              subText="Выберите студентов, отчеты которых будут проверены."
-            />
-
-            <Box sx={{ mt: 2 }}>
-              <MultiSelect
-                name="studentsId"
-                control={control}
-                options={groupStudents ?? []}
-                valueKey="id"
-                labelKey="name"
-                label="Студенты"
-              />
-            </Box>
-
-            <FormControlLabel
-              control={<Checkbox checked={check} onChange={(e) => setCheck(e.target.checked)} />}
-              label="Учитывать предыдущую проверку"
-              sx={{
-                fontSize: PARAMS.MEDIUM_FONT_SIZE,
-                color: COLORS.TEXT,
-              }}
-            />
-          </Box>
-
-          <Divider flexItem sx={{ my: 2 }} />
-
-          <Box display="flex" flexDirection="row" justifyContent="space-between">
-            <Box display="flex" flexDirection="column" flexGrow={1}>
-              <TopHeader text="Группа" subText="Выберите группу, к которой причислены студенты." />
 
               <Box sx={{ mt: 2 }}>
-                <Select
-                  name="groupId"
+                <MultiSelect
+                  name="modelId"
                   control={control}
-                  data={groups}
+                  options={models}
                   valueKey="id"
                   labelKey="name"
-                  label="Выберите группу"
+                  label="Модели"
                 />
               </Box>
             </Box>
 
-            <Box display="flex" flexDirection="column" flexGrow={1} sx={{ ml: 2 }}>
-              <TopHeader text="Отчеты" subText="Выберите архив со списком отчетов в формате zip." />
+            <Divider flexItem sx={{ my: 2 }} />
 
-              <Box sx={{ mt: 2 }}>
-                <FileSelect
-                  onChange={setFile}
-                  textFieldSx={{ background: 'white' }}
-                  accept=".zip"
+            <Box display="flex" flexDirection="column">
+              <TopHeader
+                text="Студенты"
+                subText="Выберите студентов, отчеты которых будут проверены."
+              />
+
+              <FormControlLabel
+                control={<Checkbox checked={check} onChange={(e) => setCheck(e.target.checked)} />}
+                label="Учитывать предыдущую проверку"
+                sx={{
+                  fontSize: PARAMS.MEDIUM_FONT_SIZE,
+                  color: COLORS.TEXT,
+                }}
+              />
+            </Box>
+
+            <Divider flexItem sx={{ my: 2 }} />
+
+            <Box display="flex" flexDirection="row" justifyContent="space-between">
+              <Box display="flex" flexDirection="column" flexGrow={1}>
+                <TopHeader
+                  text="Группа"
+                  subText="Выберите группу, к которой причислены студенты."
                 />
+
+                <Box sx={{ mt: 2 }}>
+                  <Select
+                    name="groupId"
+                    control={control}
+                    data={groups}
+                    valueKey="id"
+                    labelKey="name"
+                    label="Выберите группу"
+                  />
+                </Box>
+              </Box>
+
+              <Box display="flex" flexDirection="column" flexGrow={1} sx={{ ml: 2 }}>
+                <TopHeader
+                  text="Отчеты"
+                  subText="Выберите архив со списком отчетов в формате zip."
+                />
+
+                <Box sx={{ mt: 2 }}>
+                  <FileSelect
+                    onChange={setFile}
+                    textFieldSx={{ background: 'white' }}
+                    accept=".zip"
+                  />
+                </Box>
               </Box>
             </Box>
+
+            <Divider flexItem sx={{ my: 2 }} />
           </Box>
 
-          <Divider flexItem sx={{ my: 2 }} />
-        </Box>
+          <Button variant="contained" sx={{ background: COLORS.SECONDARY }} type="submit">
+            Отправить
+          </Button>
+        </form>
 
-        <Button variant="contained" sx={{ background: COLORS.SECONDARY }} type="submit">
-          Отправить
-        </Button>
-      </form>
+        <Divider flexItem sx={{ mx: 2 }} orientation="vertical" />
+
+        <Box display="flex" flexDirection="column" sx={{ width: '50%' }}>
+          <Box display="flex" flexDirection="column">
+            <TopHeader
+              text="Ход проверки"
+              subText="Здесь отобразится информация о ходе проверке отчетов."
+            />
+
+            {checkStatus === 'started' && <LinearProgress color="primary" sx={{ mt: 2 }} />}
+
+            <Divider flexItem sx={{ my: 2 }} />
+          </Box>
+
+          {checkNotifications && (
+            <Box
+              display="flex"
+              flexDirection="column"
+              sx={{ maxHeight: '55vh', overflow: 'hidden', overflowY: 'auto', pr: 2 }}
+              gap={2}
+            >
+              {checkNotifications.map(({ model, student, status }, index) => (
+                <CheckNotification model={model} student={student} status={status} key={index} />
+              ))}
+            </Box>
+          )}
+        </Box>
+      </Box>
     </Box>
   );
 };

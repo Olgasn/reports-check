@@ -31,9 +31,11 @@ export class WsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  sendToUser(event: string, data: any) {
+  sendToUser(event: string, data: any = '') {
+    const payload = JSON.stringify(data);
+
     for (const client of this.clients.values()) {
-      client.emit(event, data);
+      client.emit(event, payload);
     }
   }
 }

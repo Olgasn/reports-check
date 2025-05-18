@@ -38,8 +38,6 @@ export class CourseService {
       },
     });
 
-    console.log(items);
-
     return new CoursePaginatedDto(items, count, dto);
   }
 

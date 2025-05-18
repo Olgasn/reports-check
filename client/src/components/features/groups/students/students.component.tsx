@@ -1,6 +1,6 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
-import { Box, Button, Divider } from '@mui/material';
+import { Box, Button, Divider, Pagination } from '@mui/material';
 
 import { IStudent } from '@@types';
 import { useGroupStudents } from '@api';
@@ -13,16 +13,26 @@ import { StudentItem } from '../student-item';
 
 import { StudentsProps } from './students.types';
 
-export const Students: FC<StudentsProps> = ({ groupId }) => {
+export const Students: FC<StudentsProps> = ({ groupId, search }) => {
   const addStudentControls = useModalControls();
   const editStudentControls = useModalControls();
 
-  const { data: students } = useGroupStudents(groupId);
+  const [page, setPage] = useState(1);
+
+  const { data: students } = useGroupStudents({ groupId, pageSize: 10, page, search });
   const [student, setStudent] = useState<IStudent | null>(null);
 
   const handleAddModalOpen = () => {
     addStudentControls.handleOpen();
   };
+
+  const handlePageChange = (_: unknown, value: number) => {
+    setPage(value);
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   if (!students) {
     return null;
@@ -31,7 +41,7 @@ export const Students: FC<StudentsProps> = ({ groupId }) => {
   return (
     <Box display="flex" flexDirection="column">
       <Box display="flex" flexDirection="column" gap={1}>
-        {students.map((item) => (
+        {students.items.map((item) => (
           <>
             <StudentItem
               item={item}
@@ -44,6 +54,10 @@ export const Students: FC<StudentsProps> = ({ groupId }) => {
             <Divider flexItem sx={{ my: 1 }} />
           </>
         ))}
+      </Box>
+
+      <Box display="flex" justifyContent="center">
+        <Pagination count={students.total} page={page} onChange={handlePageChange} />
       </Box>
 
       <Button

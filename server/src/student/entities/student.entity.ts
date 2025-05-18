@@ -17,9 +17,6 @@ export class Student {
   @Column()
   middlename: string;
 
-  @Column()
-  num: string;
-
   @ManyToOne(() => Group, (group) => group.students, {
     onDelete: 'CASCADE',
   })

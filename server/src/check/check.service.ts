@@ -20,6 +20,16 @@ export class CheckService {
     this.checkRepo = this.dataSource.getRepository(Check);
   }
 
+  async getStudentChecks(studentId: number) {
+    return this.checkRepo.find({
+      where: {
+        student: {
+          id: studentId,
+        },
+      },
+    });
+  }
+
   async getByIds(ids: number[]) {
     return this.checkRepo.find({
       where: {

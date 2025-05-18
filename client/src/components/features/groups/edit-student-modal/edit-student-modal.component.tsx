@@ -34,7 +34,6 @@ export const EditStudentModal: FC<EditStudentModalProps> = ({ isOpen, onClose, g
       name: item.name,
       surname: item.surname,
       middlename: item.middlename,
-      num: item.num,
     },
   });
 
@@ -42,7 +41,6 @@ export const EditStudentModal: FC<EditStudentModalProps> = ({ isOpen, onClose, g
     setValue('name', item.name);
     setValue('surname', item.surname);
     setValue('middlename', item.middlename);
-    setValue('num', item.num);
   }, [item]);
 
   const onSubmit = (data: EditStudentFormData) => {
@@ -99,20 +97,6 @@ export const EditStudentModal: FC<EditStudentModalProps> = ({ isOpen, onClose, g
             <TextField
               {...field}
               label="Отчество"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message}
-              size="small"
-            />
-          )}
-        />
-
-        <Controller
-          name="num"
-          control={control}
-          render={({ field, fieldState }) => (
-            <TextField
-              {...field}
-              label="Номер зачетки"
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               size="small"

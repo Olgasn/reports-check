@@ -20,10 +20,6 @@ export class StudentDto {
   middlename: string;
 
   @ApiProperty()
-  @Expose()
-  num: string;
-
-  @ApiProperty()
   @Type(() => GroupDto)
   @Expose()
   group: GroupDto | null;

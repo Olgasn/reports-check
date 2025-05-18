@@ -16,6 +16,8 @@ import { CheckModule } from './check/check.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { WsModule } from './ws/ws.module';
 import { ProviderModule } from './provider/provider.module';
+import { NotificationService } from './notification/notification.service';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -43,7 +45,9 @@ import { ProviderModule } from './provider/provider.module';
     CheckModule,
     WsModule,
     ProviderModule,
+    NotificationModule,
   ],
   controllers: [],
+  providers: [NotificationService],
 })
 export class AppModule {}
