@@ -1,9 +1,11 @@
 import { FC } from 'react';
-import { Outlet } from 'react-router-dom';
-import { RootDiv, MainDiv, ContainerDiv, GlobalStyled } from './app.styled';
-import { ToastContainer } from 'react-toastify';
+
 import { PARAMS } from '@constants';
 import { Menu } from '@shared';
+import { Outlet } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+
+import { RootDiv, MainDiv, ContainerDiv, GlobalStyled } from './app.styled';
 
 export const App: FC = () => {
   return (

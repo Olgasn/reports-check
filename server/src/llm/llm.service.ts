@@ -1,114 +1,44 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import OpenAI from 'openai';
 import { Model } from 'src/model/entities/model.entity';
-import ollama from 'ollama';
-import { LlmInterfaces } from 'src/types/reports.types';
+import { LlmProviderFactory } from './providers/llm-provider.factory';
+import { wait } from 'src/common/helpers/wait.helper';
 
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
 
-  wait(ms: number) {
-    return new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
-  }
+  constructor(private readonly llmProviderFactory: LlmProviderFactory) {}
 
-  completion(content: string, model: Model) {
-    switch (model.llmInterface) {
-      case LlmInterfaces.OpenAi:
-        return this.handleOpenAi(content, model);
+  async query(content: string, model: Model) {
+    const provider = this.llmProviderFactory.create(model.llmInterface);
 
-      case LlmInterfaces.Ollama:
-        return this.handleOllama(content, model);
-    }
-  }
+    for (let i = 1; i <= 5; i++) {
+      await wait(5000);
 
-  private async handleOpenAi(content: string, model: Model) {
-    if (!model.provider || !model.key) {
-      throw new Error('No provider or key specified for the model');
-    }
+      try {
+        const result = await provider.completion(content, model);
 
-    const {
-      value: modelName,
-      provider: { url: baseURL },
-      key: { value: apiKey },
-    } = model;
+        if (!result) {
+          this.logger.warn(`Пустой ответ от модели [${model.name}]. Выполнение повторного запроса`);
 
-    const openai = new OpenAI({
-      baseURL,
-      apiKey,
-    });
-
-    const completion = await openai.chat.completions.create({
-      model: modelName,
-      messages: [
-        {
-          role: 'user',
-          content,
-        },
-      ],
-      top_p: model.top_p,
-      max_tokens: model.max_tokens,
-      temperature: model.temperature,
-    });
-
-    return completion.choices[0].message.content;
-  }
-
-  private async handleOllama(content: string, model: Model) {
-    const { value: modelName, top_p, temperature } = model;
-
-    const response = await ollama.chat({
-      model: modelName,
-      messages: [{ role: 'user', content }],
-      options: {
-        top_p,
-        temperature,
-      },
-    });
-
-    return response.message.content;
-  }
-
-  async query(content: string, model: Model, count = 0) {
-    await this.wait(10000);
-
-    try {
-      const result = await this.completion(content, model);
-
-      if (!result) {
-        if (count >= 5) {
-          this.logger.warn(`Превышено максимальное количество запросов к [${model.name}]`);
-
-          throw new BadRequestException('Не получилось выполнить проверку.');
+          await wait(10000);
         }
 
-        this.logger.warn(`Пустой ответ от модели [${model.name}]. Выполнение повторного запроса`);
+        return result;
+      } catch {
+        this.logger.warn(
+          `Ошибка при обращении к модели [${model.name}]. Выполнение повторного запроса`,
+        );
 
-        await this.wait(10000);
-
-        return this.query(content, model, count + 1);
+        await wait(20000);
       }
-
-      return result;
-    } catch (error: unknown) {
-      if (count >= 5) {
-        this.logger.warn(`Превышено максимальное количество запросов к [${model.name}]`);
-
-        throw new BadRequestException('Не получилось выполнить проверку.');
-      }
-
-      console.log(error);
-
-      this.logger.warn(
-        `Не удалось получить ответ от [${model.name}]. Выполнение повторного запроса`,
-      );
-
-      await this.wait(20000);
-
-      return this.query(content, model, count + 1);
     }
+
+    this.logger.warn(`Превышено максимальное количество запросов к [${model.name}]`);
+
+    throw new Error('Не получилось выполнить проверку.');
   }
 
   async extractData<T>(cls: ClassConstructor<T>, content: string): Promise<T> {

@@ -4,3 +4,4 @@ export * from './courses';
 export * from './settings';
 export * from './groups';
 export * from './lab-checks';
+export * from './home';

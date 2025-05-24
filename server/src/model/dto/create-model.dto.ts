@@ -1,6 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+  Min,
+  MinLength,
+} from 'class-validator';
 import { LlmInterfaces } from 'src/types/reports.types';
 
 export class CreateModelDto {
@@ -17,13 +26,15 @@ export class CreateModelDto {
   @ApiProperty()
   @Type(() => Number)
   @IsNumber()
-  @IsPositive()
-  top_p?: number;
+  @Min(0)
+  @Max(1)
+  top_p?: number = 0;
 
   @ApiProperty()
   @Type(() => Number)
   @IsNumber()
-  @IsPositive()
+  @Min(0)
+  @Max(2)
   temperature?: number;
 
   @ApiProperty()

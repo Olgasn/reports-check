@@ -3,7 +3,7 @@ import { FC } from 'react';
 import { Box, Button } from '@mui/material';
 
 import { useModalControls } from '@hooks';
-import { Modal, ResultItem, TaskModal } from '@shared';
+import { Avatar, CheckCopyBtn, Modal, ResultItem, TaskModal } from '@shared';
 
 import { StudentResultModalProps } from './student-result-modal.types';
 
@@ -14,15 +14,25 @@ export const StudentResultModal: FC<StudentResultModalProps> = ({
   studentStr,
 }) => {
   const taskControls = useModalControls();
-
-  console.log(data);
-
   const handleTaskOpen = () => {
     taskControls.handleOpen();
   };
 
   const modalBody = (
     <Box display="flex" flexDirection="column">
+      <Box
+        sx={{
+          mb: 2,
+        }}
+        display="flex"
+        flexDirection="row"
+        justifyContent="space-between"
+      >
+        <Avatar text={studentStr} />
+
+        <CheckCopyBtn {...data} studentStr={studentStr} />
+      </Box>
+
       <ResultItem {...data} />
 
       <Button variant="outlined" sx={{ mt: 2 }} onClick={handleTaskOpen}>
@@ -32,7 +42,7 @@ export const StudentResultModal: FC<StudentResultModalProps> = ({
       <TaskModal
         isOpen={taskControls.open}
         onClose={taskControls.handleClose}
-        title={`Результаты студента ${studentStr}`}
+        title={`Отчет студента ${studentStr}`}
         task={data.report}
       />
     </Box>

@@ -1,4 +1,4 @@
-import { CheckResults, Course, Courses, Groups, LabCheck, Settings } from '@features';
+import { CheckResults, Course, Courses, Groups, Home, LabCheck, Settings } from '@features';
 import { App } from '@shared';
 import { Navigate, RouteObject } from 'react-router-dom';
 
@@ -9,11 +9,15 @@ export const Routes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <Navigate to="/courses" replace />,
+        element: <Navigate to="/home" replace />,
       },
       {
         path: '/settings',
         element: <Settings />,
+      },
+      {
+        path: '/home',
+        element: <Home />,
       },
       {
         path: '/courses',

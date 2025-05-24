@@ -3,6 +3,7 @@ import { FC, useState } from 'react';
 import { Badge, IconButton, Tooltip } from '@mui/material';
 
 import { useModalControls } from '@hooks';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
@@ -47,6 +48,7 @@ export const Menu: FC = () => {
         {isOpen ? <RedoOutlinedIcon /> : <UndoOutlinedIcon />}
       </IconButton>
 
+      <MenuItem to="/home" icon={<HomeOutlinedIcon />} isOpen={isOpen} text="Главная" />
       <MenuItem to="/courses" icon={<SchoolOutlinedIcon />} isOpen={isOpen} text="Курсы" />
       <MenuItem to="/groups" icon={<PeopleAltOutlinedIcon />} isOpen={isOpen} text="Группы" />
       <MenuItem to="/settings" icon={<SettingsOutlinedIcon />} isOpen={isOpen} text="Настройки" />

@@ -10,6 +10,10 @@ import { CheckModule } from 'src/check/check.module';
 import { PromptModule } from 'src/prompt/prompt.module';
 import { GroupModule } from 'src/group/group.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { ReportCheck } from './providers/report-check.provider';
+import { OneModelStrategy } from './strategies/one-model.strategy';
+import { MultipleModelStrategy } from './strategies/multiple-model.strategy';
+import { ReportStrategy } from './providers/report-strategy.provider';
 
 @Module({
   imports: [
@@ -23,7 +27,7 @@ import { NotificationModule } from 'src/notification/notification.module';
     GroupModule,
     NotificationModule,
   ],
-  providers: [ReportsService],
+  providers: [ReportsService, ReportCheck, OneModelStrategy, MultipleModelStrategy, ReportStrategy],
   controllers: [ReportsController],
 })
 export class ReportsModule {}

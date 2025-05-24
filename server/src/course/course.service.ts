@@ -41,6 +41,14 @@ export class CourseService {
     return new CoursePaginatedDto(items, count, dto);
   }
 
+  findWithLabs() {
+    return this.courseRepo.find({
+      relations: {
+        labs: true,
+      },
+    });
+  }
+
   create(createCourseDto: CreateCourseDto) {
     const coursePlain = this.courseRepo.create(createCourseDto);
 

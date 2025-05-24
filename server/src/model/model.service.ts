@@ -1,11 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, In, Repository } from 'typeorm';
 import { Model } from './entities/model.entity';
-import { KeyService } from 'src/key/key.service';
 import { CreateModelDto } from './dto/create-model.dto';
 import { UpdateModelDto } from './dto/update-model.dto';
-import { ProviderService } from 'src/provider/provider.service';
-import { LlmInterfaces } from 'src/types/reports.types';
+import { ModelFabric } from './providers/model.fabric';
 
 @Injectable()
 export class ModelService {
@@ -13,8 +11,7 @@ export class ModelService {
 
   constructor(
     private readonly dataSource: DataSource,
-    private readonly keyService: KeyService,
-    private readonly providerService: ProviderService,
+    private readonly modelFabric: ModelFabric,
   ) {
     this.modelRepo = this.dataSource.getRepository(Model);
   }
@@ -53,96 +50,17 @@ export class ModelService {
     return this.modelRepo.find({ relations: { key: true, provider: true } });
   }
 
-  createOllama(dto: CreateModelDto) {
-    const { keyId, providerId } = dto;
-
-    if (keyId || providerId) {
-      throw new BadRequestException(`You can't set api key and provider for ollama interface`);
-    }
-
-    const modelPlain = this.modelRepo.create(dto);
-
-    return this.modelRepo.save(modelPlain);
-  }
-
-  async createOpenAi(dto: CreateModelDto) {
-    const { keyId, providerId } = dto;
-
-    if (!keyId || !providerId) {
-      throw new BadRequestException(
-        'You should define both api key and provider for OpenAi interface',
-      );
-    }
-
-    const modelPlain = this.modelRepo.create(dto);
-
-    const key = await this.keyService.findOne(keyId);
-    const provider = await this.providerService.findOne(providerId);
-
-    modelPlain.key = key;
-    modelPlain.provider = provider;
-
-    return this.modelRepo.save(modelPlain);
-  }
-
   create(dto: CreateModelDto) {
-    switch (dto.llmInterface) {
-      case LlmInterfaces.Ollama: {
-        return this.createOllama(dto);
-      }
+    const handler = this.modelFabric.create(dto.llmInterface);
 
-      case LlmInterfaces.OpenAi: {
-        return this.createOpenAi(dto);
-      }
-    }
-  }
-
-  async updateOllama(id: number, dto: UpdateModelDto) {
-    const { keyId, providerId } = dto;
-
-    if (keyId || providerId) {
-      throw new BadRequestException(`You can't set api key and provider for ollama interface`);
-    }
-
-    const model = await this.findOne(id);
-
-    Object.assign(model, dto);
-
-    return this.modelRepo.save(model);
-  }
-
-  async updateOpenAi(id: number, dto: UpdateModelDto) {
-    const { keyId, providerId } = dto;
-
-    const model = await this.findOne(id);
-
-    Object.assign(model, dto);
-
-    if (keyId) {
-      const key = await this.keyService.findOne(keyId);
-
-      model.key = key;
-    }
-
-    if (providerId) {
-      const provider = await this.providerService.findOne(providerId);
-
-      model.provider = provider;
-    }
-
-    return this.modelRepo.save(model);
+    return handler.create(dto);
   }
 
   async update(id: number, dto: UpdateModelDto) {
-    switch (dto.llmInterface) {
-      case LlmInterfaces.Ollama: {
-        return this.updateOllama(id, dto);
-      }
+    const model = await this.findOne(id);
+    const handler = this.modelFabric.create(dto.llmInterface);
 
-      case LlmInterfaces.OpenAi: {
-        return this.updateOpenAi(id, dto);
-      }
-    }
+    return handler.update(model, dto);
   }
 
   async delete(id: number) {

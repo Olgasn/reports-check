@@ -40,6 +40,11 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
 
   const { control, handleSubmit, reset } = useForm({
     resolver: yupResolver(AddModalSchema),
+    defaultValues: {
+      top_p: 0,
+      temperature: 1.0,
+      max_tokens: 8192,
+    },
   });
 
   const modalClose = () => {

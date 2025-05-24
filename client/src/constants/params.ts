@@ -6,7 +6,7 @@ export const PARAMS = {
   HEADING_FONT_SIZE: '18px',
   LARGE_FONT_SIZE: '20px',
 
-  QUERY_STORE_TIME: 1 * 60 * 1000,
+  QUERY_STORE_TIME: 3 * 60 * 1000,
   TOAST_SHOW_TIME: 2000,
   API_URL: import.meta.env.VITE_API_URL,
   WS_URL: import.meta.env.VITE_WS_URL,
@@ -14,6 +14,7 @@ export const PARAMS = {
 
 export const QUERY_KEYS = {
   COURSES: 'courses',
+  COURSES_ALL: 'courses/all',
   GROUPS: 'groups',
   KEYS: 'keys',
   LABS: 'labs',

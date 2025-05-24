@@ -1,5 +1,7 @@
-import { Box, Divider } from '@mui/material';
 import { FC } from 'react';
+
+import { Box, Divider } from '@mui/material';
+
 import { TextDiv, BoldSpan, RegularSpan } from './result-item.styled';
 import { ResultItemProps } from './result-item.types';
 
@@ -59,7 +61,7 @@ export const ResultItem: FC<ResultItemProps> = ({
 
       <TextDiv>
         <Box sx={{ mb: 2 }}>
-          <BoldSpan>Отрицательные моменты</BoldSpan>
+          <BoldSpan>Недостатки и моменты, требующие доработки</BoldSpan>
         </Box>
 
         {disadvantages.split('\n').map((adv, ind) => (

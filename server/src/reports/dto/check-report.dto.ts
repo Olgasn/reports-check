@@ -11,14 +11,22 @@ import {
 import { StudentParsedDto } from './students-parsed.dto';
 
 export class CheckReportDto {
+  @ApiProperty({
+    type: [Number],
+  })
+  @Type(() => Number)
+  @IsNumber({}, { each: true })
+  @IsPositive({ each: true })
+  modelsId: number[];
+
+  @ApiProperty({ type: [StudentParsedDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StudentParsedDto)
+  studentsId: StudentParsedDto[] = [];
+
   @ApiProperty({ type: 'string', format: 'binary', required: true })
   reportsZip: Express.Multer.File;
-
-  @ApiProperty()
-  @Type(() => Number)
-  @IsNumber()
-  @IsPositive()
-  modelId: number;
 
   @ApiProperty()
   @Type(() => Number)
@@ -31,12 +39,6 @@ export class CheckReportDto {
   @IsNumber()
   @IsPositive()
   groupId: number;
-
-  @ApiProperty({ type: [StudentParsedDto] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => StudentParsedDto)
-  studentsId: StudentParsedDto[] = [];
 
   @ApiProperty()
   @Type(() => Boolean)

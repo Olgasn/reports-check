@@ -19,3 +19,4 @@ export * from './student-check';
 export * from './student-result-modal';
 export * from './check-modal';
 export * from './top-nav';
+export * from './check-copy-btn';

@@ -14,11 +14,19 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { LabDto } from 'src/lab/dto/lab.dto';
 import { CoursePaginatedDto } from './dto/course-paginated.dto';
 import { SearchCourseDto } from './dto/search-course.dto';
+import { CourseAllDto } from './dto/course-all.dto';
 
 @ApiTags('Course')
 @Controller('courses')
 export class CourseController {
   constructor(private readonly courseService: CourseService) {}
+
+  @Get('/all')
+  @Serialize(CourseAllDto)
+  @ApiOkResponse({ type: [CourseAllDto] })
+  findAll() {
+    return this.courseService.findWithLabs();
+  }
 
   @Get(':id/labs')
   @Serialize(LabDto)

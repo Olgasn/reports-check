@@ -4,7 +4,7 @@ import { Box, Button, Divider } from '@mui/material';
 
 import { useChecks } from '@api';
 import { useModalControls } from '@hooks';
-import { Avatar, Modal, ResultItem, TaskModal } from '@shared';
+import { Avatar, CheckCopyBtn, Modal, ResultItem, TaskModal } from '@shared';
 
 import { CheckModalProps } from './check-modal.types';
 
@@ -47,8 +47,13 @@ export const CheckModal: FC<CheckModalProps> = ({ isOpen, onClose, ids }) => {
                 mt: index ? 2 : 0,
                 mb: 2,
               }}
+              display="flex"
+              flexDirection="row"
+              justifyContent="space-between"
             >
               <Avatar text={stStr} />
+
+              <CheckCopyBtn {...check} studentStr={stStr} />
             </Box>
 
             <ResultItem {...check} />
