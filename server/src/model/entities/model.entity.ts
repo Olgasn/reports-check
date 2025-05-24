@@ -21,6 +21,15 @@ export class Model {
   @Column('float', { default: 1.0 })
   temperature: number;
 
+  @Column({ default: 5 })
+  maxRetries: number;
+
+  @Column({ default: 2500 })
+  queryDelay: number;
+
+  @Column({ default: 10000 })
+  errorDelay: number;
+
   @Column({ default: 10000 })
   max_tokens: number;
 

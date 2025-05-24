@@ -44,6 +44,9 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
       top_p: 0,
       temperature: 1.0,
       max_tokens: 8192,
+      errorDelay: 10000,
+      queryDelay: 2500,
+      maxRetries: 5,
     },
   });
 
@@ -148,6 +151,51 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
               <TextField
                 {...field}
                 label="Значение"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+
+          <Controller
+            name="maxRetries"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Кол-во повторных попыток"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+
+          <Controller
+            name="queryDelay"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Задержка между запросами (мс)"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+
+          <Controller
+            name="errorDelay"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Задержка при ошибке (мс)"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 sx={{ width: '300px' }}

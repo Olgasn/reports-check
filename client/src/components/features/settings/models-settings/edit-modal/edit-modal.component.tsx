@@ -62,6 +62,9 @@ export const EditModal: FC<EditModalProps> = ({ isShow, handleClose, item }) => 
       top_p: item.top_p,
       temperature: item.temperature,
       max_tokens: item.max_tokens,
+      errorDelay: item.errorDelay,
+      queryDelay: item.queryDelay,
+      maxRetries: item.maxRetries,
     },
   });
 
@@ -171,6 +174,51 @@ export const EditModal: FC<EditModalProps> = ({ isShow, handleClose, item }) => 
               <TextField
                 {...field}
                 label="Значение"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+
+          <Controller
+            name="maxRetries"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Кол-во повторных попыток"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+
+          <Controller
+            name="queryDelay"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Задержка между запросами (мс)"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+                sx={{ width: '300px' }}
+                size="small"
+              />
+            )}
+          />
+
+          <Controller
+            name="errorDelay"
+            control={control}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Задержка при ошибке (мс)"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 sx={{ width: '300px' }}

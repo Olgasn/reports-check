@@ -24,7 +24,7 @@ export const notificationSlice = createSlice({
     },
 
     addNotification(state, action: PayloadAction<INotification>) {
-      state.notifications.push(action.payload);
+      state.notifications = [action.payload, ...state.notifications];
     },
 
     setNotifications(state, action: PayloadAction<INotification[]>) {

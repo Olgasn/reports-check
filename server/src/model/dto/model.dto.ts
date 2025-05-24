@@ -42,4 +42,16 @@ export class ModelDto {
   @ApiProperty()
   @Expose()
   max_tokens: number;
+
+  @ApiProperty()
+  @Expose()
+  maxRetries: number;
+
+  @ApiProperty()
+  @Expose()
+  queryDelay: number;
+
+  @ApiProperty()
+  @Expose()
+  errorDelay: number;
 }

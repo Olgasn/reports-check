@@ -27,7 +27,7 @@ export class NotificationService {
     this.wsGateway.sendToUser(EVENTS.CHECK_STARTED);
   }
 
-  checkFailed() {
-    this.wsGateway.sendToUser(EVENTS.CHECK_FAILED);
+  checkFailed(labId: number, reason: string = 'Неизвестная ошибка') {
+    this.wsGateway.sendToUser(EVENTS.CHECK_FAILED, { labId, reason });
   }
 }

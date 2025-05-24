@@ -14,3 +14,8 @@ export interface INotification {
 }
 
 export type CheckStatusType = 'checked' | 'failed' | 'pending' | 'started';
+
+export interface IReportFailed {
+  labId: number;
+  reason: string;
+}

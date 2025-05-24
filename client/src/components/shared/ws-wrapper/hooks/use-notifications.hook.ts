@@ -46,9 +46,9 @@ export const useNotifications = (socket?: Socket) => {
     }
 
     try {
-      const parsed = JSON.parse(savedNotifications);
+      const parsed: INotification[] = JSON.parse(savedNotifications);
 
-      dispatch(setNotifications(parsed));
+      dispatch(setNotifications(parsed.sort((a, b) => b.time - a.time)));
     } catch (e) {
       console.error('Error parsing notifications:', e);
     }

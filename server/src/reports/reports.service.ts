@@ -42,8 +42,8 @@ export class ReportsService {
         const ids = results.map((check) => check.id);
 
         this.notificationService.reportsChecked(ids, dto.labId);
-      } catch {
-        this.notificationService.checkFailed();
+      } catch (error: any) {
+        this.notificationService.checkFailed(dto.labId, error?.message);
       }
     };
 

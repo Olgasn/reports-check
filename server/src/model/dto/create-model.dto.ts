@@ -57,6 +57,27 @@ export class CreateModelDto {
   @IsPositive()
   providerId?: number;
 
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  maxRetries?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  questionDelay?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  errorDelay?: number;
+
   @ApiProperty({
     enum: LlmInterfaces,
     example: LlmInterfaces.OpenAi,

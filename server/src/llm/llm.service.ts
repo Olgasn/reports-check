@@ -12,10 +12,11 @@ export class LlmService {
   constructor(private readonly llmProviderFactory: LlmProviderFactory) {}
 
   async query(content: string, model: Model) {
+    const { maxRetries, queryDelay, errorDelay } = model;
     const provider = this.llmProviderFactory.create(model.llmInterface);
 
-    for (let i = 1; i <= 5; i++) {
-      await wait(5000);
+    for (let i = 1; i <= maxRetries; i++) {
+      await wait(queryDelay);
 
       try {
         const result = await provider.completion(content, model);
@@ -23,16 +24,18 @@ export class LlmService {
         if (!result) {
           this.logger.warn(`Пустой ответ от модели [${model.name}]. Выполнение повторного запроса`);
 
-          await wait(10000);
+          await wait(errorDelay);
         }
 
         return result;
-      } catch {
+      } catch (error: unknown) {
+        provider.processError(error);
+
         this.logger.warn(
           `Ошибка при обращении к модели [${model.name}]. Выполнение повторного запроса`,
         );
 
-        await wait(20000);
+        await wait(errorDelay);
       }
     }
 

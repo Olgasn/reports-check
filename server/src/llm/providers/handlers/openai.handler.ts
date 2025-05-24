@@ -5,6 +5,22 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class OpenAiHandler implements ILlmProviderHandler {
+  processError(error: unknown) {
+    const isInstance = error instanceof OpenAI.APIError;
+
+    if (!isInstance) {
+      return;
+    }
+
+    console.log(error);
+
+    switch (error.status) {
+      case 400: {
+        throw new Error(error.message);
+      }
+    }
+  }
+
   async completion(content: string, model: Model) {
     if (!model.provider || !model.key) {
       throw new Error('No provider or key specified for the model');

@@ -140,6 +140,10 @@ export class ReportCheck {
       }
     }
 
+    if (!results.length && resultPromises[0].status === 'rejected') {
+      throw new Error(resultPromises[0].reason);
+    }
+
     for (const result of results) {
       if (!reportsData.some((rp) => isSimilarStudents(rp, result.student))) {
         const studentStr = `${result.student.name} ${result.student.surname} ${result.student.middlename}`;

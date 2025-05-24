@@ -44,5 +44,8 @@ export interface ICreateModel {
   providerId?: number;
   temperature: number;
   max_tokens: number;
+  maxRetries: number;
+  queryDelay: number;
+  errorDelay: number;
   llmInterface: LlmInterfaces;
 }

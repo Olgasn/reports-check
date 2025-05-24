@@ -1,8 +1,15 @@
 import { useEffect } from 'react';
 
-import { IReport } from '@@types';
-import { addCheckNotification, AppDispatch, changeCheckNotification } from '@store';
+import { IReport, IReportFailed } from '@@types';
+import {
+  addCheckNotification,
+  AppDispatch,
+  changeCheckNotification,
+  cleanCheckNotifications,
+  setCheckStatus,
+} from '@store';
 import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 import { Socket } from 'socket.io-client';
 
 import { EVENTS } from '../ws-wrapper.constants';
@@ -30,5 +37,16 @@ export const useCheckNotifications = (socket?: Socket) => {
 
   useEffect(() => {
     socket?.on(EVENTS.REPORT_ONE_FAILED, handleCheckStatusChange);
+  }, [socket]);
+
+  useEffect(() => {
+    socket?.on(EVENTS.CHECK_FAILED, (payload: unknown) => {
+      const data: IReportFailed = JSON.parse(String(payload));
+
+      dispatch(cleanCheckNotifications(data));
+      dispatch(setCheckStatus({ labId: data.labId, status: 'failed' }));
+
+      toast.error(data.reason, { autoClose: false });
+    });
   }, [socket]);
 };
