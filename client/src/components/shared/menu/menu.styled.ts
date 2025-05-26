@@ -1,5 +1,6 @@
-import { COLORS, PARAMS } from '@constants';
 import { IconButton } from '@mui/material';
+
+import { COLORS, PARAMS } from '@constants';
 import { darken } from 'polished';
 import styled, { css } from 'styled-components';
 
@@ -12,10 +13,12 @@ export const MenuStyled = styled.aside<MenuProps>`
     background-color: ${COLORS.MENU_BG};
     display: flex;
     flex-direction: column;
-    width: ${isOpen ? '330px' : '60px'};
+    width: ${isOpen ? '330px' : '70px'};
     align-items: center;
     transition: all 0.2s ease;
-    max-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    position: relative;
   `}
 `;
 

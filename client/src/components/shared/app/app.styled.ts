@@ -45,13 +45,14 @@ export const GlobalStyled = createGlobalStyle`
 export const RootDiv = styled.div`
   display: flex;
   flex-direction: column;
-  max-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 `;
 
 export const MainDiv = styled.main`
   display: flex;
   flex-direction: row;
-  min-height: 100vh;
+  overflow: hidden;
 `;
 
 export const ContainerDiv = styled.div`

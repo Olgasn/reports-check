@@ -9,7 +9,7 @@ export const Routes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <Navigate to="/home" replace />,
+        element: <Navigate to="/courses" replace />,
       },
       {
         path: '/settings',

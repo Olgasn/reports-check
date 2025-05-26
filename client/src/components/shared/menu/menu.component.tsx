@@ -1,7 +1,8 @@
 import { FC, useState } from 'react';
 
-import { Badge, IconButton, Tooltip } from '@mui/material';
+import { Badge, Box, Divider, IconButton, Tooltip } from '@mui/material';
 
+import { useAllCourses } from '@api';
 import { useModalControls } from '@hooks';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
@@ -15,13 +16,16 @@ import { RootState } from '@store';
 import { darken } from 'polished';
 import { useSelector } from 'react-redux';
 
+import { CoursesTree } from './courses-tree';
 import { MenuStyled, NotificationsBtn } from './menu.styled';
 
 export const Menu: FC = () => {
   const notificationControls = useModalControls();
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const { notifications } = useSelector((state: RootState) => state.notifications);
+
+  const { data: courses } = useAllCourses();
 
   const toggleOpen = () => {
     setIsOpen(!isOpen);
@@ -34,6 +38,10 @@ export const Menu: FC = () => {
   const handleNotificationsClose = () => {
     notificationControls.handleClose();
   };
+
+  if (!courses) {
+    return null;
+  }
 
   return (
     <MenuStyled isOpen={isOpen}>
@@ -49,8 +57,11 @@ export const Menu: FC = () => {
       </IconButton>
 
       <MenuItem to="/home" icon={<HomeOutlinedIcon />} isOpen={isOpen} text="Главная" />
+
       <MenuItem to="/courses" icon={<SchoolOutlinedIcon />} isOpen={isOpen} text="Курсы" />
+
       <MenuItem to="/groups" icon={<PeopleAltOutlinedIcon />} isOpen={isOpen} text="Группы" />
+
       <MenuItem to="/settings" icon={<SettingsOutlinedIcon />} isOpen={isOpen} text="Настройки" />
 
       <NotificationsBtn onClick={handleNotificationsOpen}>
@@ -60,6 +71,16 @@ export const Menu: FC = () => {
           </Badge>
         </Tooltip>
       </NotificationsBtn>
+
+      {isOpen && <Divider flexItem sx={{ my: 2, bgcolor: 'white' }} />}
+
+      <Box
+        display="flex"
+        flexDirection="column"
+        sx={{ width: '100%', display: isOpen ? 'block' : 'none', mb: 2 }}
+      >
+        <CoursesTree courses={courses} />
+      </Box>
 
       <NotificationsModal
         isOpen={notificationControls.open}
