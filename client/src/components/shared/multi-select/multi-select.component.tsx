@@ -11,7 +11,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 
-import { FieldValues, Controller, useController } from 'react-hook-form';
+import { FieldValues, Controller } from 'react-hook-form';
 
 import { MultiSelectProps } from './multi-select.types';
 
@@ -26,8 +26,6 @@ export const MultiSelect = <T extends FieldValues, K>({
   disabled,
 }: MultiSelectProps<T, K>) => {
   const labelId = useId();
-
-  const { field } = useController({ name, control });
 
   return (
     <Controller

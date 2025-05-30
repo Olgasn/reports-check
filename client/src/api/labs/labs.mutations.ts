@@ -1,7 +1,8 @@
+import { useMutation } from '@tanstack/react-query';
+
 import { ICreateLab, IEditLab, ILab } from '@@types';
 import { api, queryClient } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useMutation } from '@tanstack/react-query';
 import { prepareFormData } from '@utils';
 
 export const useCreateLab = () =>
@@ -17,7 +18,7 @@ export const useCreateLab = () =>
         })
         .then((res) => res.data);
     },
-    onSuccess: (data, payload) => {
+    onSuccess: (_, payload) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COURSE_LABS, payload.courseId] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LABS] });
     },

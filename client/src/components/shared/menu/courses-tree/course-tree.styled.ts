@@ -1,4 +1,4 @@
-import { COLORS, PARAMS } from '@constants';
+import { PARAMS } from '@constants';
 import { darken } from 'polished';
 import { NavLink } from 'react-router';
 import styled from 'styled-components';
