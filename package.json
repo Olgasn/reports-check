@@ -1,0 +1,15 @@
+{
+  "name": "reports-check",
+  "version": "1.0.0",
+  "description": "**ПРОГРАММНЫЙ КОМПЛЕКС ДЛЯ РЕЦЕНЗИРОВАНИЯ ОТЧЕТОВ ПО ЛАБОРАТОРНЫМ РАБОТАМ СТУДЕНТОВ**",
+  "main": "start.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wait-port": "^1.1.0"
+  }
+}
