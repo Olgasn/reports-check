@@ -1,10 +1,11 @@
 import { FC, useState } from 'react';
 
-import { Badge, Box, Divider, IconButton, Tooltip } from '@mui/material';
+import { Badge, IconButton, Tooltip } from '@mui/material';
 
 import { useAllCourses } from '@api';
 import { useModalControls } from '@hooks';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
+import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
 import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
@@ -16,7 +17,6 @@ import { RootState } from '@store';
 import { darken } from 'polished';
 import { useSelector } from 'react-redux';
 
-import { CoursesTree } from './courses-tree';
 import { MenuStyled, NotificationsBtn } from './menu.styled';
 
 export const Menu: FC = () => {
@@ -56,9 +56,11 @@ export const Menu: FC = () => {
         {isOpen ? <RedoOutlinedIcon /> : <UndoOutlinedIcon />}
       </IconButton>
 
-      <MenuItem to="/home" icon={<HomeOutlinedIcon />} isOpen={isOpen} text="Главная" />
-
       <MenuItem to="/courses" icon={<SchoolOutlinedIcon />} isOpen={isOpen} text="Курсы" />
+
+      <MenuItem to="/results" icon={<AssessmentOutlinedIcon />} isOpen={isOpen} text="Результаты" />
+
+      <MenuItem to="/checks" icon={<CheckBoxOutlinedIcon />} isOpen={isOpen} text="Проверка" />
 
       <MenuItem to="/groups" icon={<PeopleAltOutlinedIcon />} isOpen={isOpen} text="Группы" />
 
@@ -71,16 +73,6 @@ export const Menu: FC = () => {
           </Badge>
         </Tooltip>
       </NotificationsBtn>
-
-      {isOpen && <Divider flexItem sx={{ my: 2, bgcolor: 'white' }} />}
-
-      <Box
-        display="flex"
-        flexDirection="column"
-        sx={{ width: '100%', display: isOpen ? 'block' : 'none', mb: 2 }}
-      >
-        <CoursesTree courses={courses} />
-      </Box>
 
       <NotificationsModal
         isOpen={notificationControls.open}

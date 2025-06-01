@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { ICourse, ICourseAll, ICoursePagination, IPaginated } from '@@types';
+import { ICourse, ICoursePagination, ICourseSimple, IPaginated } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
 
@@ -17,7 +17,7 @@ export const useCourses = (data: ICoursePagination) =>
   });
 
 export const useAllCourses = () =>
-  useQuery<ICourseAll[]>({
+  useQuery<ICourseSimple[]>({
     queryKey: [QUERY_KEYS.COURSES_ALL],
     queryFn: () => api.get('/courses/all').then((res) => res.data),
   });

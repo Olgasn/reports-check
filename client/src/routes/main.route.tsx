@@ -1,4 +1,13 @@
-import { CheckResults, Course, Courses, Groups, Home, LabCheck, Settings } from '@features';
+import {
+  CheckResults,
+  Course,
+  CourseChecks,
+  CourseResults,
+  Courses,
+  Groups,
+  LabCheck,
+  Settings,
+} from '@features';
 import { App } from '@shared';
 import { Navigate, RouteObject } from 'react-router-dom';
 
@@ -12,12 +21,16 @@ export const Routes: RouteObject[] = [
         element: <Navigate to="/courses" replace />,
       },
       {
-        path: '/settings',
-        element: <Settings />,
+        path: '/results',
+        element: <CourseResults />,
       },
       {
-        path: '/home',
-        element: <Home />,
+        path: '/checks',
+        element: <CourseChecks />,
+      },
+      {
+        path: '/settings',
+        element: <Settings />,
       },
       {
         path: '/courses',

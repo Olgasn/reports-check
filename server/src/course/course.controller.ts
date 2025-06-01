@@ -14,7 +14,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { LabDto } from 'src/lab/dto/lab.dto';
 import { CoursePaginatedDto } from './dto/course-paginated.dto';
 import { SearchCourseDto } from './dto/search-course.dto';
-import { CourseAllDto } from './dto/course-all.dto';
+import { CourseSimpleDto } from './dto/course-simple.dto';
 
 @ApiTags('Course')
 @Controller('courses')
@@ -22,10 +22,10 @@ export class CourseController {
   constructor(private readonly courseService: CourseService) {}
 
   @Get('/all')
-  @Serialize(CourseAllDto)
-  @ApiOkResponse({ type: [CourseAllDto] })
+  @Serialize(CourseSimpleDto)
+  @ApiOkResponse({ type: [CourseSimpleDto] })
   findAll() {
-    return this.courseService.findWithLabs();
+    return this.courseService.findAllCourses();
   }
 
   @Get(':id/labs')

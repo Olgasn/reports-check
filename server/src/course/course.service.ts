@@ -41,6 +41,15 @@ export class CourseService {
     return new CoursePaginatedDto(items, count, dto);
   }
 
+  async findAllCourses() {
+    return this.courseRepo.find({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+  }
+
   findWithLabs() {
     return this.courseRepo.find({
       relations: {

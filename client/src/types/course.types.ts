@@ -31,3 +31,8 @@ export interface ICourseAll {
   name: string;
   labs: ILab[];
 }
+
+export interface ICourseSimple {
+  id: number;
+  name: string;
+}
