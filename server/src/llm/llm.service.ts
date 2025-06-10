@@ -25,6 +25,8 @@ export class LlmService {
           this.logger.warn(`Пустой ответ от модели [${model.name}]. Выполнение повторного запроса`);
 
           await wait(errorDelay);
+
+          continue;
         }
 
         return result;
@@ -34,6 +36,8 @@ export class LlmService {
         this.logger.warn(
           `Ошибка при обращении к модели [${model.name}]. Выполнение повторного запроса`,
         );
+
+        console.log(error);
 
         await wait(errorDelay);
       }
