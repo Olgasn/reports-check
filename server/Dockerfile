@@ -20,7 +20,6 @@ RUN npm install --only=production
 
 COPY --from=builder /app/dist ./dist
 
-COPY --from=builder /app/db ./db
 COPY --from=builder /app/prompts ./prompts
 
 EXPOSE 3000 
