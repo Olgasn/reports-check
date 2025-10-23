@@ -43,4 +43,4 @@ client: http://localhost:8080.
 server: http://localhost:3000/docs.
 
 **Инструкция пользователя**
-см. папку docx
+см. папку docs
