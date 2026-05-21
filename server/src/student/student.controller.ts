@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { StudentService } from './student.service';
 import {
+  ApiConsumes,
   ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
@@ -11,6 +12,8 @@ import { Serialize } from 'src/common/decorators/serialize.decorator';
 import { StudentDto } from './dto/student.dto';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ImportStudentsCsvDto, ImportStudentsCsvResultDto } from './dto/import-students-csv.dto';
 
 @ApiTags('Student')
 @Controller('students')
@@ -40,6 +43,20 @@ export class StudentController {
   @ApiBadRequestResponse({ description: 'Incorrect data' })
   create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentService.create(createStudentDto);
+  }
+
+  @Post('/import-csv')
+  @UseInterceptors(FileInterceptor('csvFile'))
+  @ApiConsumes('multipart/form-data')
+  @ApiCreatedResponse({ type: ImportStudentsCsvResultDto })
+  @ApiBadRequestResponse({ description: 'Incorrect data' })
+  importCsv(
+    @Body() importStudentsCsvDto: ImportStudentsCsvDto,
+    @UploadedFile() csvFile: Express.Multer.File,
+  ) {
+    importStudentsCsvDto.csvFile = csvFile;
+
+    return this.studentService.importFromCsv(importStudentsCsvDto.csvFile);
   }
 
   @Patch(':id')

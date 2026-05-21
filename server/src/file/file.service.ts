@@ -70,6 +70,28 @@ export class FileService {
     }
   }
 
+  async parseSingleReport(
+    reportFile: Express.Multer.File,
+    student?: { name: string; surname: string; middlename: string },
+  ) {
+    const ext = path.extname(reportFile.originalname).toLowerCase();
+
+    if (!['.pdf', '.docx', '.txt'].includes(ext)) {
+      throw new Error('Одиночная проверка поддерживает только файлы .pdf, .docx и .txt');
+    }
+
+    const content = await this.parseFile(reportFile.originalname, reportFile.buffer);
+    const parsedStudent = student ?? this.parseStudentFromFilename(reportFile.originalname);
+
+    const report: ReportCheck = {
+      ...parsedStudent,
+      num: path.parse(reportFile.originalname).name,
+      content,
+    };
+
+    return [report];
+  }
+
   async parseArchive(zipBuffer: Buffer) {
     const dir = path.join(process.cwd(), 'temp');
 
@@ -140,6 +162,25 @@ export class FileService {
       middlename,
       num,
     };
+  }
+
+  parseStudentFromFilename(filename: string) {
+    const baseName = path.parse(filename).name;
+    const [info] = baseName.split('_');
+
+    if (!info) {
+      throw new Error('Не удалось извлечь ФИО студента из имени файла');
+    }
+
+    const [surname, name, middlename] = info.trim().split(/\s+/);
+
+    if (!surname || !name || !middlename) {
+      throw new Error(
+        'Для одиночной проверки задайте имя файла в формате "Фамилия Имя Отчество_..."',
+      );
+    }
+
+    return { name, surname, middlename };
   }
 
   async extractFolderContent(folderPath: string): Promise<string> {

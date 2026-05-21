@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UploadedFile, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiConsumes,
@@ -7,7 +7,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ReportsService } from './reports.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { Serialize } from 'src/common/decorators/serialize.decorator';
 import { CheckDto } from 'src/check/dto/check.dto';
 import { CheckGrDto } from 'src/check/dto/check-gr.dto';
@@ -33,11 +33,24 @@ export class ReportsController {
 
   @Post()
   @Serialize(CheckDto)
-  @UseInterceptors(FileInterceptor('reportsZip'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'reportsZip', maxCount: 1 },
+      { name: 'reportFile', maxCount: 1 },
+    ]),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: [CheckDto] })
-  uploadArchive(@Body() checkReportDto: CheckReportDto, @UploadedFile() file: Express.Multer.File) {
-    checkReportDto.reportsZip = file;
+  uploadArchive(
+    @Body() checkReportDto: CheckReportDto,
+    @UploadedFiles()
+    files?: {
+      reportsZip?: Express.Multer.File[];
+      reportFile?: Express.Multer.File[];
+    },
+  ) {
+    checkReportDto.reportsZip = files?.reportsZip?.[0];
+    checkReportDto.reportFile = files?.reportFile?.[0];
 
     this.reportsService.handleCheckReports(checkReportDto);
 

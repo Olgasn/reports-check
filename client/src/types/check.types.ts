@@ -32,7 +32,8 @@ export interface ICheckResult {
 }
 
 export interface ICheckData {
-  reportsZip: File;
+  reportsZip?: File;
+  reportFile?: File;
   labId: number;
   modelsId: number[];
   studentsId: IStudentParsed[];

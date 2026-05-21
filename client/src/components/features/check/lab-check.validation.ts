@@ -5,6 +5,7 @@ export const LabCheckSchema = yup.object({
   modelId: yup.array().of(yup.number().required()).required(),
   studentIds: yup.array().of(yup.string().required()).required(),
   groupId: yup.number().required('Необходимо выбрать элемент'),
+  singleStudentId: yup.number().optional(),
 });
 
 export type LabCheckFormData = InferType<typeof LabCheckSchema>;

@@ -34,3 +34,15 @@ export interface IStudentsParsed {
 export interface IStudentParse {
   reportsZip: File;
 }
+
+export interface IImportStudentsCsvData {
+  csvFile: File;
+}
+
+export interface IImportStudentsCsvResult {
+  totalRows: number;
+  createdStudents: number;
+  duplicateStudents: number;
+  createdGroups: number;
+  skippedRows: number;
+}

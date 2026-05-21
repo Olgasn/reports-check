@@ -35,10 +35,15 @@ export class OpenAiHandler implements ILlmProviderHandler {
     const openai = new OpenAI({
       baseURL,
       apiKey,
+      defaultHeaders: {
+        'HTTP-Referer': 'https://github.com/Olgasn/reports-check',
+        'X-Title': 'Reports_Check',
+      },
     });
 
     const completion = await openai.chat.completions.create({
       model: modelName,
+	  reasoning_effort: "high",
       messages: [
         {
           role: 'user',

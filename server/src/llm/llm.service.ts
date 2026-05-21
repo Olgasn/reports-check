@@ -56,15 +56,8 @@ export class LlmService {
       throw new Error('JSON block not found in the content');
     }
 
-    const jsonString = jsonMatch[1].trim();
-
-    let jsonData: unknown;
-
-    try {
-      jsonData = JSON.parse(jsonString);
-    } catch (error) {
-      throw new Error(`Failed to parse JSON: ${error.message}`);
-    }
+    const jsonString = this.normalizeJsonBlock(jsonMatch[1].trim());
+    const jsonData = this.parseModelJson(jsonString);
 
     const instance = plainToInstance(cls, jsonData);
     const errors = await validate(instance as unknown as object);
@@ -76,5 +69,114 @@ export class LlmService {
     }
 
     return instance;
+  }
+
+  normalizeJsonBlock(json: string) {
+    return json
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+  }
+
+  parseModelJson(json: string) {
+    const sanitized = this.escapeControlCharsInStrings(json);
+    const sanitizedWithoutTrailingCommas = this.removeTrailingCommas(sanitized);
+    const attempts = [json, sanitized, sanitizedWithoutTrailingCommas];
+
+    for (let i = 0; i < attempts.length; i++) {
+      const current = attempts[i];
+
+      try {
+        if (i > 0) {
+          this.logger.warn(`Используется fallback-парсинг JSON ответа модели, попытка ${i + 1}`);
+        }
+
+        return JSON.parse(current);
+      } catch (error) {
+        if (i === attempts.length - 1) {
+          throw new Error(`Failed to parse JSON: ${error.message}`);
+        }
+      }
+    }
+
+    throw new Error('Failed to parse JSON: unknown parsing error');
+  }
+
+  escapeControlCharsInStrings(raw: string) {
+    let result = '';
+    let inString = false;
+    let escaped = false;
+
+    for (let i = 0; i < raw.length; i++) {
+      const char = raw[i];
+
+      if (!inString) {
+        if (char === '"') {
+          inString = true;
+        }
+
+        result += char;
+
+        continue;
+      }
+
+      if (escaped) {
+        result += char;
+        escaped = false;
+
+        continue;
+      }
+
+      if (char === '\\') {
+        result += char;
+        escaped = true;
+
+        continue;
+      }
+
+      if (char === '"') {
+        result += char;
+        inString = false;
+
+        continue;
+      }
+
+      switch (char) {
+        case '\n': {
+          result += '\\n';
+
+          break;
+        }
+
+        case '\r': {
+          result += '\\r';
+
+          break;
+        }
+
+        case '\t': {
+          result += '\\t';
+
+          break;
+        }
+
+        default: {
+          const code = char.charCodeAt(0);
+
+          if (code < 0x20) {
+            result += ' ';
+          } else {
+            result += char;
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  removeTrailingCommas(json: string) {
+    return json.replace(/,\s*([}\]])/g, '$1');
   }
 }

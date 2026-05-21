@@ -1,8 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
 
-import { ICreateStudent, IStudent, IUpdateStudent } from '@@types';
+import { ICreateStudent, IImportStudentsCsvData, IImportStudentsCsvResult, IStudent, IUpdateStudent } from '@@types';
 import { api, queryClient } from '@api';
 import { QUERY_KEYS } from '@constants';
+import { prepareFormData } from '@utils';
 
 export const useCreateStudent = () =>
   useMutation<IStudent, Error, ICreateStudent>({
@@ -27,5 +28,24 @@ export const useDeleteStudent = () =>
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STUDENTS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STUDENTS, id] });
+    },
+  });
+
+export const useImportStudentsCsv = () =>
+  useMutation<IImportStudentsCsvResult, Error, IImportStudentsCsvData>({
+    mutationFn: (payload) => {
+      const formData = prepareFormData(payload);
+
+      return api
+        .post('/students/import-csv', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+        .then((res) => res.data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.STUDENTS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GROUPS] });
     },
   });

@@ -20,11 +20,13 @@ import { toast } from 'react-toastify';
 import { AddGroupModal } from './add-group-modal';
 import { EditGroupModal } from './edit-group-modal';
 import { getGroupsActions } from './groups.constants';
+import { ImportCsvModal } from './import-csv-modal';
 import { Students } from './students/students.component';
 
 export const Groups: FC = () => {
   const addGroupControls = useModalControls();
   const editGroupControls = useModalControls();
+  const importCsvControls = useModalControls();
 
   const { mutate: deleteGroup } = useDeleteGroup();
 
@@ -42,6 +44,9 @@ export const Groups: FC = () => {
       getGroupsActions({
         addCb: () => {
           addGroupControls.handleOpen();
+        },
+        importCb: () => {
+          importCsvControls.handleOpen();
         },
         editCb: () => {
           editGroupControls.handleOpen();
@@ -63,7 +68,7 @@ export const Groups: FC = () => {
           });
         },
       }),
-    [group]
+    [addGroupControls, importCsvControls, editGroupControls, deleteGroup, group]
   );
 
   const groupLabelId = useId();
@@ -87,7 +92,12 @@ export const Groups: FC = () => {
   };
 
   useEffect(() => {
-    handleGroupChange({ target: { value: 0 } } as SelectChangeEvent<number>);
+    if (!groups?.length) {
+      return;
+    }
+
+    setGroupIndex(0);
+    setGroup(groups[0]);
   }, [groups]);
 
   if (!groups) {
@@ -136,6 +146,11 @@ export const Groups: FC = () => {
       {group && <Students groupId={group.id} search={searchDebounced} />}
 
       <AddGroupModal isShow={addGroupControls.open} handleClose={addGroupControls.handleClose} />
+
+      <ImportCsvModal
+        isShow={importCsvControls.open}
+        handleClose={importCsvControls.handleClose}
+      />
 
       {group && (
         <EditGroupModal

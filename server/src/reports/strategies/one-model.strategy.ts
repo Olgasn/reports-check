@@ -49,7 +49,7 @@ export class OneModelStrategy implements ReportStrategy {
   }
 
   async prepareCheckData(dto: CheckReportDto) {
-    const { labId, modelsId, reportsZip, studentsId } = dto;
+    const { labId, modelsId, studentsId } = dto;
     const modelId = modelsId[0];
 
     if (!modelId) {
@@ -61,12 +61,26 @@ export class OneModelStrategy implements ReportStrategy {
 
     const { content } = lab.course.prompt;
     const task = lab.content;
-    const repData = await this.fileService.parseArchive(reportsZip.buffer);
+    const repData = await this.getReportsData(dto);
 
     const reportsData = studentsId.length
       ? repData.filter((rp) => studentsId.some((st) => isSimilarStudents(rp, st)))
       : repData;
 
     return { model, content, task, lab, reportsData };
+  }
+
+  async getReportsData(dto: CheckReportDto) {
+    const { reportsZip, reportFile, studentsId } = dto;
+
+    if (reportsZip) {
+      return this.fileService.parseArchive(reportsZip.buffer);
+    }
+
+    if (reportFile) {
+      return this.fileService.parseSingleReport(reportFile, studentsId[0]);
+    }
+
+    throw new Error('Не переданы файлы отчета для проверки');
   }
 }

@@ -25,8 +25,13 @@ export class CheckReportDto {
   @Type(() => StudentParsedDto)
   studentsId: StudentParsedDto[] = [];
 
-  @ApiProperty({ type: 'string', format: 'binary', required: true })
-  reportsZip: Express.Multer.File;
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @IsOptional()
+  reportsZip?: Express.Multer.File;
+
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  @IsOptional()
+  reportFile?: Express.Multer.File;
 
   @ApiProperty()
   @Type(() => Number)

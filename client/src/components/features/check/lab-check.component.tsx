@@ -5,13 +5,25 @@ import {
   Button,
   Checkbox,
   Divider,
+  FormControl,
   FormControlLabel,
+  InputLabel,
   LinearProgress,
+  MenuItem,
   Paper,
+  Select as MuiSelect,
+  SelectChangeEvent,
 } from '@mui/material';
 
 import { ICheckData, IStudentParsed } from '@@types';
-import { useCheckReports, useGroups, useLab, useModels, useStudentsParseFromArchive } from '@api';
+import {
+  useCheckReports,
+  useGroupStudents,
+  useGroups,
+  useLab,
+  useModels,
+  useStudentsParseFromArchive,
+} from '@api';
 import { COLORS, PARAMS } from '@constants';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useModalControls } from '@hooks';
@@ -37,20 +49,24 @@ import { CheckNotification } from './check-notification';
 import { useLabCheckData } from './lab-check.hook';
 import { LabCheckFormData, LabCheckSchema } from './lab-check.validation';
 
+type ReportSource = 'zip' | 'single';
+
 export const LabCheck: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const taskControls = useModalControls();
 
   const [file, setFile] = useState<File | null>(null);
   const [check, setCheck] = useState<boolean>(false);
+  const [source, setSource] = useState<ReportSource>('zip');
   const [students, setStudents] = useState<IStudentParsed[]>([]);
 
-  const { control, handleSubmit, setError, setValue } = useForm({
+  const { control, getValues, handleSubmit, setError, setValue, watch } = useForm({
     resolver: yupResolver(LabCheckSchema),
     defaultValues: {
       modelId: [],
       studentIds: [],
-      groupId: 1,
+      groupId: 0,
+      singleStudentId: undefined,
     },
   });
 
@@ -63,9 +79,40 @@ export const LabCheck: FC = () => {
   const { data: models } = useModels();
   const { data: groups } = useGroups();
   const { mutate: parseStudentsFromArchive } = useStudentsParseFromArchive();
+  const selectedGroupId = watch('groupId');
+  const { data: groupStudents } = useGroupStudents({
+    page: 1,
+    pageSize: 1000,
+    search: '',
+    groupId: Number(selectedGroupId),
+  }, Boolean(selectedGroupId));
+
+  const selectedGroupStudents = useMemo(
+    () =>
+      (groupStudents?.items ?? []).map((student) => ({
+        ...student,
+        fullName: `${student.surname} ${student.name} ${student.middlename}`,
+      })),
+    [groupStudents],
+  );
 
   useEffect(() => {
-    if (!file) {
+    if (!groups?.length) {
+      return;
+    }
+
+    const currentGroupId = getValues('groupId');
+    const hasCurrent = groups.some((group) => group.id === currentGroupId);
+
+    if (hasCurrent) {
+      return;
+    }
+
+    setValue('groupId', groups[0].id);
+  }, [groups]);
+
+  useEffect(() => {
+    if (source !== 'zip' || !file) {
       return;
     }
 
@@ -81,7 +128,17 @@ export const LabCheck: FC = () => {
         },
       }
     );
-  }, [file]);
+  }, [file, source]);
+
+  const handleSourceChange = (e: SelectChangeEvent<ReportSource>) => {
+    const nextSource = e.target.value as ReportSource;
+
+    setSource(nextSource);
+    setFile(null);
+    setStudents([]);
+    setValue('studentIds', []);
+    setValue('singleStudentId', undefined);
+  };
 
   const checkOnSuccess = () => {
     dispatch(setCheckStatus({ labId, status: 'started' }));
@@ -100,12 +157,17 @@ export const LabCheck: FC = () => {
     }
 
     if (!file) {
-      window.alert('Выберите архив с отчетами!');
+      const message =
+        source === 'zip'
+          ? 'Выберите архив с отчетами!'
+          : 'Выберите отчет в формате PDF, DOCX или TXT!';
+
+      window.alert(message);
 
       return;
     }
 
-    const { modelId, groupId, studentIds } = data;
+    const { modelId, groupId, singleStudentId, studentIds } = data;
 
     if (!modelId.length) {
       setError('modelId', { type: 'custom', message: 'Выберите хотя бы одну модель!' });
@@ -113,17 +175,43 @@ export const LabCheck: FC = () => {
       return;
     }
 
-    const studentsFiltered = studentIds
-      .map((studentId) => students.find((student) => student.id === studentId) ?? null)
-      .filter((item) => item !== null);
-
     const reqData: ICheckData = {
       modelsId: modelId,
       labId: lab.id,
-      reportsZip: file,
       groupId,
-      studentsId: studentsFiltered,
+      studentsId: [],
     };
+
+    if (source === 'zip') {
+      const studentsFiltered = studentIds
+        .map((studentId) => students.find((student) => student.id === studentId) ?? null)
+        .filter((item) => item !== null);
+
+      reqData.reportsZip = file;
+      reqData.studentsId = studentsFiltered;
+    } else {
+      const studentId = Number(singleStudentId);
+      const student = selectedGroupStudents.find((st) => st.id === studentId);
+
+      if (!student) {
+        setError('singleStudentId', {
+          type: 'custom',
+          message: 'Выберите студента для проверки',
+        });
+
+        return;
+      }
+
+      reqData.reportFile = file;
+      reqData.studentsId = [
+        {
+          id: String(student.id),
+          name: student.name,
+          surname: student.surname,
+          middlename: student.middlename,
+        },
+      ];
+    }
 
     if (check) {
       reqData.checkPrev = check;
@@ -212,22 +300,63 @@ export const LabCheck: FC = () => {
             <Divider flexItem sx={{ my: 2 }} />
 
             <Box display="flex" flexDirection="column">
+              <TopHeader text="Источник отчетов" subText="Выберите формат загрузки отчетов." />
+
+              <Box sx={{ mt: 2 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="report-source-label">Источник</InputLabel>
+                  <MuiSelect
+                    value={source}
+                    onChange={handleSourceChange}
+                    labelId="report-source-label"
+                    label="Источник"
+                    size="small"
+                    sx={{ background: 'white' }}
+                  >
+                    <MenuItem value="zip">ZIP архив</MenuItem>
+                    <MenuItem value="single">Одиночный файл (PDF/DOCX/TXT)</MenuItem>
+                  </MuiSelect>
+                </FormControl>
+              </Box>
+            </Box>
+
+            <Divider flexItem sx={{ my: 2 }} />
+
+            <Box display="flex" flexDirection="column">
               <TopHeader
                 text="Студенты"
-                subText="Выберите студентов, отчеты которых будут проверены."
+                subText={
+                  source === 'zip'
+                    ? 'Выберите студентов, отчеты которых будут проверены.'
+                    : 'Выберите студента, для которого загружен отдельный отчет.'
+                }
               />
 
-              <Box sx={{ mt: 2, mb: 1 }}>
-                <MultiSelect
-                  name="studentIds"
-                  control={control}
-                  options={students}
-                  valueKey="id"
-                  labelKey="surname"
-                  label="Студенты"
-                  disabled={Boolean(!students.length)}
-                />
-              </Box>
+              {source === 'zip' ? (
+                <Box sx={{ mt: 2, mb: 1 }}>
+                  <MultiSelect
+                    name="studentIds"
+                    control={control}
+                    options={students}
+                    valueKey="id"
+                    labelKey="surname"
+                    label="Студенты"
+                    disabled={Boolean(!students.length)}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ mt: 2, mb: 1 }}>
+                  <Select
+                    name="singleStudentId"
+                    control={control}
+                    data={selectedGroupStudents}
+                    valueKey="id"
+                    labelKey="fullName"
+                    label="Студент"
+                    selectProps={{ displayEmpty: true }}
+                  />
+                </Box>
+              )}
 
               <FormControlLabel
                 control={<Checkbox checked={check} onChange={(e) => setCheck(e.target.checked)} />}
@@ -236,7 +365,7 @@ export const LabCheck: FC = () => {
                   fontSize: PARAMS.MEDIUM_FONT_SIZE,
                   color: COLORS.TEXT,
                 }}
-                disabled={Boolean(!students.length)}
+                disabled={Boolean(source === 'zip' ? !students.length : !selectedGroupStudents.length)}
               />
             </Box>
 
@@ -264,14 +393,19 @@ export const LabCheck: FC = () => {
               <Box display="flex" flexDirection="column" flexGrow={1} sx={{ ml: 2 }}>
                 <TopHeader
                   text="Отчеты"
-                  subText="Выберите архив со списком отчетов в формате zip."
+                  subText={
+                    source === 'zip'
+                      ? 'Выберите архив со списком отчетов в формате zip.'
+                      : 'Выберите файл отчета в формате PDF, DOCX или TXT.'
+                  }
                 />
 
                 <Box sx={{ mt: 2 }}>
                   <FileSelect
+                    key={source}
                     onChange={setFile}
                     textFieldSx={{ background: 'white' }}
-                    accept=".zip"
+                    accept={source === 'zip' ? '.zip' : '.pdf,.docx,.txt'}
                   />
                 </Box>
               </Box>

@@ -16,9 +16,10 @@ export const useStudents = () =>
     queryFn: () => api.get('/students').then((res) => res.data),
   });
 
-export const useGroupStudents = (pagination: ISearchStudents) =>
+export const useGroupStudents = (pagination: ISearchStudents, enabled = true) =>
   useQuery<IPaginated<IStudent>>({
     queryKey: [QUERY_KEYS.STUDENTS, pagination],
     queryFn: () =>
       api.get(`/groups/search-students`, { params: pagination }).then((res) => res.data),
+    enabled,
   });
