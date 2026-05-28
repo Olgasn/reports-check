@@ -1,7 +1,8 @@
+import { useMutation } from '@tanstack/react-query';
+
 import { ICourse, ICreateCourse } from '@@types';
 import { api, queryClient } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useMutation } from '@tanstack/react-query';
 
 export const useCreateCourse = () =>
   useMutation<ICourse, Error, ICreateCourse>({

@@ -37,7 +37,7 @@ export const EditGroupModal: FC<EditGroupModalProps> = ({ isShow, handleClose, i
 
   useEffect(() => {
     setValue('name', item.name);
-  }, [item]);
+  }, [item, setValue]);
 
   const onSubmit = (data: EditGroupFormData) => {
     updateGroup(

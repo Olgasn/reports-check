@@ -60,7 +60,7 @@ export const NotificationsModal: FC<NotificationsModalProps> = ({ isOpen, handle
         })}
       </Box>
     ),
-    [notifications]
+    [checkControls, notifications]
   );
 
   return (

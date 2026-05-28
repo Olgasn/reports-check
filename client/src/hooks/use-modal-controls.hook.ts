@@ -1,19 +1,22 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export const useModalControls = () => {
   const [open, setOpen] = useState(false);
 
-  const handleOpen = () => {
+  const handleOpen = useCallback(() => {
     setOpen(true);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
 
-  return {
-    open,
-    handleOpen,
-    handleClose,
-  };
+  return useMemo(
+    () => ({
+      open,
+      handleOpen,
+      handleClose,
+    }),
+    [handleClose, handleOpen, open]
+  );
 };

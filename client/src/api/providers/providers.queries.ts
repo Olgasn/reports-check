@@ -1,7 +1,8 @@
+import { useQuery } from '@tanstack/react-query';
+
 import { IProvider } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useQuery } from '@tanstack/react-query';
 
 export const useProvider = (id: number) =>
   useQuery<IProvider>({

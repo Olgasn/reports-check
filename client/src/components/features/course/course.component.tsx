@@ -66,7 +66,7 @@ export const Course: FC = () => {
           });
         }
       ),
-    [course]
+    [course, deleteCourse, editModalControls, navigate]
   );
 
   if (!course || !labs) {

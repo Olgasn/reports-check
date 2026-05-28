@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { INotification } from '@@types';
 import { addNotification, AppDispatch, RootState, setCheckStatus, setNotifications } from '@store';
@@ -12,31 +12,43 @@ export const useNotifications = (socket?: Socket) => {
   const dispatch = useDispatch<AppDispatch>();
   const { notifications } = useSelector((state: RootState) => state.notifications);
 
+  const handleReportsChecked = useCallback((payload: unknown) => {
+    const data: INotification = JSON.parse(String(payload));
+
+    const notification = {
+      text: 'Проверка выполнена',
+      time: Date.now(),
+      ids: data.ids,
+      labId: data.labId,
+    };
+
+    dispatch(addNotification(notification));
+    dispatch(setCheckStatus({ labId: data.labId, status: 'checked' }));
+
+    localStorage.setItem('notifications', JSON.stringify([notification, ...notifications]));
+
+    toast.success('Отчеты были проверены, зайдите в уведомления');
+  }, [dispatch, notifications]);
+
+  const handleCheckFailed = useCallback(() => {
+    toast.error('Не удалось проверить отчеты');
+  }, []);
+
   useEffect(() => {
-    socket?.on(EVENTS.REPORTS_CHECKED, (payload: unknown) => {
-      const data: INotification = JSON.parse(String(payload));
+    socket?.on(EVENTS.REPORTS_CHECKED, handleReportsChecked);
 
-      const notification = {
-        text: 'Проверка выполнена',
-        time: Date.now(),
-        ids: data.ids,
-        labId: data.labId,
-      };
-
-      dispatch(addNotification(notification));
-      dispatch(setCheckStatus({ labId: data.labId, status: 'checked' }));
-
-      localStorage.setItem('notifications', JSON.stringify([...notifications, notification]));
-
-      toast.success('Отчеты были проверены, зайдите в уведомления');
-    });
-  }, [socket]);
+    return () => {
+      socket?.off(EVENTS.REPORTS_CHECKED, handleReportsChecked);
+    };
+  }, [handleReportsChecked, socket]);
 
   useEffect(() => {
-    socket?.on(EVENTS.CHECK_FAILED, () => {
-      toast.error('Не удалось проверить отчеты');
-    });
-  }, [socket]);
+    socket?.on(EVENTS.CHECK_FAILED, handleCheckFailed);
+
+    return () => {
+      socket?.off(EVENTS.CHECK_FAILED, handleCheckFailed);
+    };
+  }, [handleCheckFailed, socket]);
 
   useEffect(() => {
     const savedNotifications = localStorage.getItem('notifications');
@@ -52,5 +64,5 @@ export const useNotifications = (socket?: Socket) => {
     } catch (e) {
       console.error('Error parsing notifications:', e);
     }
-  }, []);
+  }, [dispatch]);
 };

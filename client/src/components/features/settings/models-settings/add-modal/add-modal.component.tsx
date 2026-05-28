@@ -3,7 +3,9 @@ import { FC, useId, useRef, useState } from 'react';
 import {
   Box,
   Button,
+  Checkbox,
   FormControl,
+  FormControlLabel,
   FormHelperText,
   InputLabel,
   MenuItem,
@@ -47,6 +49,7 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
       errorDelay: 10000,
       queryDelay: 2500,
       maxRetries: 5,
+      cacheControl: false,
     },
   });
 
@@ -267,6 +270,17 @@ export const AddModal: FC<AddModalProps> = ({ isShow, handleClose }) => {
               <MenuItem value={LlmInterfaces.OpenAi}>{LlmInterfaces.OpenAi}</MenuItem>
             </Select>
           </FormControl>
+
+          <Controller
+            name="cacheControl"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Checkbox checked={!!field.value} onChange={field.onChange} />}
+                label="Кэширование промпта"
+              />
+            )}
+          />
 
           {llmInterface === LlmInterfaces.OpenAi && (
             <>

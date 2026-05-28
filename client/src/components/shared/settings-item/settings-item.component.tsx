@@ -1,8 +1,11 @@
-import { Box, Button } from '@mui/material';
-import { SettingsItemProps } from './settings-item.types';
 import { FC } from 'react';
+
+import { Box, Button } from '@mui/material';
+
 import { COLORS } from '@constants';
 import { TopHeader } from '@shared';
+
+import { SettingsItemProps } from './settings-item.types';
 
 export const SettingsItem: FC<SettingsItemProps> = ({ text, subText, children, addCb }) => {
   return (

@@ -1,5 +1,6 @@
-import { COLORS, PARAMS } from '@constants';
 import { Box } from '@mui/material';
+
+import { COLORS, PARAMS } from '@constants';
 import styled from 'styled-components';
 
 export const LabDiv = styled(Box)`

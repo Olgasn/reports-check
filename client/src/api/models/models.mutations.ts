@@ -1,7 +1,8 @@
+import { useMutation } from '@tanstack/react-query';
+
 import { ICreateModel, IModel, IUpdateModel } from '@@types';
 import { api, queryClient } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useMutation } from '@tanstack/react-query';
 
 export const useCreateModel = () =>
   useMutation<IModel, Error, ICreateModel>({

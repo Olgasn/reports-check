@@ -16,6 +16,7 @@ export const AddModalSchema = yup.object({
   maxRetries: yup.number().min(5).max(30).required('Обязательный параметр'),
   queryDelay: yup.number().min(2500).required('Обязательный параметр'),
   errorDelay: yup.number().min(10000).required('Обязательный параметр'),
+  cacheControl: yup.boolean().optional(),
 });
 
 export type AddModalFormData = InferType<typeof AddModalSchema>;

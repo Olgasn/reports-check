@@ -1,6 +1,7 @@
 import { Model } from 'src/model/entities/model.entity';
+import { SplitPrompt } from 'src/prompt/prompt.service';
 
 export interface ILlmProviderHandler {
-  completion(content: string, model: Model): Promise<string>;
+  completion(prompt: SplitPrompt, model: Model): Promise<string>;
   processError(error: unknown);
 }

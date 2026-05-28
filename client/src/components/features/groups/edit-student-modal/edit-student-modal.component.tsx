@@ -41,7 +41,7 @@ export const EditStudentModal: FC<EditStudentModalProps> = ({ isOpen, onClose, g
     setValue('name', item.name);
     setValue('surname', item.surname);
     setValue('middlename', item.middlename);
-  }, [item]);
+  }, [item, setValue]);
 
   const onSubmit = (data: EditStudentFormData) => {
     updateStudent(

@@ -1,7 +1,8 @@
+import { useQuery } from '@tanstack/react-query';
+
 import { IModel } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useQuery } from '@tanstack/react-query';
 
 export const useModels = () =>
   useQuery<IModel[]>({

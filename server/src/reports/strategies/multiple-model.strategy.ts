@@ -157,7 +157,7 @@ export class MultipleModelStrategy implements ReportStrategy {
     }
 
     const lab = await this.labService.findOne(labId, { course: { prompt: true } });
-    const models = await this.modelService.findByIds(modelsId);
+    const models = await this.modelService.findByIds(modelsId.slice(0, -1));
     const modelReview = await this.modelService.findOne(reviewModelId);
 
     const { content } = lab.course.prompt;

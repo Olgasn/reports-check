@@ -53,7 +53,7 @@ export const KeysSettings: FC = () => {
           });
         }
       ),
-    [data]
+    [data, deleteKey, editModalControls]
   );
 
   const handleEditModalClose = () => {

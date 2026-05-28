@@ -30,7 +30,7 @@ export const StudentItem: FC<StudentItemProps> = ({ item, editCb }) => {
           onSuccess,
         });
       }),
-    []
+    [deleteStudent, editCb, item.id]
   );
 
   return (

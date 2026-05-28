@@ -37,7 +37,7 @@ export const CourseItem: FC<CourseItemProps> = ({ id, name, description }) => {
           });
         }
       ),
-    []
+    [deleteCourse, editModalControls, id]
   );
 
   return (

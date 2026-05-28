@@ -53,7 +53,7 @@ export const ProvidersSettings: FC = () => {
           });
         }
       ),
-    [data]
+    [data, deleteProvider, editModalControls]
   );
 
   const handleEditModalClose = () => {

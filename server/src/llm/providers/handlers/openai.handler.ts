@@ -1,5 +1,6 @@
 import { Model } from 'src/model/entities/model.entity';
 import { ILlmProviderHandler } from '../llm-provider.interface';
+import { SplitPrompt } from 'src/prompt/prompt.service';
 import OpenAI from 'openai';
 import { Injectable } from '@nestjs/common';
 
@@ -21,7 +22,7 @@ export class OpenAiHandler implements ILlmProviderHandler {
     }
   }
 
-  async completion(content: string, model: Model) {
+  async completion({ system, user }: SplitPrompt, model: Model) {
     if (!model.provider || !model.key) {
       throw new Error('No provider or key specified for the model');
     }
@@ -41,15 +42,25 @@ export class OpenAiHandler implements ILlmProviderHandler {
       },
     });
 
+    const messages: OpenAI.ChatCompletionMessageParam[] = [];
+
+    if (system) {
+      if (model.cacheControl) {
+        messages.push({
+          role: 'system',
+          content: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }] as any,
+        });
+      } else {
+        messages.push({ role: 'system', content: system });
+      }
+    }
+
+    messages.push({ role: 'user', content: user });
+
     const completion = await openai.chat.completions.create({
       model: modelName,
 	  reasoning_effort: "high",
-      messages: [
-        {
-          role: 'user',
-          content,
-        },
-      ],
+      messages,
       top_p: model.top_p,
       max_tokens: model.max_tokens,
       temperature: model.temperature,

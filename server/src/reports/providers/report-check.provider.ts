@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CheckOneReportDto, FilterSuccessResultsDto, ProcessStudentDto } from '../reports.types';
 import { NotificationService } from 'src/notification/notification.service';
-import { PromptService } from 'src/prompt/prompt.service';
+import { PromptService, SplitPrompt } from 'src/prompt/prompt.service';
 import { FileService } from 'src/file/file.service';
 import { LlmService } from 'src/llm/llm.service';
 import { CheckResultDto } from '../dto/check-result.dto';
@@ -72,7 +72,7 @@ export class ReportCheck {
     return check;
   }
 
-  async preparePrompt(prompt: string, usePrev?: boolean, stId?: number) {
+  async preparePrompt(prompt: SplitPrompt, usePrev?: boolean, stId?: number): Promise<SplitPrompt> {
     if (!usePrev || !stId) {
       return prompt;
     }
@@ -83,13 +83,15 @@ export class ReportCheck {
       return prompt;
     }
 
+    const fullText = prompt.system ? `${prompt.system}\n${prompt.user}` : prompt.user;
+
     const newPrompt = this.promptService.preparePrevPrompt({
       ...prevCheck,
       grade: String(prevCheck.grade),
-      promptTxt: prompt,
+      promptTxt: fullText,
     });
 
-    return newPrompt;
+    return { system: '', user: newPrompt };
   }
 
   async processStudent(data: ProcessStudentDto) {

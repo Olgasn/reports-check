@@ -52,7 +52,7 @@ export const Lab: FC<LabProps> = ({ item }) => {
           taskModalControls.handleOpen();
         },
       }),
-    [item]
+    [deleteLab, editControls, item, navigate, taskModalControls]
   );
 
   return (

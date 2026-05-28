@@ -48,4 +48,5 @@ export interface ICreateModel {
   queryDelay: number;
   errorDelay: number;
   llmInterface: LlmInterfaces;
+  cacheControl?: boolean;
 }

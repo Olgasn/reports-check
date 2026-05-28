@@ -1,8 +1,12 @@
-import { Tooltip } from '@mui/material';
 import { FC } from 'react';
+
+import { Tooltip } from '@mui/material';
+
+import { PopoverMenu, SettingsItem } from '@shared';
+
 import { KeyItem, KeyName, KeyValue } from './settings-section.styled';
 import { SettingsSectionProps } from './settings-section.types';
-import { PopoverMenu, SettingsItem } from '@shared';
+
 
 export const SettingsSection: FC<SettingsSectionProps> = ({
   text,

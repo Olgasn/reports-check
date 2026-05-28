@@ -1,6 +1,6 @@
-import { PARAMS } from '@constants';
 import { QueryClient } from '@tanstack/react-query';
 
+import { PARAMS } from '@constants';
 import axios from 'axios';
 
 export const queryClient = new QueryClient({

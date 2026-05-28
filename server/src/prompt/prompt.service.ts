@@ -7,6 +7,8 @@ import { ConfigService } from '@nestjs/config';
 import { PromptConfig } from 'src/types/config.types';
 import { Prompt } from './entities/prompt.entity';
 
+export type SplitPrompt = { system: string; user: string };
+
 @Injectable()
 export class PromptService {
   private readonly promptRepo: Repository<Prompt>;
@@ -33,6 +35,17 @@ export class PromptService {
     return this.promptRepo.find();
   }
 
+  private splitAtMarker(template: string): SplitPrompt {
+    const parts = template.split('@SPLIT');
+    if (parts.length < 2) {
+      return { system: '', user: template };
+    }
+    return {
+      system: parts[0].trimEnd(),
+      user: parts[1].replace(/^\r?\n/, ''),
+    };
+  }
+
   preparePrevPrompt(data: {
     review: string;
     grade: string;
@@ -53,26 +66,24 @@ export class PromptService {
     return template;
   }
 
-  prepareMultiplePrompt(data: { task: string; answer: string; content: string; checks: string[] }) {
+  prepareMultiplePrompt(data: { task: string; answer: string; content: string; checks: string[] }): SplitPrompt {
     const { task, answer, content, checks } = data;
-    let template = this.templateMultiple;
+    const template = this.templateMultiple
+      .replace('@PROMPT_TEXT', content)
+      .replace('@LAB_TASK', task)
+      .replace('@STUDENT_ANSWER', answer)
+      .replace('@MODELS_CHECK_RESULT', checks.join(', '));
 
-    template = template.replace('@PROMPT_TEXT', content);
-    template = template.replace('@LAB_TASK', task);
-    template = template.replace('@STUDENT_ANSWER', answer);
-    template = template.replace(' @MODELS_CHECK_RESULT', checks.join(', '));
-
-    return template;
+    return this.splitAtMarker(template);
   }
 
-  preparePrompt(answer: string, task: string, content: string) {
-    let template = this.template;
+  preparePrompt(answer: string, task: string, content: string): SplitPrompt {
+    const template = this.template
+      .replace('@PROMPT_TEXT', content)
+      .replace('@LAB_TASK', task)
+      .replace('@STUDENT_ANSWER', answer);
 
-    template = template.replace('@PROMPT_TEXT', content);
-    template = template.replace('@LAB_TASK', task);
-    template = template.replace('@STUDENT_ANSWER', answer);
-
-    return template;
+    return this.splitAtMarker(template);
   }
 
   async findOne(id: number) {

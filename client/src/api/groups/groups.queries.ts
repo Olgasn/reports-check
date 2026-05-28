@@ -1,7 +1,8 @@
+import { useQuery } from '@tanstack/react-query';
+
 import { IGroup } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useQuery } from '@tanstack/react-query';
 
 export const useGroup = (id: number) =>
   useQuery<IGroup>({

@@ -16,6 +16,7 @@ export const EditModalSchema = yup.object({
   queryDelay: yup.number().min(2500).required('Обязательный параметр'),
   errorDelay: yup.number().min(10000).required('Обязательный параметр'),
   max_tokens: yup.number().min(1).required('Обязательный параметр'),
+  cacheControl: yup.boolean().optional(),
 });
 
 export type EditModalFormData = InferType<typeof EditModalSchema>;

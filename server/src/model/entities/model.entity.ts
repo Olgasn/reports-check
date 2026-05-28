@@ -46,6 +46,9 @@ export class Model {
   @Column()
   llmInterface: LlmInterfaces;
 
+  @Column({ default: false })
+  cacheControl: boolean;
+
   @OneToMany(() => Check, (check) => check.model, {
     onDelete: 'CASCADE',
   })

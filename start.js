@@ -1,10 +1,11 @@
 const { spawn } = require("child_process");
+const net = require("net");
 const waitPort = require("wait-port");
 
 function startProcess({ cwd, args, label }) {
   const isWin = process.platform === "win32";
-  const command = isWin ? "cmd.exe" : "npm";
-  const spawnArgs = isWin ? ["/d", "/s", "/c", `npm ${args.join(" ")}`] : args;
+  const command = isWin ? process.env.ComSpec || "cmd.exe" : "npm";
+  const spawnArgs = isWin ? ["/d", "/s", "/c", "npm", ...args] : args;
 
   const processChild = spawn(command, spawnArgs, {
     cwd,
@@ -27,26 +28,63 @@ function startProcess({ cwd, args, label }) {
   return processChild;
 }
 
+function isPortOpen(port) {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host: "localhost", port });
+
+    const done = (result) => {
+      socket.removeAllListeners();
+      socket.destroy();
+      resolve(result);
+    };
+
+    socket.setTimeout(500);
+    socket.once("connect", () => done(true));
+    socket.once("timeout", () => done(false));
+    socket.once("error", () => done(false));
+  });
+}
+
 async function startServer() {
   console.log("Starting server...");
 
-  startProcess({
+  const serverPort = 3000;
+
+  if (await isPortOpen(serverPort)) {
+    console.log(`Server port ${serverPort} is already in use. Using the existing server.`);
+    return true;
+  }
+
+  const serverProcess = startProcess({
     cwd: "server",
     args: ["run", "start:dev"],
     label: "Server",
   });
 
-  const serverPort = 3000;
-
   console.log(`Waiting for server to start on port ${serverPort}...`);
 
   try {
-    await waitPort({
-      host: "localhost",
-      port: serverPort,
-      timeout: 60000,
-      output: "silent",
-    });
+    const result = await Promise.race([
+      waitPort({
+        host: "localhost",
+        port: serverPort,
+        timeout: 60000,
+        output: "silent",
+      }).then(({ open }) => ({ ready: open })),
+      new Promise((resolve) => {
+        serverProcess.once("exit", (code, signal) => {
+          resolve({ ready: false, code, signal });
+        });
+      }),
+    ]);
+
+    if (!result.ready) {
+      console.error("Server did not open the port:", result);
+      if (serverProcess.exitCode === null) {
+        serverProcess.kill();
+      }
+      return false;
+    }
 
     console.log("Server is ready!");
 

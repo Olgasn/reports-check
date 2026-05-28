@@ -109,7 +109,7 @@ export const LabCheck: FC = () => {
     }
 
     setValue('groupId', groups[0].id);
-  }, [groups]);
+  }, [getValues, groups, setValue]);
 
   useEffect(() => {
     if (source !== 'zip' || !file) {
@@ -128,7 +128,7 @@ export const LabCheck: FC = () => {
         },
       }
     );
-  }, [file, source]);
+  }, [file, parseStudentsFromArchive, setValue, source]);
 
   const handleSourceChange = (e: SelectChangeEvent<ReportSource>) => {
     const nextSource = e.target.value as ReportSource;
@@ -233,7 +233,7 @@ export const LabCheck: FC = () => {
         cb: () => taskControls.handleOpen(),
       },
     ],
-    []
+    [taskControls]
   );
 
   if (!lab || !models || !groups) {

@@ -18,6 +18,7 @@ export default defineConfig({
     tsconfigPaths(),
     checker({
       typescript: true,
+      enableBuild: false,
     }),
     react(),
   ],

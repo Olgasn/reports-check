@@ -3,7 +3,9 @@ import { FC, useEffect, useId, useRef, useState } from 'react';
 import {
   Box,
   Button,
+  Checkbox,
   FormControl,
+  FormControlLabel,
   FormHelperText,
   InputLabel,
   MenuItem,
@@ -50,7 +52,7 @@ export const EditModal: FC<EditModalProps> = ({ isShow, handleClose, item }) => 
     if (provider !== -1) {
       setProviderIndex(provider);
     }
-  }, [keys, providers]);
+  }, [item.key?.id, item.provider?.id, keys, providers]);
 
   const formRef = useRef<HTMLFormElement | null>(null);
 
@@ -65,6 +67,7 @@ export const EditModal: FC<EditModalProps> = ({ isShow, handleClose, item }) => 
       errorDelay: item.errorDelay,
       queryDelay: item.queryDelay,
       maxRetries: item.maxRetries,
+      cacheControl: item.cacheControl ?? false,
     },
   });
 
@@ -290,6 +293,17 @@ export const EditModal: FC<EditModalProps> = ({ isShow, handleClose, item }) => 
               <MenuItem value={LlmInterfaces.OpenAi}>{LlmInterfaces.OpenAi}</MenuItem>
             </Select>
           </FormControl>
+
+          <Controller
+            name="cacheControl"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Checkbox checked={!!field.value} onChange={field.onChange} />}
+                label="Кэширование промпта"
+              />
+            )}
+          />
 
           {llmInterface === LlmInterfaces.OpenAi && (
             <>

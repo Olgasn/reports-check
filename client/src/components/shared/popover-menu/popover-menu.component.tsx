@@ -1,9 +1,12 @@
 import { FC, useId, useState, MouseEvent } from 'react';
-import { PopoverMenuProps } from './popover-menu.types';
+
 import { Box, IconButton, Popover } from '@mui/material';
-import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
+
 import { COLORS } from '@constants';
+import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
+
 import { PopoverBtn, PopoverText } from './popover-menu.styled';
+import { PopoverMenuProps } from './popover-menu.types';
 
 export const PopoverMenu: FC<PopoverMenuProps> = ({ actions, elemId }) => {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);

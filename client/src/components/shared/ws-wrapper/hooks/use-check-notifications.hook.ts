@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import { IReport, IReportFailed } from '@@types';
 import {
@@ -17,36 +17,56 @@ import { EVENTS } from '../ws-wrapper.constants';
 export const useCheckNotifications = (socket?: Socket) => {
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleCheckStatusChange = (check: unknown) => {
+  const handleCheckStatusChange = useCallback((check: unknown) => {
     const data: IReport = JSON.parse(String(check));
 
     dispatch(changeCheckNotification({ labId: data.labId, check: data }));
-  };
+  }, [dispatch]);
+
+  const handleReportOneStarted = useCallback((payload: unknown) => {
+    const data: IReport = JSON.parse(String(payload));
+
+    dispatch(addCheckNotification({ labId: data.labId, check: data }));
+  }, [dispatch]);
+
+  const handleCheckFailed = useCallback((payload: unknown) => {
+    const data: IReportFailed = JSON.parse(String(payload));
+
+    dispatch(cleanCheckNotifications(data));
+    dispatch(setCheckStatus({ labId: data.labId, status: 'failed' }));
+
+    toast.error(data.reason, { autoClose: false });
+  }, [dispatch]);
 
   useEffect(() => {
-    socket?.on(EVENTS.REPORT_ONE_STARTED, (payload: unknown) => {
-      const data: IReport = JSON.parse(String(payload));
+    socket?.on(EVENTS.REPORT_ONE_STARTED, handleReportOneStarted);
 
-      dispatch(addCheckNotification({ labId: data.labId, check: data }));
-    });
-  }, [socket]);
+    return () => {
+      socket?.off(EVENTS.REPORT_ONE_STARTED, handleReportOneStarted);
+    };
+  }, [handleReportOneStarted, socket]);
 
   useEffect(() => {
     socket?.on(EVENTS.REPORT_ONE_SUCCESS, handleCheckStatusChange);
-  }, [socket]);
+
+    return () => {
+      socket?.off(EVENTS.REPORT_ONE_SUCCESS, handleCheckStatusChange);
+    };
+  }, [handleCheckStatusChange, socket]);
 
   useEffect(() => {
     socket?.on(EVENTS.REPORT_ONE_FAILED, handleCheckStatusChange);
-  }, [socket]);
+
+    return () => {
+      socket?.off(EVENTS.REPORT_ONE_FAILED, handleCheckStatusChange);
+    };
+  }, [handleCheckStatusChange, socket]);
 
   useEffect(() => {
-    socket?.on(EVENTS.CHECK_FAILED, (payload: unknown) => {
-      const data: IReportFailed = JSON.parse(String(payload));
+    socket?.on(EVENTS.CHECK_FAILED, handleCheckFailed);
 
-      dispatch(cleanCheckNotifications(data));
-      dispatch(setCheckStatus({ labId: data.labId, status: 'failed' }));
-
-      toast.error(data.reason, { autoClose: false });
-    });
-  }, [socket]);
+    return () => {
+      socket?.off(EVENTS.CHECK_FAILED, handleCheckFailed);
+    };
+  }, [handleCheckFailed, socket]);
 };

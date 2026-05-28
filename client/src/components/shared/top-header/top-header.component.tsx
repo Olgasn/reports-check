@@ -1,4 +1,5 @@
 import { FC } from 'react';
+
 import { HeaderText, SubText } from './top-header.styled';
 import { TopHeaderProps } from './top-header.types';
 

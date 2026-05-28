@@ -1,7 +1,8 @@
+import { useQuery } from '@tanstack/react-query';
+
 import { ICheck, ICheckResult, IGetChecks } from '@@types';
 import { api } from '@api';
 import { QUERY_KEYS } from '@constants';
-import { useQuery } from '@tanstack/react-query';
 
 export const useLabChecks = (labId: number) =>
   useQuery<ICheckResult[]>({

@@ -54,4 +54,8 @@ export class ModelDto {
   @ApiProperty()
   @Expose()
   errorDelay: number;
+
+  @ApiProperty()
+  @Expose()
+  cacheControl: boolean;
 }

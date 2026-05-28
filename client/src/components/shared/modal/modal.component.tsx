@@ -1,9 +1,13 @@
-import { Box, IconButton, Modal as MuiModal, Typography } from '@mui/material';
 import { FC } from 'react';
-import { MODAL_SX } from './modal.constants';
-import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
-import { ModalProps } from './modal.props';
+
+import { Box, IconButton, Modal as MuiModal, Typography } from '@mui/material';
+
 import { COLORS, PARAMS } from '@constants';
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+
+import { MODAL_SX } from './modal.constants';
+import { ModalProps } from './modal.props';
+
 
 export const Modal: FC<ModalProps> = ({ open, onClose, footer, body, sx, title }) => {
   const finalSx = sx ? { ...sx, ...MODAL_SX } : MODAL_SX;

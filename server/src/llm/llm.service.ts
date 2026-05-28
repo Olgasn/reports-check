@@ -3,6 +3,7 @@ import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { Model } from 'src/model/entities/model.entity';
 import { LlmProviderFactory } from './providers/llm-provider.factory';
+import { SplitPrompt } from 'src/prompt/prompt.service';
 import { wait } from 'src/common/helpers/wait.helper';
 
 @Injectable()
@@ -11,7 +12,7 @@ export class LlmService {
 
   constructor(private readonly llmProviderFactory: LlmProviderFactory) {}
 
-  async query(content: string, model: Model) {
+  async query(prompt: SplitPrompt, model: Model) {
     const { maxRetries, queryDelay, errorDelay } = model;
     const provider = this.llmProviderFactory.create(model.llmInterface);
 
@@ -19,7 +20,7 @@ export class LlmService {
       await wait(queryDelay);
 
       try {
-        const result = await provider.completion(content, model);
+        const result = await provider.completion(prompt, model);
 
         if (!result) {
           this.logger.warn(`Пустой ответ от модели [${model.name}]. Выполнение повторного запроса`);

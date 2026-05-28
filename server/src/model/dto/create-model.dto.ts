@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -84,4 +85,9 @@ export class CreateModelDto {
   })
   @IsEnum(LlmInterfaces)
   llmInterface: LlmInterfaces;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  cacheControl?: boolean;
 }

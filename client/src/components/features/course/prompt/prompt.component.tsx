@@ -47,7 +47,7 @@ export const Prompt: FC<PromptProps> = ({ prompt, courseId }) => {
         },
       },
     ],
-    [prompt]
+    [prompt, setValue]
   );
 
   const handleSave = async () => {

@@ -1,5 +1,6 @@
-import { SxProps } from '@mui/material';
 import { ReactElement } from 'react';
+
+import { SxProps } from '@mui/material';
 
 export interface ModalProps {
   footer?: ReactElement;

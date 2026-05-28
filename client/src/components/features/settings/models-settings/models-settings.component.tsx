@@ -54,7 +54,7 @@ export const ModelsSettings: FC = () => {
           });
         }
       ),
-    [data]
+    [data, deleteModel, editModalControls]
   );
 
   const handleEditClose = () => {
