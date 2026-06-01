@@ -8,4 +8,8 @@ export interface CheckCopyBtnProps {
   date: string;
   model: IModel;
   studentStr: string;
+  promptInjectionDetected?: boolean;
+  promptInjectionRisk?: string;
+  promptInjectionFragments?: string;
+  securityComment?: string;
 }

@@ -23,6 +23,18 @@ export class Check {
   @Column({ default: '' })
   report: string;
 
+  @Column({ default: false })
+  promptInjectionDetected: boolean;
+
+  @Column({ default: 'none' })
+  promptInjectionRisk: string;
+
+  @Column('text', { default: '' })
+  promptInjectionFragments: string;
+
+  @Column('text', { default: '' })
+  securityComment: string;
+
   @CreateDateColumn()
   date: Date;
 

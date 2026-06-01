@@ -10,7 +10,13 @@ import { CheckResult } from 'src/types/reports.types';
 import { LlmService } from 'src/llm/llm.service';
 import { PromptService } from 'src/prompt/prompt.service';
 import { CheckResultDto } from '../dto/check-result.dto';
-import { CombineCheckResultDto, CombineCheckResultsDto, MultipleReviewDto } from '../reports.types';
+import {
+  CombineCheckResultDto,
+  CombineCheckResultsDto,
+  ModelCheckResultSummary,
+  MultipleReviewDto,
+} from '../reports.types';
+import { PromptInjectionService } from 'src/security/prompt-injection.service';
 
 @Injectable()
 export class MultipleModelStrategy implements ReportStrategy {
@@ -23,6 +29,7 @@ export class MultipleModelStrategy implements ReportStrategy {
     private readonly fileService: FileService,
     private readonly llmService: LlmService,
     private readonly promptService: PromptService,
+    private readonly promptInjectionService: PromptInjectionService,
   ) {}
 
   async check(dto: CheckReportDto) {
@@ -84,6 +91,7 @@ export class MultipleModelStrategy implements ReportStrategy {
     } = data;
 
     const studentStr = `${student.name} ${student.surname} ${student.middlename}`;
+    const securityAnalysis = this.promptInjectionService.analyze(answer);
 
     this.logger.log(
       `Началось сведение ответов для студента [${studentStr}] моделью [${modelReview.name}]`,
@@ -94,6 +102,7 @@ export class MultipleModelStrategy implements ReportStrategy {
       answer,
       checks: result,
       content,
+      securityAnalysis,
     });
 
     const reviewModelResponse = await this.llmService.query(prompt, modelReview);
@@ -109,9 +118,15 @@ export class MultipleModelStrategy implements ReportStrategy {
     );
 
     const resultDto = await this.llmService.extractData(CheckResultDto, reviewModelResponse);
+    const checkedResult = this.promptInjectionService.mergeResultFields(
+      resultDto,
+      securityAnalysis,
+    );
+
+    this.promptInjectionService.assertGeneratedReviewAllowed(checkedResult);
 
     const finalResult: CheckResult = {
-      ...resultDto,
+      ...checkedResult,
       student,
       model: modelReview,
       answer,
@@ -128,18 +143,21 @@ export class MultipleModelStrategy implements ReportStrategy {
       .map((resultPromise) => resultPromise.value);
 
     for (let i = 0; i < results[0].length; i++) {
-      const check: string[] = [];
+      const check: ModelCheckResultSummary[] = [];
       const answer: string = results[0][i].answer;
 
       for (const result of results) {
-        const checkStr = `
-          Review: ${result[i].review}
-          Grade: ${result[i].grade}
-          Advantages: ${result[i].advantages.join(', ')}
-          Disadvantages: ${result[i].disadvantages.join(', ')}
-        `;
-
-        check.push(checkStr);
+        check.push({
+          modelName: result[i].model.name,
+          review: result[i].review,
+          grade: result[i].grade,
+          advantages: result[i].advantages,
+          disadvantages: result[i].disadvantages,
+          promptInjectionDetected: result[i].promptInjectionDetected,
+          promptInjectionRisk: result[i].promptInjectionRisk,
+          promptInjectionFragments: result[i].promptInjectionFragments,
+          securityComment: result[i].securityComment,
+        });
       }
 
       reviewData.push({ student: results[0][i].student, result: check, answer });

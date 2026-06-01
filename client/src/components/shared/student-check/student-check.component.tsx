@@ -1,6 +1,6 @@
 import { FC, useState } from 'react';
 
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Divider } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Chip, Divider } from '@mui/material';
 
 import { ICheckItem } from '@@types';
 import { COLORS } from '@constants';
@@ -42,6 +42,7 @@ export const StudentCheck: FC<StudentCheckProps> = ({ student, checks }) => {
             <StudenText>{date.toLocaleString()}</StudenText>
             <StudenText>{check.model.name}</StudenText>
             <StudenText>{check.grade}/10</StudenText>
+            {check.promptInjectionDetected && <Chip color="warning" label="Prompt injection" size="small" />}
           </Box>
 
           <Button

@@ -29,6 +29,22 @@ export class CheckItemDto {
 
   @ApiProperty()
   @Expose()
+  promptInjectionDetected: boolean;
+
+  @ApiProperty()
+  @Expose()
+  promptInjectionRisk: string;
+
+  @ApiProperty()
+  @Expose()
+  promptInjectionFragments: string;
+
+  @ApiProperty()
+  @Expose()
+  securityComment: string;
+
+  @ApiProperty()
+  @Expose()
   date: Date;
 
   @ApiProperty()

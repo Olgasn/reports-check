@@ -30,6 +30,22 @@ export class CheckDto {
   report: string;
 
   @ApiProperty()
+  @Expose()
+  promptInjectionDetected: boolean;
+
+  @ApiProperty()
+  @Expose()
+  promptInjectionRisk: string;
+
+  @ApiProperty()
+  @Expose()
+  promptInjectionFragments: string;
+
+  @ApiProperty()
+  @Expose()
+  securityComment: string;
+
+  @ApiProperty()
   @Type(() => LabDto)
   @Expose()
   lab: LabDto;

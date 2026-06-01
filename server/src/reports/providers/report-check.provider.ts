@@ -10,6 +10,7 @@ import { CheckService } from 'src/check/check.service';
 import { StudentService } from 'src/student/student.service';
 import { Check } from 'src/check/entities/check.entity';
 import { isSimilarStudents } from '../reports.utils';
+import { PromptInjectionService } from 'src/security/prompt-injection.service';
 
 @Injectable()
 export class ReportCheck {
@@ -22,6 +23,7 @@ export class ReportCheck {
     private readonly llmService: LlmService,
     private readonly checkService: CheckService,
     private readonly studentService: StudentService,
+    private readonly promptInjectionService: PromptInjectionService,
   ) {}
 
   async checkOneReport(data: CheckOneReportDto) {
@@ -37,7 +39,14 @@ export class ReportCheck {
     });
     this.logger.log(`Начал провека отчета студента [${studentStr}] моделью [${model.name}]`);
 
-    const basePrompt = this.promptService.preparePrompt(report.content, task, content);
+    const securityAnalysis = this.promptInjectionService.analyze(report.content);
+
+    const basePrompt = this.promptService.preparePrompt(
+      report.content,
+      task,
+      content,
+      securityAnalysis,
+    );
 
     const prompt = await this.preparePrompt(basePrompt, checkPrev, studentFound?.id);
 
@@ -58,13 +67,23 @@ export class ReportCheck {
     this.logger.log(`Отчет студента [${studentStr}] был проверен моделью [${model.name}]`);
 
     const resultDto = await this.llmService.extractData(CheckResultDto, result);
+    const checkedResult = this.promptInjectionService.mergeResultFields(
+      resultDto,
+      securityAnalysis,
+    );
+
+    this.promptInjectionService.assertGeneratedReviewAllowed(checkedResult);
 
     const check: CheckResult = {
       student,
-      grade: resultDto.grade,
-      review: resultDto.review,
-      advantages: resultDto.advantages,
-      disadvantages: resultDto.disadvantages,
+      grade: checkedResult.grade,
+      review: checkedResult.review,
+      advantages: checkedResult.advantages,
+      disadvantages: checkedResult.disadvantages,
+      promptInjectionDetected: checkedResult.promptInjectionDetected,
+      promptInjectionRisk: checkedResult.promptInjectionRisk,
+      promptInjectionFragments: checkedResult.promptInjectionFragments,
+      securityComment: checkedResult.securityComment,
       model,
       answer: report.content,
     };
@@ -85,11 +104,13 @@ export class ReportCheck {
 
     const fullText = prompt.system ? `${prompt.system}\n${prompt.user}` : prompt.user;
 
+    const prevSecurityAnalysis = this.promptInjectionService.analyze(prevCheck.report);
+
     const newPrompt = this.promptService.preparePrevPrompt({
       ...prevCheck,
       grade: String(prevCheck.grade),
       promptTxt: fullText,
-    });
+    }, prevSecurityAnalysis);
 
     return { system: '', user: newPrompt };
   }
@@ -122,6 +143,10 @@ export class ReportCheck {
         modelId,
         grade: result.grade,
         report: result.answer,
+        promptInjectionDetected: result.promptInjectionDetected,
+        promptInjectionRisk: result.promptInjectionRisk,
+        promptInjectionFragments: result.promptInjectionFragments.join('\n'),
+        securityComment: result.securityComment,
       });
 
       checks.push(check);

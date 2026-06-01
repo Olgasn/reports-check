@@ -12,12 +12,22 @@ export const formatCheckToText = (check: CheckCopyBtnProps) => {
 
   const advantages = formatList(check.advantages);
   const disadvantages = formatList(check.disadvantages);
+  const security = check.promptInjectionDetected
+    ? `
+    **Prompt injection:** обнаружена
+    **Риск:** ${check.promptInjectionRisk ?? 'unknown'}
+    **Фрагменты:**
+    ${check.promptInjectionFragments ?? ''}
+    **Комментарий безопасности:** ${check.securityComment ?? ''}
+    `
+    : '';
 
   const text = `
     **Студент: ${check.studentStr}**
     **Оценка: ${check.grade}/10**
     **Модель: ${check.model.name}**
     **Дата: ${date.toLocaleDateString()}**
+    ${security}
 
     **Отзыв:**
     ${check.review}

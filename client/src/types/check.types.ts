@@ -19,6 +19,10 @@ export interface ICheckItem {
   date: string;
   model: IModel;
   report: string;
+  promptInjectionDetected: boolean;
+  promptInjectionRisk: string;
+  promptInjectionFragments: string;
+  securityComment: string;
 }
 
 export interface IGroupCheck {
@@ -51,6 +55,10 @@ export interface ICheck {
   model: IModel;
   lab: ILab;
   report: string;
+  promptInjectionDetected: boolean;
+  promptInjectionRisk: string;
+  promptInjectionFragments: string;
+  securityComment: string;
   date: string;
 }
 

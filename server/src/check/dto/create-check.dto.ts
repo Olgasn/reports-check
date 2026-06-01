@@ -7,4 +7,8 @@ export class CreateCheckDto {
   disadvantages: string;
   grade: number;
   report: string;
+  promptInjectionDetected?: boolean;
+  promptInjectionRisk?: string;
+  promptInjectionFragments?: string;
+  securityComment?: string;
 }

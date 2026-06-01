@@ -10,6 +10,26 @@ import { LlmInterfaces } from 'src/types/reports.types';
 import { Model } from 'src/model/entities/model.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { CheckResult } from 'src/types/reports.types';
+import { PromptInjectionService } from 'src/security/prompt-injection.service';
+
+const cleanSecurityAnalysis = {
+  detected: false,
+  riskLevel: 'none' as const,
+  indicators: [],
+  fragments: [],
+};
+
+const makePromptInjectionService = () => ({
+  analyze: jest.fn().mockReturnValue(cleanSecurityAnalysis),
+  mergeResultFields: jest.fn((result) => ({
+    ...result,
+    promptInjectionDetected: false,
+    promptInjectionRisk: 'none',
+    promptInjectionFragments: [],
+    securityComment: '',
+  })),
+  assertGeneratedReviewAllowed: jest.fn(),
+});
 
 const makeModel = (id: number, name: string): Model =>
   ({ id, name, value: name, llmInterface: LlmInterfaces.OpenAi, cacheControl: false } as Model);
@@ -25,6 +45,10 @@ const makeCheckResult = (overrides: Partial<CheckResult> = {}): CheckResult => (
   disadvantages: ['краткость'],
   model: makeModel(1, 'model-a'),
   answer: 'ответ студента',
+  promptInjectionDetected: false,
+  promptInjectionRisk: 'none',
+  promptInjectionFragments: [],
+  securityComment: '',
   ...overrides,
 });
 
@@ -41,6 +65,7 @@ describe('MultipleModelStrategy — prepareMultipleData', () => {
         { provide: FileService, useValue: {} },
         { provide: LlmService, useValue: {} },
         { provide: PromptService, useValue: {} },
+        { provide: PromptInjectionService, useValue: makePromptInjectionService() },
       ],
     }).compile();
 
@@ -62,8 +87,8 @@ describe('MultipleModelStrategy — prepareMultipleData', () => {
     expect(reviewData).toHaveLength(1);
     expect(reviewData[0].student).toEqual(student);
     expect(reviewData[0].result).toHaveLength(2);
-    expect(reviewData[0].result[0]).toContain('Grade: 7');
-    expect(reviewData[0].result[1]).toContain('Grade: 9');
+    expect(reviewData[0].result[0]).toMatchObject({ modelName: 'a', grade: 7 });
+    expect(reviewData[0].result[1]).toMatchObject({ modelName: 'b', grade: 9 });
   });
 
   it('skips rejected model results', () => {
@@ -90,7 +115,7 @@ describe('MultipleModelStrategy — prepareMultipleData', () => {
     expect(reviewData[0].answer).toBe('конкретный ответ');
   });
 
-  it('formats check string with Review, Grade, Advantages, Disadvantages', () => {
+  it('formats model check result as structured data', () => {
     const result: CheckResult[] = [
       makeCheckResult({ grade: 8, review: 'неплохо', advantages: ['чёткость'], disadvantages: ['нет примеров'] }),
     ];
@@ -100,12 +125,19 @@ describe('MultipleModelStrategy — prepareMultipleData', () => {
     ];
 
     const reviewData = strategy.prepareMultipleData(settled);
-    const checkStr = reviewData[0].result[0];
+    const check = reviewData[0].result[0];
 
-    expect(checkStr).toContain('Review: неплохо');
-    expect(checkStr).toContain('Grade: 8');
-    expect(checkStr).toContain('Advantages: чёткость');
-    expect(checkStr).toContain('Disadvantages: нет примеров');
+    expect(check).toMatchObject({
+      modelName: 'model-a',
+      review: 'неплохо',
+      grade: 8,
+      advantages: ['чёткость'],
+      disadvantages: ['нет примеров'],
+      promptInjectionDetected: false,
+      promptInjectionRisk: 'none',
+      promptInjectionFragments: [],
+      securityComment: '',
+    });
   });
 });
 
@@ -129,6 +161,7 @@ describe('MultipleModelStrategy — prepareCheckData excludes last model from ch
         { provide: FileService, useValue: fileService },
         { provide: LlmService, useValue: {} },
         { provide: PromptService, useValue: {} },
+        { provide: PromptInjectionService, useValue: makePromptInjectionService() },
       ],
     }).compile();
 
@@ -206,6 +239,7 @@ describe('MultipleModelStrategy — combineCheckResult', () => {
         { provide: FileService, useValue: fileService },
         { provide: LlmService, useValue: llmService },
         { provide: PromptService, useValue: promptService },
+        { provide: PromptInjectionService, useValue: makePromptInjectionService() },
       ],
     }).compile();
 
@@ -215,6 +249,17 @@ describe('MultipleModelStrategy — combineCheckResult', () => {
   it('queries llm, writes log file, extracts result and returns CheckResult', async () => {
     const modelReview = makeModel(3, 'reviewer');
     const student = makeStudent();
+    const modelCheck = {
+      modelName: 'checker',
+      grade: 8,
+      review: 'check review',
+      advantages: ['a'],
+      disadvantages: [],
+      promptInjectionDetected: false,
+      promptInjectionRisk: 'none' as const,
+      promptInjectionFragments: [],
+      securityComment: '',
+    };
 
     const splitPrompt = { system: 'sys', user: 'usr' };
     promptService.prepareMultiplePrompt.mockReturnValue(splitPrompt);
@@ -230,7 +275,7 @@ describe('MultipleModelStrategy — combineCheckResult', () => {
       modelReview,
       task: 'задание',
       content: 'промпт',
-      data: { student, result: ['check1'], answer: 'ответ' },
+      data: { student, result: [modelCheck], answer: 'ответ' },
     });
 
     expect(llmService.query).toHaveBeenCalledWith(splitPrompt, modelReview);

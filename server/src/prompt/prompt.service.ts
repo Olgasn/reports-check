@@ -6,8 +6,16 @@ import { UpdatePromptDto } from './dto/update-promt.dto';
 import { ConfigService } from '@nestjs/config';
 import { PromptConfig } from 'src/types/config.types';
 import { Prompt } from './entities/prompt.entity';
+import { PromptInjectionAnalysis } from 'src/security/prompt-injection.service';
 
 export type SplitPrompt = { system: string; user: string };
+
+const DEFAULT_SECURITY_CONTEXT = {
+  detected: false,
+  riskLevel: 'none',
+  indicators: [],
+  fragments: [],
+} as const satisfies PromptInjectionAnalysis;
 
 @Injectable()
 export class PromptService {
@@ -46,6 +54,41 @@ export class PromptService {
     };
   }
 
+  buildUntrustedBlock(label: string, content: string) {
+    const tag = `UNTRUSTED_${label.toUpperCase()}`;
+    const sanitized = this.sanitizeUntrustedText(content, tag);
+
+    return `<${tag}>\n${sanitized}\n</${tag}>`;
+  }
+
+  sanitizeUntrustedText(content: string, tag?: string) {
+    let sanitized = content
+      .replace(/@SPLIT/g, '[REMOVED_SPLIT_MARKER]')
+      .replace(/<\/?JSON>/gi, '[REMOVED_JSON_MARKER]');
+
+    if (tag) {
+      sanitized = sanitized.replace(
+        new RegExp(`<\\s*/?\\s*${tag}\\s*>`, 'gi'),
+        `[REMOVED_${tag}_MARKER]`,
+      );
+    }
+
+    return sanitized;
+  }
+
+  formatSecurityContext(analysis: PromptInjectionAnalysis = DEFAULT_SECURITY_CONTEXT) {
+    return JSON.stringify(
+      {
+        promptInjectionDetected: analysis.detected,
+        promptInjectionRisk: analysis.riskLevel,
+        indicators: analysis.indicators,
+        suspiciousFragments: analysis.fragments,
+      },
+      null,
+      2,
+    );
+  }
+
   preparePrevPrompt(data: {
     review: string;
     grade: string;
@@ -53,35 +96,50 @@ export class PromptService {
     disadvantages: string;
     promptTxt: string;
     report: string;
-  }) {
+  }, securityAnalysis: PromptInjectionAnalysis = DEFAULT_SECURITY_CONTEXT) {
     let template = this.templatePrev;
 
     template = template.replace('@PROMPT', data.promptTxt);
+    template = template.replace('@SECURITY_CONTEXT', this.formatSecurityContext(securityAnalysis));
     template = template.replace('@PREV_REVIEW', data.review);
     template = template.replace('@PREV_GRADE', data.grade);
     template = template.replace('@PREV_ADVANTAGES', data.advantages);
     template = template.replace('@PREV_DISADVANTAGES', data.disadvantages);
-    template = template.replace('@PREV_REPORT', data.report);
+    template = template.replace('@PREV_REPORT', this.buildUntrustedBlock('previous_report', data.report));
 
     return template;
   }
 
-  prepareMultiplePrompt(data: { task: string; answer: string; content: string; checks: string[] }): SplitPrompt {
-    const { task, answer, content, checks } = data;
+  prepareMultiplePrompt(data: {
+    task: string;
+    answer: string;
+    content: string;
+    checks: unknown[];
+    securityAnalysis?: PromptInjectionAnalysis;
+  }): SplitPrompt {
+    const { task, answer, content, checks, securityAnalysis } = data;
+    const checksJson = JSON.stringify(checks, null, 2);
     const template = this.templateMultiple
+      .replace('@SECURITY_CONTEXT', this.formatSecurityContext(securityAnalysis))
       .replace('@PROMPT_TEXT', content)
       .replace('@LAB_TASK', task)
-      .replace('@STUDENT_ANSWER', answer)
-      .replace('@MODELS_CHECK_RESULT', checks.join(', '));
+      .replace('@STUDENT_ANSWER', this.buildUntrustedBlock('student_report', answer))
+      .replace('@MODELS_CHECK_RESULT', this.buildUntrustedBlock('model_check_results', checksJson));
 
     return this.splitAtMarker(template);
   }
 
-  preparePrompt(answer: string, task: string, content: string): SplitPrompt {
+  preparePrompt(
+    answer: string,
+    task: string,
+    content: string,
+    securityAnalysis: PromptInjectionAnalysis = DEFAULT_SECURITY_CONTEXT,
+  ): SplitPrompt {
     const template = this.template
+      .replace('@SECURITY_CONTEXT', this.formatSecurityContext(securityAnalysis))
       .replace('@PROMPT_TEXT', content)
       .replace('@LAB_TASK', task)
-      .replace('@STUDENT_ANSWER', answer);
+      .replace('@STUDENT_ANSWER', this.buildUntrustedBlock('student_report', answer));
 
     return this.splitAtMarker(template);
   }

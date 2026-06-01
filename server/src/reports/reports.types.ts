@@ -2,6 +2,7 @@ import { Model } from 'src/model/entities/model.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { CheckResult, ReportCheck } from 'src/types/reports.types';
 import { ReportCheck as ReportCheckType } from 'src/types/reports.types';
+import { PromptInjectionRiskLevel } from 'src/security/prompt-injection.service';
 
 export interface CheckOneReportDto {
   report: ReportCheck;
@@ -27,9 +28,21 @@ export interface FilterSuccessResultsDto {
   labId: number;
 }
 
+export interface ModelCheckResultSummary {
+  modelName: string;
+  grade: number;
+  review: string;
+  advantages: string[];
+  disadvantages: string[];
+  promptInjectionDetected: boolean;
+  promptInjectionRisk: PromptInjectionRiskLevel;
+  promptInjectionFragments: string[];
+  securityComment: string;
+}
+
 export interface MultipleReviewDto {
   student: Student;
-  result: string[];
+  result: ModelCheckResultSummary[];
   answer: string;
 }
 

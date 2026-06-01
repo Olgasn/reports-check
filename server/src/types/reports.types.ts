@@ -1,5 +1,6 @@
 import { Model } from 'src/model/entities/model.entity';
 import { Student } from 'src/student/entities/student.entity';
+import { PromptInjectionRiskLevel } from 'src/security/prompt-injection.service';
 
 export interface ReportCheck {
   name: string;
@@ -20,6 +21,10 @@ export interface CheckResult {
   advantages: string[];
   disadvantages: string[];
   review: string;
+  promptInjectionDetected: boolean;
+  promptInjectionRisk: PromptInjectionRiskLevel;
+  promptInjectionFragments: string[];
+  securityComment: string;
   model: Model;
   answer: string;
 }

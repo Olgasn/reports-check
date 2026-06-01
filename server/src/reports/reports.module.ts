@@ -14,6 +14,7 @@ import { ReportCheck } from './providers/report-check.provider';
 import { OneModelStrategy } from './strategies/one-model.strategy';
 import { MultipleModelStrategy } from './strategies/multiple-model.strategy';
 import { ReportStrategy } from './providers/report-strategy.provider';
+import { SecurityModule } from 'src/security/security.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ReportStrategy } from './providers/report-strategy.provider';
     PromptModule,
     GroupModule,
     NotificationModule,
+    SecurityModule,
   ],
   providers: [ReportsService, ReportCheck, OneModelStrategy, MultipleModelStrategy, ReportStrategy],
   controllers: [ReportsController],

@@ -24,6 +24,10 @@ const makeCheckResult = (): CheckResult => ({
   disadvantages: [],
   model: makeModel(),
   answer: 'ответ',
+  promptInjectionDetected: false,
+  promptInjectionRisk: 'none',
+  promptInjectionFragments: [],
+  securityComment: '',
 });
 
 const makeReportData = () => ({

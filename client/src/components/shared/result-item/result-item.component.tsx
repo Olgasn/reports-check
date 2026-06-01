@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-import { Box, Divider } from '@mui/material';
+import { Alert, Box, Divider } from '@mui/material';
 
 import { TextDiv, BoldSpan, RegularSpan } from './result-item.styled';
 import { ResultItemProps } from './result-item.types';
@@ -12,12 +12,32 @@ export const ResultItem: FC<ResultItemProps> = ({
   advantages,
   disadvantages,
   date,
+  promptInjectionDetected,
+  promptInjectionRisk,
+  promptInjectionFragments,
+  securityComment,
 }) => {
   const d = new Date(date);
+  const fragments = promptInjectionFragments?.split('\n').filter(Boolean) ?? [];
 
   return (
     <Box display="flex" flexDirection="column">
       <Divider flexItem sx={{ mb: 2 }} />
+
+      {promptInjectionDetected && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Обнаружена возможная prompt-инъекция
+          {promptInjectionRisk && `, риск: ${promptInjectionRisk}`}
+          {securityComment && `. ${securityComment}`}
+          {fragments.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              {fragments.map((fragment, ind) => (
+                <Box key={ind}>{fragment}</Box>
+              ))}
+            </Box>
+          )}
+        </Alert>
+      )}
 
       <Box display="flex" flexDirection="row" justifyContent="space-between">
         <TextDiv>

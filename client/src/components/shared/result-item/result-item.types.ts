@@ -7,4 +7,8 @@ export interface ResultItemProps {
   advantages: string;
   disadvantages: string;
   date: string;
+  promptInjectionDetected?: boolean;
+  promptInjectionRisk?: string;
+  promptInjectionFragments?: string;
+  securityComment?: string;
 }

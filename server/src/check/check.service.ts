@@ -56,8 +56,20 @@ export class CheckService {
   }
 
   async create(createCheckDto: CreateCheckDto) {
-    const { review, advantages, disadvantages, studentId, labId, modelId, grade, report } =
-      createCheckDto;
+    const {
+      review,
+      advantages,
+      disadvantages,
+      studentId,
+      labId,
+      modelId,
+      grade,
+      report,
+      promptInjectionDetected = false,
+      promptInjectionRisk = 'none',
+      promptInjectionFragments = '',
+      securityComment = '',
+    } = createCheckDto;
 
     const student = await this.studentService.findOne(studentId);
     const lab = await this.labService.findOne(labId);
@@ -72,6 +84,10 @@ export class CheckService {
       lab,
       model,
       report,
+      promptInjectionDetected,
+      promptInjectionRisk,
+      promptInjectionFragments,
+      securityComment,
     });
 
     const check = await this.checkRepo.save(checkPlain);
