@@ -11,10 +11,10 @@ import { Check } from 'src/check/entities/check.entity';
 import { CheckResult } from 'src/types/reports.types';
 
 const makeModel = (): Model =>
-  ({ id: 1, name: 'gpt-4', value: 'gpt-4', llmInterface: LlmInterfaces.OpenAi } as Model);
+  ({ id: 1, name: 'gpt-4', value: 'gpt-4', llmInterface: LlmInterfaces.OpenAi }) as Model;
 
 const makeStudent = (): Student =>
-  ({ id: 1, name: 'Мария', surname: 'Кузнецова', middlename: 'Сергеевна' } as Student);
+  ({ id: 1, name: 'Мария', surname: 'Кузнецова', middlename: 'Сергеевна' }) as Student;
 
 const makeCheckResult = (): CheckResult => ({
   student: makeStudent(),
@@ -92,7 +92,12 @@ describe('OneModelStrategy — prepareCheckData', () => {
     modelService.findOne.mockResolvedValue(makeModel());
 
     const report1 = makeReportData();
-    const report2 = { ...makeReportData(), name: 'Петр', surname: 'Петров', middlename: 'Петрович' };
+    const report2 = {
+      ...makeReportData(),
+      name: 'Петр',
+      surname: 'Петров',
+      middlename: 'Петрович',
+    };
     fileService.parseArchive.mockResolvedValue([report1, report2]);
 
     const data = await strategy.prepareCheckData({
@@ -145,7 +150,11 @@ describe('OneModelStrategy — prepareCheckData', () => {
 
 describe('OneModelStrategy — check (orchestration)', () => {
   let strategy: OneModelStrategy;
-  let reportCheck: { checkOneReport: jest.Mock; filterSuccessResults: jest.Mock; createChecks: jest.Mock };
+  let reportCheck: {
+    checkOneReport: jest.Mock;
+    filterSuccessResults: jest.Mock;
+    createChecks: jest.Mock;
+  };
   let labService: { findOne: jest.Mock };
   let modelService: { findOne: jest.Mock };
   let fileService: { parseArchive: jest.Mock };

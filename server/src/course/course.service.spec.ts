@@ -77,7 +77,10 @@ describe('CourseService', () => {
   // ─── findAllCourses ──────────────────────────────────────────
   describe('findAllCourses', () => {
     it('returns all courses with only id and name selected', async () => {
-      const courses = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }];
+      const courses = [
+        { id: 1, name: 'A' },
+        { id: 2, name: 'B' },
+      ];
       courseRepo.find.mockResolvedValue(courses);
 
       const result = await service.findAllCourses();
@@ -108,7 +111,11 @@ describe('CourseService', () => {
   describe('create', () => {
     it('creates and saves a new course', async () => {
       const dto = { name: 'New Course', description: 'A test course' };
-      courseRepo.save.mockResolvedValue({ id: 1, name: 'New Course', description: 'A test course' });
+      courseRepo.save.mockResolvedValue({
+        id: 1,
+        name: 'New Course',
+        description: 'A test course',
+      });
 
       const result = await service.create(dto);
 

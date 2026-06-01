@@ -89,14 +89,17 @@ export class PromptService {
     );
   }
 
-  preparePrevPrompt(data: {
-    review: string;
-    grade: string;
-    advantages: string;
-    disadvantages: string;
-    promptTxt: string;
-    report: string;
-  }, securityAnalysis: PromptInjectionAnalysis = DEFAULT_SECURITY_CONTEXT) {
+  preparePrevPrompt(
+    data: {
+      review: string;
+      grade: string;
+      advantages: string;
+      disadvantages: string;
+      promptTxt: string;
+      report: string;
+    },
+    securityAnalysis: PromptInjectionAnalysis = DEFAULT_SECURITY_CONTEXT,
+  ) {
     let template = this.templatePrev;
 
     template = template.replace('@PROMPT', data.promptTxt);
@@ -105,7 +108,10 @@ export class PromptService {
     template = template.replace('@PREV_GRADE', data.grade);
     template = template.replace('@PREV_ADVANTAGES', data.advantages);
     template = template.replace('@PREV_DISADVANTAGES', data.disadvantages);
-    template = template.replace('@PREV_REPORT', this.buildUntrustedBlock('previous_report', data.report));
+    template = template.replace(
+      '@PREV_REPORT',
+      this.buildUntrustedBlock('previous_report', data.report),
+    );
 
     return template;
   }

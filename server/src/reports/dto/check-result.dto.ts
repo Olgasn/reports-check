@@ -15,12 +15,7 @@ import {
 } from 'class-validator';
 import { PromptInjectionRiskLevel } from 'src/security/prompt-injection.service';
 
-const PROMPT_INJECTION_RISK_LEVELS: PromptInjectionRiskLevel[] = [
-  'none',
-  'low',
-  'medium',
-  'high',
-];
+const PROMPT_INJECTION_RISK_LEVELS: PromptInjectionRiskLevel[] = ['none', 'low', 'medium', 'high'];
 
 export class CheckResultDto {
   @ApiProperty()

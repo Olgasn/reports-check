@@ -23,17 +23,14 @@ const makeModel = (overrides: Partial<Model> = {}): Model =>
     llmInterface: LlmInterfaces.OpenAi,
     cacheControl: false,
     ...overrides,
-  } as Model);
+  }) as Model;
 
 describe('LlmService — pure helpers', () => {
   let service: LlmService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        LlmService,
-        { provide: LlmProviderFactory, useValue: { create: jest.fn() } },
-      ],
+      providers: [LlmService, { provide: LlmProviderFactory, useValue: { create: jest.fn() } }],
     }).compile();
 
     service = module.get(LlmService);

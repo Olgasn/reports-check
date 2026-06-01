@@ -1,12 +1,22 @@
 import { FileService } from './file.service';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as JSZip from 'jszip';
+import * as pdfParseModule from 'pdf-parse';
+import * as mammothModule from 'mammoth';
 
 // Mock external parsers
 jest.mock('pdf-parse', () => jest.fn().mockResolvedValue({ text: 'parsed pdf content' }));
 jest.mock('mammoth', () => ({
   extractRawText: jest.fn().mockResolvedValue({ value: 'parsed docx content' }),
 }));
+jest.mock('jszip', () => ({
+  loadAsync: jest.fn(),
+}));
+
+const mockedPdfParse = jest.mocked(pdfParseModule);
+const mockedMammoth = jest.mocked(mammothModule);
+const mockedJSZip = jest.mocked(JSZip);
 
 describe('FileService', () => {
   let service: FileService;
@@ -55,22 +65,20 @@ describe('FileService', () => {
   // ─── parseFile ───────────────────────────────────────────────
   describe('parseFile', () => {
     it('parses .pdf files via pdf-parse', async () => {
-      const pdfParse = require('pdf-parse');
       const buffer = Buffer.from('fake pdf');
 
       const result = await service.parseFile('report.pdf', buffer);
 
-      expect(pdfParse).toHaveBeenCalledWith(buffer);
+      expect(mockedPdfParse).toHaveBeenCalledWith(buffer);
       expect(result).toBe('parsed pdf content');
     });
 
     it('parses .docx files via mammoth', async () => {
-      const mammoth = require('mammoth');
       const buffer = Buffer.from('fake docx');
 
       const result = await service.parseFile('report.docx', buffer);
 
-      expect(mammoth.extractRawText).toHaveBeenCalledWith({ buffer });
+      expect(mockedMammoth.extractRawText).toHaveBeenCalledWith({ buffer });
       expect(result).toBe('parsed docx content');
     });
 
@@ -126,9 +134,7 @@ describe('FileService', () => {
     });
 
     it('handles extra whitespace between name parts', () => {
-      const result = service.parseStudentFromFilename(
-        'Петров  Петр  Петрович_ЛР2.docx',
-      );
+      const result = service.parseStudentFromFilename('Петров  Петр  Петрович_ЛР2.docx');
 
       expect(result).toEqual({
         name: 'Петр',
@@ -176,10 +182,9 @@ describe('FileService', () => {
   // ─── extractFolderContent ────────────────────────────────────
   describe('extractFolderContent', () => {
     it('picks the first .pdf file in the folder and parses it', async () => {
-      jest.spyOn(fs, 'readdirSync').mockReturnValue([
-        'report.pdf' as any,
-        'notes.txt' as any,
-      ] as any);
+      jest
+        .spyOn(fs, 'readdirSync')
+        .mockReturnValue(['report.pdf' as any, 'notes.txt' as any] as any);
       jest.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from('pdf data'));
 
       const result = await service.extractFolderContent('/fake/folder');
@@ -188,10 +193,9 @@ describe('FileService', () => {
     });
 
     it('picks .docx over .doc when both present (first match wins)', async () => {
-      jest.spyOn(fs, 'readdirSync').mockReturnValue([
-        'report.docx' as any,
-        'backup.doc' as any,
-      ] as any);
+      jest
+        .spyOn(fs, 'readdirSync')
+        .mockReturnValue(['report.docx' as any, 'backup.doc' as any] as any);
       jest.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from('docx data'));
 
       const result = await service.extractFolderContent('/fake/folder');
@@ -212,10 +216,7 @@ describe('FileService', () => {
 
   // ─── parseSingleReport ───────────────────────────────────────
   describe('parseSingleReport', () => {
-    const makeFile = (
-      originalname: string,
-      content: string,
-    ): Express.Multer.File =>
+    const makeFile = (originalname: string, content: string): Express.Multer.File =>
       ({
         originalname,
         buffer: Buffer.from(content),
@@ -266,7 +267,6 @@ describe('FileService', () => {
   // ─── parseStudentsFromFile (ZIP student list) ────────────────
   describe('parseStudentsFromFile', () => {
     it('parses student names from flat ZIP file structure', async () => {
-      const JSZip = require('jszip');
       const mockZip = {
         files: {
           'Иванов Иван Иванович_12345_assignsubmission/report.pdf': { dir: false },
@@ -274,7 +274,7 @@ describe('FileService', () => {
           'some_folder/': { dir: true },
         },
       };
-      JSZip.loadAsync = jest.fn().mockResolvedValue(mockZip);
+      mockedJSZip.loadAsync.mockResolvedValue(mockZip as unknown as JSZip);
 
       jest.spyOn(fs, 'existsSync').mockReturnValue(true);
       jest.spyOn(fs, 'mkdirSync').mockImplementation(() => undefined as any);
@@ -291,8 +291,7 @@ describe('FileService', () => {
     });
 
     it('cleans up temp directory in finally block', async () => {
-      const JSZip = require('jszip');
-      JSZip.loadAsync = jest.fn().mockResolvedValue({ files: {} });
+      mockedJSZip.loadAsync.mockResolvedValue({ files: {} } as unknown as JSZip);
 
       jest.spyOn(fs, 'existsSync').mockReturnValue(true);
       jest.spyOn(fs, 'mkdirSync').mockImplementation(() => undefined as any);
@@ -300,17 +299,16 @@ describe('FileService', () => {
 
       await service.parseStudentsFromFile(Buffer.from('fake zip'));
 
-      expect(rmSyncSpy).toHaveBeenCalledWith(
-        expect.stringContaining('temp'),
-        { recursive: true, force: true },
-      );
+      expect(rmSyncSpy).toHaveBeenCalledWith(expect.stringContaining('temp'), {
+        recursive: true,
+        force: true,
+      });
     });
   });
 
   // ─── parseArchive ────────────────────────────────────────────
   describe('parseArchive', () => {
     it('extracts ZIP, processes folders and cleans up temp dir', async () => {
-      const JSZip = require('jszip');
       const mockZipFile = {
         async: jest.fn().mockResolvedValue(Buffer.from('file content')),
         name: 'Иванов Иван Иванович_1/report.pdf',
@@ -322,7 +320,7 @@ describe('FileService', () => {
           'Иванов Иван Иванович_1/report.pdf': mockZipFile,
         },
       };
-      JSZip.loadAsync = jest.fn().mockResolvedValue(mockZip);
+      mockedJSZip.loadAsync.mockResolvedValue(mockZip as unknown as JSZip);
 
       let dirExists = false;
       jest.spyOn(fs, 'existsSync').mockImplementation(() => dirExists);
@@ -353,10 +351,10 @@ describe('FileService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Иван');
       expect(result[0].surname).toBe('Иванов');
-      expect(rmSyncSpy).toHaveBeenCalledWith(
-        expect.stringContaining('temp'),
-        { recursive: true, force: true },
-      );
+      expect(rmSyncSpy).toHaveBeenCalledWith(expect.stringContaining('temp'), {
+        recursive: true,
+        force: true,
+      });
     });
   });
 
@@ -366,9 +364,7 @@ describe('FileService', () => {
       const makeDirent = (name: string, isDir: boolean) =>
         ({ isDirectory: () => isDir, name }) as any;
 
-      jest.spyOn(fs, 'readdirSync').mockReturnValue([
-        makeDirent('file.txt', false),
-      ]);
+      jest.spyOn(fs, 'readdirSync').mockReturnValue([makeDirent('file.txt', false)]);
 
       const resultPromise = service.processFolders('/root');
 
@@ -378,17 +374,15 @@ describe('FileService', () => {
 
     it('skips folders with unparseable names (no underscore → num is undefined but still processes)', async () => {
       const makeDirent = (name: string, isDir: boolean) =>
-        ({ isDirectory: () => isDir, name }) as any;
+        ({ isDirectory: () => isDir, name }) as fs.Dirent;
 
-      let readdirCallCount = 0;
-      jest.spyOn(fs, 'readdirSync').mockImplementation((dirPath: any, options?: any) => {
-        readdirCallCount++;
+      jest.spyOn(fs, 'readdirSync').mockImplementation((_dirPath: fs.PathLike, options?: any) => {
         if (options?.withFileTypes) {
           // processFolders call
           return [makeDirent('badfolder', true)];
         }
         // extractFolderContent call — must return a matching file
-        return ['report.pdf'];
+        return ['report.pdf'] as any;
       });
 
       jest.spyOn(fs, 'readFileSync').mockReturnValue(Buffer.from('some content'));

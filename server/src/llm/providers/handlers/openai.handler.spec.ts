@@ -28,7 +28,7 @@ const makeModel = (overrides: Partial<Model> = {}): Model =>
     provider: { id: 1, name: 'OpenRouter', url: 'https://openrouter.ai/api/v1' },
     key: { id: 1, name: 'my-key', value: 'sk-test-key' },
     ...overrides,
-  } as Model);
+  }) as Model;
 
 describe('OpenAiHandler — completion', () => {
   let handler: OpenAiHandler;
@@ -46,7 +46,7 @@ describe('OpenAiHandler — completion', () => {
               create: mockCreate,
             },
           },
-        } as any),
+        }) as any,
     );
   });
 

@@ -164,7 +164,9 @@ describe('LabService', () => {
       labRepo.save.mockResolvedValue({ ...existing, course });
 
       const result = await service.update(1, {
-        name: 'Lab', description: 'D', courseId: 10,
+        name: 'Lab',
+        description: 'D',
+        courseId: 10,
       });
 
       expect(courseService.findOne).toHaveBeenCalledWith(10);
@@ -181,7 +183,9 @@ describe('LabService', () => {
       fileService.parseFile.mockResolvedValue('new parsed');
 
       await service.update(1, {
-        name: 'Lab', description: 'D', task: taskFile,
+        name: 'Lab',
+        description: 'D',
+        task: taskFile,
       });
 
       expect(fileService.parseFile).toHaveBeenCalledWith('new_task.pdf', taskFile.buffer);

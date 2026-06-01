@@ -103,16 +103,17 @@ export class PromptInjectionService {
     analysis: PromptInjectionAnalysis,
   ): T & Required<PromptInjectionResultFields> {
     const detected = Boolean(result.promptInjectionDetected) || analysis.detected;
-    const promptInjectionRisk = this.maxRisk(result.promptInjectionRisk ?? 'none', analysis.riskLevel);
+    const promptInjectionRisk = this.maxRisk(
+      result.promptInjectionRisk ?? 'none',
+      analysis.riskLevel,
+    );
     const promptInjectionFragments = this.unique([
       ...(result.promptInjectionFragments ?? []),
       ...analysis.fragments,
     ]);
     const securityComment =
       result.securityComment ??
-      (detected
-        ? 'Potential prompt injection was detected in untrusted report content.'
-        : '');
+      (detected ? 'Potential prompt injection was detected in untrusted report content.' : '');
 
     return {
       ...result,
@@ -123,8 +124,16 @@ export class PromptInjectionService {
     };
   }
 
-  assertGeneratedReviewAllowed(result: { review?: string; advantages?: string[]; disadvantages?: string[] }) {
-    const text = [result.review ?? '', ...(result.advantages ?? []), ...(result.disadvantages ?? [])]
+  assertGeneratedReviewAllowed(result: {
+    review?: string;
+    advantages?: string[];
+    disadvantages?: string[];
+  }) {
+    const text = [
+      result.review ?? '',
+      ...(result.advantages ?? []),
+      ...(result.disadvantages ?? []),
+    ]
       .join('\n')
       .toLowerCase();
 

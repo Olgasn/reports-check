@@ -2,8 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { StudentService } from './student.service';
 import { GroupService } from 'src/group/group.service';
-import { Student } from './entities/student.entity';
-import { Group } from 'src/group/entities/group.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('StudentService', () => {
@@ -99,7 +97,10 @@ describe('StudentService', () => {
   // ─── findMany ────────────────────────────────────────────────
   describe('findMany', () => {
     it('returns all students with group relation', async () => {
-      const students = [{ id: 1, group: {} }, { id: 2, group: {} }];
+      const students = [
+        { id: 1, group: {} },
+        { id: 2, group: {} },
+      ];
       studentRepo.find.mockResolvedValue(students);
 
       const result = await service.findMany();
@@ -185,7 +186,10 @@ describe('StudentService', () => {
       studentRepo.save.mockResolvedValue({ ...existing, group });
 
       const result = await service.update(1, {
-        name: 'x', surname: 'y', middlename: 'z', groupId: 5,
+        name: 'x',
+        surname: 'y',
+        middlename: 'z',
+        groupId: 5,
       });
 
       expect(groupService.findOne).toHaveBeenCalledWith(5);
@@ -349,10 +353,26 @@ describe('StudentService', () => {
     const makeCsvFile = (content: string): Express.Multer.File =>
       ({ buffer: Buffer.from(content, 'utf-8') }) as Express.Multer.File;
 
+    const makeTransactionManager = (overrides: Record<string, unknown> = {}) => ({
+      getRepository: jest.fn().mockReturnValue({
+        find: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        create: jest.fn((dto: unknown) => dto),
+        save: jest.fn((entity: unknown) => Promise.resolve(entity)),
+        ...overrides,
+      }),
+    });
+
+    const makeMockDataSource = (transactionOverrides: Record<string, unknown> = {}) => ({
+      getRepository: jest.fn().mockReturnValue(studentRepo),
+      transaction: jest.fn().mockImplementation((cb: (manager: unknown) => unknown) => {
+        const manager = makeTransactionManager(transactionOverrides);
+        return cb(manager);
+      }),
+    });
+
     it('throws BadRequestException when file is nil', async () => {
-      await expect(service.importFromCsv(undefined as any)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.importFromCsv(undefined as any)).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when CSV has only headers', async () => {
@@ -368,29 +388,7 @@ describe('StudentService', () => {
     });
 
     it('imports students with transaction', async () => {
-      // Create a mock that supports the transaction pattern
-      const transactionResult = {
-        totalRows: 1,
-        createdStudents: 1,
-        duplicateStudents: 0,
-        createdGroups: 1,
-        skippedRows: 0,
-      };
-
-      const mockDataSource = {
-        getRepository: jest.fn().mockReturnValue(studentRepo),
-        transaction: jest.fn().mockImplementation(async (cb: Function) => {
-          const manager = {
-            getRepository: jest.fn().mockReturnValue({
-              find: jest.fn().mockResolvedValue([]),
-              findOne: jest.fn().mockResolvedValue(null),
-              create: jest.fn((dto) => dto),
-              save: jest.fn((entity) => Promise.resolve(entity)),
-            }),
-          };
-          return cb(manager);
-        }),
-      };
+      const mockDataSource = makeMockDataSource();
 
       const module2: TestingModule = await Test.createTestingModule({
         providers: [
@@ -410,20 +408,7 @@ describe('StudentService', () => {
     });
 
     it('skips rows with missing required fields', async () => {
-      const mockDataSource = {
-        getRepository: jest.fn().mockReturnValue(studentRepo),
-        transaction: jest.fn().mockImplementation(async (cb: Function) => {
-          const manager = {
-            getRepository: jest.fn().mockReturnValue({
-              find: jest.fn().mockResolvedValue([]),
-              findOne: jest.fn().mockResolvedValue(null),
-              create: jest.fn((dto) => dto),
-              save: jest.fn((entity) => Promise.resolve(entity)),
-            }),
-          };
-          return cb(manager);
-        }),
-      };
+      const mockDataSource = makeMockDataSource();
 
       const module2: TestingModule = await Test.createTestingModule({
         providers: [
@@ -444,20 +429,9 @@ describe('StudentService', () => {
 
     it('counts duplicates when student already exists', async () => {
       const existingStudent = { id: 1, name: 'Иван', surname: 'Иванов', middlename: 'Иванович' };
-      const mockDataSource = {
-        getRepository: jest.fn().mockReturnValue(studentRepo),
-        transaction: jest.fn().mockImplementation(async (cb: Function) => {
-          const manager = {
-            getRepository: jest.fn().mockReturnValue({
-              find: jest.fn().mockResolvedValue([]),
-              findOne: jest.fn().mockResolvedValue(existingStudent),
-              create: jest.fn((dto) => dto),
-              save: jest.fn((entity) => Promise.resolve(entity)),
-            }),
-          };
-          return cb(manager);
-        }),
-      };
+      const mockDataSource = makeMockDataSource({
+        findOne: jest.fn().mockResolvedValue(existingStudent),
+      });
 
       const module2: TestingModule = await Test.createTestingModule({
         providers: [
@@ -477,20 +451,7 @@ describe('StudentService', () => {
     });
 
     it('uses middlename column when present and defaults to "-" when empty', async () => {
-      const mockDataSource = {
-        getRepository: jest.fn().mockReturnValue(studentRepo),
-        transaction: jest.fn().mockImplementation(async (cb: Function) => {
-          const manager = {
-            getRepository: jest.fn().mockReturnValue({
-              find: jest.fn().mockResolvedValue([]),
-              findOne: jest.fn().mockResolvedValue(null),
-              create: jest.fn((dto) => dto),
-              save: jest.fn((entity) => Promise.resolve(entity)),
-            }),
-          };
-          return cb(manager);
-        }),
-      };
+      const mockDataSource = makeMockDataSource();
 
       const module2: TestingModule = await Test.createTestingModule({
         providers: [

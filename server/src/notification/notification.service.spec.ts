@@ -11,10 +11,7 @@ describe('NotificationService', () => {
     wsGateway = { sendToUser: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        NotificationService,
-        { provide: WsGateway, useValue: wsGateway },
-      ],
+      providers: [NotificationService, { provide: WsGateway, useValue: wsGateway }],
     }).compile();
 
     service = module.get(NotificationService);

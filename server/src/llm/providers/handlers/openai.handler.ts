@@ -59,7 +59,7 @@ export class OpenAiHandler implements ILlmProviderHandler {
 
     const completion = await openai.chat.completions.create({
       model: modelName,
-	  reasoning_effort: "high",
+      reasoning_effort: 'high',
       messages,
       top_p: model.top_p,
       max_tokens: model.max_tokens,

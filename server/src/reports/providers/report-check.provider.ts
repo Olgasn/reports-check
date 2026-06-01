@@ -106,11 +106,14 @@ export class ReportCheck {
 
     const prevSecurityAnalysis = this.promptInjectionService.analyze(prevCheck.report);
 
-    const newPrompt = this.promptService.preparePrevPrompt({
-      ...prevCheck,
-      grade: String(prevCheck.grade),
-      promptTxt: fullText,
-    }, prevSecurityAnalysis);
+    const newPrompt = this.promptService.preparePrevPrompt(
+      {
+        ...prevCheck,
+        grade: String(prevCheck.grade),
+        promptTxt: fullText,
+      },
+      prevSecurityAnalysis,
+    );
 
     return { system: '', user: newPrompt };
   }

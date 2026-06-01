@@ -32,10 +32,10 @@ const makePromptInjectionService = () => ({
 });
 
 const makeModel = (id: number, name: string): Model =>
-  ({ id, name, value: name, llmInterface: LlmInterfaces.OpenAi, cacheControl: false } as Model);
+  ({ id, name, value: name, llmInterface: LlmInterfaces.OpenAi, cacheControl: false }) as Model;
 
 const makeStudent = (): Student =>
-  ({ id: 1, name: 'Анна', surname: 'Сидорова', middlename: 'Павловна' } as Student);
+  ({ id: 1, name: 'Анна', surname: 'Сидорова', middlename: 'Павловна' }) as Student;
 
 const makeCheckResult = (overrides: Partial<CheckResult> = {}): CheckResult => ({
   student: makeStudent(),
@@ -117,12 +117,15 @@ describe('MultipleModelStrategy — prepareMultipleData', () => {
 
   it('formats model check result as structured data', () => {
     const result: CheckResult[] = [
-      makeCheckResult({ grade: 8, review: 'неплохо', advantages: ['чёткость'], disadvantages: ['нет примеров'] }),
+      makeCheckResult({
+        grade: 8,
+        review: 'неплохо',
+        advantages: ['чёткость'],
+        disadvantages: ['нет примеров'],
+      }),
     ];
 
-    const settled: PromiseSettledResult<CheckResult[]>[] = [
-      { status: 'fulfilled', value: result },
-    ];
+    const settled: PromiseSettledResult<CheckResult[]>[] = [{ status: 'fulfilled', value: result }];
 
     const reviewData = strategy.prepareMultipleData(settled);
     const check = reviewData[0].result[0];
@@ -263,7 +266,9 @@ describe('MultipleModelStrategy — combineCheckResult', () => {
 
     const splitPrompt = { system: 'sys', user: 'usr' };
     promptService.prepareMultiplePrompt.mockReturnValue(splitPrompt);
-    llmService.query.mockResolvedValue('<JSON>{"grade":9,"review":"отлично","advantages":["a"],"disadvantages":[]}</JSON>');
+    llmService.query.mockResolvedValue(
+      '<JSON>{"grade":9,"review":"отлично","advantages":["a"],"disadvantages":[]}</JSON>',
+    );
     llmService.extractData.mockResolvedValue({
       grade: 9,
       review: 'отлично',

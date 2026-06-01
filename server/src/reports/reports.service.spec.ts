@@ -5,11 +5,14 @@ import { CheckService } from 'src/check/check.service';
 import { PromptService } from 'src/prompt/prompt.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { ReportStrategy } from './providers/report-strategy.provider';
-import { Logger } from '@nestjs/common';
 
 describe('ReportsService', () => {
   let service: ReportsService;
-  let notificationService: { checkStarted: jest.Mock; reportsChecked: jest.Mock; checkFailed: jest.Mock };
+  let notificationService: {
+    checkStarted: jest.Mock;
+    reportsChecked: jest.Mock;
+    checkFailed: jest.Mock;
+  };
   let fileService: { parseStudentsFromFile: jest.Mock };
   let checkService: { getLabChecks: jest.Mock; getByIds: jest.Mock };
   let reportStrategy: { getStrategy: jest.Mock };
@@ -91,9 +94,9 @@ describe('ReportsService', () => {
     });
 
     it('calls setImmediate with the check function', () => {
-      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((fn: any) => {
+      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation(() => {
         // Don't actually execute; we just verify it was called
-        return {} as any;
+        return {} as NodeJS.Immediate;
       });
 
       service.handleCheckReports({
@@ -114,10 +117,10 @@ describe('ReportsService', () => {
 
       reportStrategy.getStrategy.mockReturnValue(mockStrategy);
 
-      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((fn: any) => {
+      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((cb) => {
         // Execute synchronously so we can verify
-        fn();
-        return {} as any;
+        (cb as () => void)();
+        return {} as NodeJS.Immediate;
       });
 
       const dto = {
@@ -151,9 +154,9 @@ describe('ReportsService', () => {
 
       reportStrategy.getStrategy.mockReturnValue(mockStrategy);
 
-      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((fn: any) => {
-        fn();
-        return {} as any;
+      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((cb) => {
+        (cb as () => void)();
+        return {} as NodeJS.Immediate;
       });
 
       service.handleCheckReports({
@@ -181,9 +184,9 @@ describe('ReportsService', () => {
 
       reportStrategy.getStrategy.mockReturnValue(mockStrategy);
 
-      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((fn: any) => {
-        fn();
-        return {} as any;
+      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((cb) => {
+        (cb as () => void)();
+        return {} as NodeJS.Immediate;
       });
 
       service.handleCheckReports({
@@ -210,9 +213,9 @@ describe('ReportsService', () => {
       reportStrategy.getStrategy.mockReturnValue(mockStrategy);
 
       // Execute setImmediate callback synchronously
-      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((fn: any) => {
-        fn();
-        return {} as any;
+      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((cb) => {
+        (cb as () => void)();
+        return {} as NodeJS.Immediate;
       });
 
       service.handleCheckReports({
@@ -238,9 +241,9 @@ describe('ReportsService', () => {
       const mockStrategy = { check: jest.fn().mockResolvedValue([]) };
       reportStrategy.getStrategy.mockReturnValue(mockStrategy);
 
-      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((fn: any) => {
-        fn();
-        return {} as any;
+      const setImmediateSpy = jest.spyOn(global, 'setImmediate').mockImplementation((cb) => {
+        (cb as () => void)();
+        return {} as NodeJS.Immediate;
       });
 
       service.handleCheckReports({

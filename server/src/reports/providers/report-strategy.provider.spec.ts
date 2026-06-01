@@ -19,10 +19,7 @@ describe('ReportStrategy', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ReportStrategy,
-        { provide: ModuleRef, useValue: moduleRef },
-      ],
+      providers: [ReportStrategy, { provide: ModuleRef, useValue: moduleRef }],
     }).compile();
 
     provider = module.get(ReportStrategy);

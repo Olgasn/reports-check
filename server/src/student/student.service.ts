@@ -1,4 +1,10 @@
-import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { Student } from './entities/student.entity';
 import { GroupService } from 'src/group/group.service';
@@ -131,9 +137,7 @@ export class StudentService {
     const groupsIdx = headers.findIndex((h) => h.startsWith('групп') || h === 'groups');
 
     if (nameIdx === -1 || surnameIdx === -1 || groupsIdx === -1) {
-      throw new BadRequestException(
-        'В CSV должны быть столбцы: Имя, Фамилия и Группы.',
-      );
+      throw new BadRequestException('В CSV должны быть столбцы: Имя, Фамилия и Группы.');
     }
 
     const result = await this.dataSource.transaction(async (manager) => {

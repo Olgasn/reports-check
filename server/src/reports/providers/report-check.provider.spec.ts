@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReportCheck } from './report-check.provider';
 import { NotificationService } from 'src/notification/notification.service';
@@ -33,10 +34,16 @@ const makePromptInjectionService = () => ({
 });
 
 const makeModel = (overrides: Partial<Model> = {}): Model =>
-  ({ id: 1, name: 'gpt-4', value: 'gpt-4', llmInterface: LlmInterfaces.OpenAi, ...overrides } as Model);
+  ({
+    id: 1,
+    name: 'gpt-4',
+    value: 'gpt-4',
+    llmInterface: LlmInterfaces.OpenAi,
+    ...overrides,
+  }) as Model;
 
 const makeStudent = (overrides: Partial<Student> = {}): Student =>
-  ({ id: 10, name: 'Иван', surname: 'Иванов', middlename: 'Иванович', ...overrides } as Student);
+  ({ id: 10, name: 'Иван', surname: 'Иванов', middlename: 'Иванович', ...overrides }) as Student;
 
 const makeReport = () => ({
   name: 'Иван',
@@ -69,7 +76,14 @@ describe('ReportCheck — filterSuccessResults', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReportCheck,
-        { provide: NotificationService, useValue: { reportOneStarted: jest.fn(), reportOneChecked: jest.fn(), reportOneFailed: jest.fn() } },
+        {
+          provide: NotificationService,
+          useValue: {
+            reportOneStarted: jest.fn(),
+            reportOneChecked: jest.fn(),
+            reportOneFailed: jest.fn(),
+          },
+        },
         { provide: PromptService, useValue: {} },
         { provide: FileService, useValue: { writeFile: jest.fn() } },
         { provide: LlmService, useValue: {} },
@@ -80,7 +94,7 @@ describe('ReportCheck — filterSuccessResults', () => {
     }).compile();
 
     provider = module.get(ReportCheck);
-    notificationService = module.get(NotificationService) as jest.Mocked<NotificationService>;
+    notificationService = module.get(NotificationService);
   });
 
   it('returns only fulfilled results', () => {
@@ -143,7 +157,14 @@ describe('ReportCheck — processStudent', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReportCheck,
-        { provide: NotificationService, useValue: { reportOneStarted: jest.fn(), reportOneChecked: jest.fn(), reportOneFailed: jest.fn() } },
+        {
+          provide: NotificationService,
+          useValue: {
+            reportOneStarted: jest.fn(),
+            reportOneChecked: jest.fn(),
+            reportOneFailed: jest.fn(),
+          },
+        },
         { provide: PromptService, useValue: {} },
         { provide: FileService, useValue: {} },
         { provide: LlmService, useValue: {} },
@@ -161,7 +182,10 @@ describe('ReportCheck — processStudent', () => {
     studentService.findRawStudent.mockResolvedValue(existing);
 
     const result = await provider.processStudent({
-      name: 'Иван', surname: 'Иванов', middlename: 'Иванович', groupId: 1,
+      name: 'Иван',
+      surname: 'Иванов',
+      middlename: 'Иванович',
+      groupId: 1,
     });
 
     expect(result.student).toBe(existing);
@@ -175,7 +199,10 @@ describe('ReportCheck — processStudent', () => {
     studentService.create.mockResolvedValue(created);
 
     const result = await provider.processStudent({
-      name: 'Иван', surname: 'Иванов', middlename: 'Иванович', groupId: 2,
+      name: 'Иван',
+      surname: 'Иванов',
+      middlename: 'Иванович',
+      groupId: 2,
     });
 
     expect(result.student.id).toBe(99);
@@ -188,7 +215,10 @@ describe('ReportCheck — processStudent', () => {
     studentService.findRawStudent.mockResolvedValue(makeStudent());
 
     const result = await provider.processStudent({
-      name: 'Иван', surname: 'Иванов', middlename: 'Иванович', groupId: 1,
+      name: 'Иван',
+      surname: 'Иванов',
+      middlename: 'Иванович',
+      groupId: 1,
     });
 
     expect(result.studentStr).toBe('Иван Иванов Иванович');
@@ -242,7 +272,11 @@ describe('ReportCheck — preparePrompt', () => {
 
   it('builds prev prompt from system+user when both present', async () => {
     const prevCheck = {
-      review: 'prev review', grade: 7, advantages: 'adv', disadvantages: 'dis', report: 'rep',
+      review: 'prev review',
+      grade: 7,
+      advantages: 'adv',
+      disadvantages: 'dis',
+      report: 'rep',
     };
     checkService.findLastCheck.mockResolvedValue(prevCheck);
     promptService.preparePrevPrompt.mockReturnValue('prev prompt text');
@@ -259,7 +293,11 @@ describe('ReportCheck — preparePrompt', () => {
 
   it('builds prev prompt from user only when system is empty', async () => {
     const prevCheck = {
-      review: 'r', grade: 5, advantages: 'a', disadvantages: 'd', report: 'rep',
+      review: 'r',
+      grade: 5,
+      advantages: 'a',
+      disadvantages: 'd',
+      report: 'rep',
     };
     checkService.findLastCheck.mockResolvedValue(prevCheck);
     promptService.preparePrevPrompt.mockReturnValue('result');
@@ -380,7 +418,8 @@ describe('ReportCheck - checkOneReport', () => {
     const model = makeModel({ id: 5, name: 'main-model' });
     const report = makeReport();
     const splitPrompt = { system: 'system prompt', user: 'user prompt' };
-    const rawModelResponse = '<JSON>{"grade":8,"review":"ok","advantages":["a"],"disadvantages":["d"]}</JSON>';
+    const rawModelResponse =
+      '<JSON>{"grade":8,"review":"ok","advantages":["a"],"disadvantages":["d"]}</JSON>';
 
     studentService.findRawStudent.mockResolvedValue(student);
     promptService.preparePrompt.mockReturnValue(splitPrompt);

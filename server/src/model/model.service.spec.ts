@@ -115,7 +115,7 @@ describe('ModelService', () => {
       modelFabric.create.mockReturnValue(handler);
       const dto = { name: 'new', llmInterface: LlmInterfaces.Ollama };
 
-      const result = await service.update(1, dto);
+      await service.update(1, dto);
 
       expect(modelRepo.findOne).toHaveBeenCalledWith({
         where: { id: 1 },

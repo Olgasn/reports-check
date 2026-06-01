@@ -153,9 +153,9 @@ describe('GroupService', () => {
       groupRepo.findOne.mockResolvedValue(group);
       studentService.findOne.mockResolvedValue(student);
 
-      await expect(
-        service.addMember({ studentId: 10, groupId: 1 }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.addMember({ studentId: 10, groupId: 1 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -180,9 +180,9 @@ describe('GroupService', () => {
       groupRepo.findOne.mockResolvedValue(group);
       studentService.findOne.mockResolvedValue(student);
 
-      await expect(
-        service.removeMember({ studentId: 99, groupId: 1 }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.removeMember({ studentId: 99, groupId: 1 })).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -193,7 +193,11 @@ describe('GroupService', () => {
       studentService.searchStudents.mockResolvedValue({ items: [], count: 0 });
 
       await service.getGroupStudents({
-        groupId: 1, page: 1, pageSize: 10, offset: 0, search: '',
+        groupId: 1,
+        page: 1,
+        pageSize: 10,
+        offset: 0,
+        search: '',
       } as any);
 
       expect(studentService.searchStudents).toHaveBeenCalled();
@@ -204,7 +208,11 @@ describe('GroupService', () => {
 
       await expect(
         service.getGroupStudents({
-          groupId: 999, page: 1, pageSize: 10, offset: 0, search: '',
+          groupId: 999,
+          page: 1,
+          pageSize: 10,
+          offset: 0,
+          search: '',
         } as any),
       ).rejects.toThrow(NotFoundException);
     });
