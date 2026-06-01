@@ -1,5 +1,7 @@
 # Reports Check
 
+[![CI](https://github.com/Olgasn/reports-check/actions/workflows/ci.yml/badge.svg)](https://github.com/Olgasn/reports-check/actions/workflows/ci.yml)
+
 Программный комплекс для автоматической проверки отчётов по лабораторным работам студентов с использованием языковых моделей (LLM).
 
 ## Назначение
