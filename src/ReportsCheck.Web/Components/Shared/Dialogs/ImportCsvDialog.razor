@@ -1,0 +1,39 @@
+@namespace ReportsCheck.Web.Components.Shared.Dialogs
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">CSV со столбцами: Имя, Фамилия, Группы (опционально Отчество).</MudText>
+        <MudFileUpload T="IBrowserFile" @bind-Files="_file" Accept=".csv">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.UploadFile">
+                    @(_file?.Name ?? "Выбрать CSV-файл")
+                </MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="_file is null">Импорт</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private IBrowserFile? _file;
+
+    private async Task Submit()
+    {
+        if (_file is null)
+        {
+            return;
+        }
+
+        using var stream = _file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        MudDialog.Close(DialogResult.Ok(ms.ToArray()));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,32 @@
+@namespace ReportsCheck.Web.Components.Shared.Dialogs
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-3" />
+        <MudTextField @bind-Value="_description" Label="Описание" Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Name { get; set; } = string.Empty;
+    [Parameter] public string Description { get; set; } = string.Empty;
+
+    private string _name = string.Empty;
+    private string _description = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _name = Name;
+        _description = Description;
+    }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok((_name, _description)));
+
+    private void Cancel() => MudDialog.Cancel();
+}

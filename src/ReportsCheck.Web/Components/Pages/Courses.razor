@@ -1,0 +1,118 @@
+@page "/courses"
+@using ReportsCheck.Application.Common.Models
+@using ReportsCheck.Application.Features.Courses
+@using ReportsCheck.Web.Components.Shared.Dialogs
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Курсы</PageTitle>
+
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h4">Курсы</MudText>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="AddCourse">Добавить курс</MudButton>
+</MudStack>
+
+<MudTextField @bind-Value="_search" Label="Поиск по названию" Immediate="true" DebounceInterval="1000"
+              OnDebounceIntervalElapsed="OnSearchChanged" Adornment="Adornment.Start"
+              AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-4" />
+
+@if (_result is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudGrid>
+        @foreach (var course in _result.Items)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">@course.Name</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@course.Description</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Size="Size.Small" OnClick="() => Open(course.Id)">Открыть</MudButton>
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="() => EditCourse(course)" />
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteCourse(course)" />
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudPagination Class="mt-4" Count="@PageCount" Selected="_page" SelectedChanged="OnPageChanged" />
+}
+
+@code {
+    private const int PageSize = 9;
+    private PaginatedResult<CourseDto>? _result;
+    private string _search = string.Empty;
+    private int _page = 1;
+
+    private int PageCount => _result is null ? 1 : Math.Max(1, (int)Math.Ceiling(_result.Total / (double)PageSize));
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        _result = await Mediator.Send(new SearchCoursesQuery((_page - 1) * PageSize, PageSize, _search));
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _search = value;
+        _page = 1;
+        await Load();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _page = page;
+        await Load();
+    }
+
+    private void Open(int id) => Navigation.NavigateTo($"/courses/{id}");
+
+    private async Task AddCourse()
+    {
+        var dialog = await DialogService.ShowAsync<CourseDialog>("Новый курс");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: ValueTuple<string, string> data })
+        {
+            await Mediator.Send(new CreateCourseCommand(data.Item1, data.Item2));
+            Snackbar.Add("Курс создан", Severity.Success);
+            await Load();
+        }
+    }
+
+    private async Task EditCourse(CourseDto course)
+    {
+        var parameters = new DialogParameters<CourseDialog>
+        {
+            { x => x.Name, course.Name },
+            { x => x.Description, course.Description },
+        };
+        var dialog = await DialogService.ShowAsync<CourseDialog>("Редактирование курса", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: ValueTuple<string, string> data })
+        {
+            await Mediator.Send(new UpdateCourseCommand(course.Id, data.Item1, data.Item2));
+            Snackbar.Add("Курс обновлён", Severity.Success);
+            await Load();
+        }
+    }
+
+    private async Task DeleteCourse(CourseDto course)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить курс «{course.Name}»?", yesText: "Удалить", cancelText: "Отмена");
+        if (confirmed == true)
+        {
+            await Mediator.Send(new DeleteCourseCommand(course.Id));
+            Snackbar.Add("Курс удалён", Severity.Success);
+            await Load();
+        }
+    }
+}

@@ -1,0 +1,58 @@
+@namespace ReportsCheck.Web.Components.Shared
+
+@* Порт ResultItem: оценка, модель, дата, отзыв, плюсы/минусы и предупреждение об инъекции. *@
+<MudPaper Class="pa-4 mb-3" Elevation="1">
+    @if (Check.PromptInjectionDetected)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-3" Icon="@Icons.Material.Filled.Security">
+            <MudText Typo="Typo.subtitle2">Обнаружена возможная инъекция промпта (риск: @Check.PromptInjectionRisk)</MudText>
+            @if (!string.IsNullOrWhiteSpace(Check.SecurityComment))
+            {
+                <MudText Typo="Typo.body2">@Check.SecurityComment</MudText>
+            }
+            @if (!string.IsNullOrWhiteSpace(Check.PromptInjectionFragments))
+            {
+                <MudList T="string" Dense="true">
+                    @foreach (var fragment in Check.PromptInjectionFragments.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.Warning">@fragment</MudListItem>
+                    }
+                </MudList>
+            }
+        </MudAlert>
+    }
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudChip T="string" Color="Color.Primary">Оценка: @Check.Grade</MudChip>
+        <MudText Typo="Typo.caption">@(Check.Model?.Name) · @Check.Date.ToLocalTime().ToString("g")</MudText>
+    </MudStack>
+
+    <MudText Typo="Typo.subtitle2">Отзыв</MudText>
+    <MudText Typo="Typo.body2" Class="mb-2" Style="white-space: pre-wrap;">@Check.Review</MudText>
+
+    @if (!string.IsNullOrWhiteSpace(Check.Advantages))
+    {
+        <MudText Typo="Typo.subtitle2">Достоинства</MudText>
+        <ol>
+            @foreach (var item in Check.Advantages.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                <li>@item</li>
+            }
+        </ol>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Check.Disadvantages))
+    {
+        <MudText Typo="Typo.subtitle2">Недостатки</MudText>
+        <ol>
+            @foreach (var item in Check.Disadvantages.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                <li>@item</li>
+            }
+        </ol>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public CheckDto Check { get; set; } = default!;
+}

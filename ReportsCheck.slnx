@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ReportsCheck.Application/ReportsCheck.Application.csproj" />
+    <Project Path="src/ReportsCheck.Domain/ReportsCheck.Domain.csproj" />
+    <Project Path="src/ReportsCheck.Infrastructure/ReportsCheck.Infrastructure.csproj" />
+    <Project Path="src/ReportsCheck.Web/ReportsCheck.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ReportsCheck.UnitTests/ReportsCheck.UnitTests.csproj" />
+  </Folder>
+</Solution>

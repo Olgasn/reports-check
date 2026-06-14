@@ -1,0 +1,86 @@
+@namespace ReportsCheck.Web.Components.Shared.Dialogs
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-2" />
+        <MudTextField @bind-Value="_value" Label="Идентификатор модели" Required="true" Class="mb-2" />
+        <MudSelect T="string" @bind-Value="_llmInterface" Label="Интерфейс" Class="mb-2">
+            <MudSelectItem Value="@("OpenAi")">OpenAi</MudSelectItem>
+            <MudSelectItem Value="@("Ollama")">Ollama</MudSelectItem>
+        </MudSelect>
+        <MudSelect T="int?" @bind-Value="_keyId" Label="Ключ" Clearable="true" Class="mb-2">
+            @foreach (var key in Keys)
+            {
+                <MudSelectItem T="int?" Value="@key.Id">@key.Name</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="int?" @bind-Value="_providerId" Label="Провайдер" Clearable="true" Class="mb-2">
+            @foreach (var provider in Providers)
+            {
+                <MudSelectItem T="int?" Value="@provider.Id">@provider.Name</MudSelectItem>
+            }
+        </MudSelect>
+        <MudNumericField @bind-Value="_temperature" Label="Temperature" Min="0" Max="2" Step="0.1" Class="mb-2" />
+        <MudNumericField @bind-Value="_topP" Label="top_p" Min="0" Max="1" Step="0.1" Class="mb-2" />
+        <MudNumericField @bind-Value="_maxTokens" Label="max_tokens" Min="1" Class="mb-2" />
+        <MudNumericField @bind-Value="_maxRetries" Label="Макс. число попыток" Min="1" Class="mb-2" />
+        <MudNumericField @bind-Value="_queryDelay" Label="Задержка запроса (мс)" Min="0" Class="mb-2" />
+        <MudNumericField @bind-Value="_errorDelay" Label="Задержка при ошибке (мс)" Min="0" Class="mb-2" />
+        <MudCheckBox @bind-Value="_cacheControl" Label="cache_control (ephemeral)" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<KeyDto> Keys { get; set; } = [];
+    [Parameter] public IReadOnlyList<ProviderDto> Providers { get; set; } = [];
+    [Parameter] public ModelDto? Existing { get; set; }
+
+    private string _name = string.Empty;
+    private string _value = string.Empty;
+    private string _llmInterface = "OpenAi";
+    private int? _keyId;
+    private int? _providerId;
+    private double _temperature = 1.0;
+    private double _topP = 1.0;
+    private int _maxTokens = 10000;
+    private int _maxRetries = 5;
+    private int _queryDelay = 2500;
+    private int _errorDelay = 10000;
+    private bool _cacheControl;
+
+    protected override void OnInitialized()
+    {
+        if (Existing is null)
+        {
+            return;
+        }
+
+        _name = Existing.Name;
+        _value = Existing.Value;
+        _llmInterface = Existing.LlmInterface;
+        _keyId = Existing.Key?.Id;
+        _providerId = Existing.Provider?.Id;
+        _temperature = Existing.Temperature;
+        _topP = Existing.TopP;
+        _maxTokens = Existing.MaxTokens;
+        _maxRetries = Existing.MaxRetries;
+        _queryDelay = Existing.QueryDelay;
+        _errorDelay = Existing.ErrorDelay;
+        _cacheControl = Existing.CacheControl;
+    }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(new ModelDialogResult(
+        _name, _value, _topP, _temperature, _maxTokens, _maxRetries, _queryDelay, _errorDelay, _llmInterface, _cacheControl, _keyId, _providerId)));
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public record ModelDialogResult(
+        string Name, string Value, double TopP, double Temperature, int MaxTokens, int MaxRetries,
+        int QueryDelay, int ErrorDelay, string LlmInterface, bool CacheControl, int? KeyId, int? ProviderId);
+}

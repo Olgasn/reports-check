@@ -1,0 +1,205 @@
+@page "/groups"
+@using ReportsCheck.Application.Common.Models
+@using ReportsCheck.Application.Features.Groups
+@using ReportsCheck.Application.Features.Students
+@using ReportsCheck.Web.Components.Shared.Dialogs
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Группы</PageTitle>
+
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h4">Группы</MudText>
+    <MudStack Row="true" Spacing="1">
+        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddGroup">Добавить группу</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.UploadFile" OnClick="ImportCsv">Импорт CSV</MudButton>
+    </MudStack>
+</MudStack>
+
+<MudGrid>
+    <MudItem xs="12" md="4">
+        <MudSelect T="int?" Value="_groupId" ValueChanged="OnGroupChanged" Label="Группа">
+            @foreach (var group in _groups)
+            {
+                <MudSelectItem T="int?" Value="@group.Id">@group.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    @if (_groupId is not null)
+    {
+        <MudItem xs="12" md="8" Class="d-flex justify-end align-center">
+            <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" OnClick="EditGroup">Переименовать</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteGroup">Удалить группу</MudButton>
+            <MudButton Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AddStudent">Добавить студента</MudButton>
+        </MudItem>
+    }
+</MudGrid>
+
+@if (_groupId is not null)
+{
+    <MudTextField @bind-Value="_search" Label="Поиск по фамилии" Immediate="true" DebounceInterval="2000"
+                  OnDebounceIntervalElapsed="OnSearchChanged" Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search" Class="my-4" />
+
+    @if (_students is not null)
+    {
+        <MudTable Items="_students.Items" Hover="true" Dense="true">
+            <HeaderContent>
+                <MudTh>Фамилия</MudTh>
+                <MudTh>Имя</MudTh>
+                <MudTh>Отчество</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Surname</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Middlename</MudTd>
+                <MudTd Style="text-align:right">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditStudent(context))" />
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteStudent(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+        <MudPagination Class="mt-4" Count="@PageCount" Selected="_page" SelectedChanged="OnPageChanged" />
+    }
+}
+
+@code {
+    private const int PageSize = 10;
+    private IReadOnlyList<GroupDto> _groups = [];
+    private int? _groupId;
+    private string _search = string.Empty;
+    private int _page = 1;
+    private PaginatedResult<StudentDto>? _students;
+
+    private int PageCount => _students is null ? 1 : Math.Max(1, (int)Math.Ceiling(_students.Total / (double)PageSize));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroups();
+        _groupId = _groups.FirstOrDefault()?.Id;
+        await LoadStudents();
+    }
+
+    private async Task LoadGroups() => _groups = await Mediator.Send(new GetGroupsQuery());
+
+    private async Task LoadStudents()
+    {
+        if (_groupId is null)
+        {
+            _students = null;
+            return;
+        }
+        _students = await Mediator.Send(new SearchGroupStudentsQuery((_page - 1) * PageSize, PageSize, _search, _groupId.Value));
+    }
+
+    private async Task OnGroupChanged(int? value)
+    {
+        _groupId = value;
+        _page = 1;
+        await LoadStudents();
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _search = value;
+        _page = 1;
+        await LoadStudents();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _page = page;
+        await LoadStudents();
+    }
+
+    private async Task AddGroup()
+    {
+        var dialog = await DialogService.ShowAsync<GroupDialog>("Новая группа");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name })
+        {
+            var id = await Mediator.Send(new CreateGroupCommand(name));
+            await LoadGroups();
+            _groupId = id;
+            await LoadStudents();
+        }
+    }
+
+    private async Task EditGroup()
+    {
+        var current = _groups.First(g => g.Id == _groupId);
+        var parameters = new DialogParameters<GroupDialog> { { x => x.Name, current.Name } };
+        var dialog = await DialogService.ShowAsync<GroupDialog>("Переименование группы", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string name })
+        {
+            await Mediator.Send(new UpdateGroupCommand(current.Id, name));
+            await LoadGroups();
+        }
+    }
+
+    private async Task DeleteGroup()
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync("Удаление", "Удалить группу со всеми студентами?", yesText: "Удалить", cancelText: "Отмена");
+        if (confirmed == true)
+        {
+            await Mediator.Send(new DeleteGroupCommand(_groupId!.Value));
+            await LoadGroups();
+            _groupId = _groups.FirstOrDefault()?.Id;
+            await LoadStudents();
+        }
+    }
+
+    private async Task AddStudent()
+    {
+        var dialog = await DialogService.ShowAsync<StudentDialog>("Новый студент");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: ValueTuple<string, string, string> data })
+        {
+            await Mediator.Send(new CreateStudentCommand(data.Item1, data.Item2, data.Item3, _groupId!.Value));
+            await LoadStudents();
+        }
+    }
+
+    private async Task EditStudent(StudentDto student)
+    {
+        var parameters = new DialogParameters<StudentDialog>
+        {
+            { x => x.Name, student.Name },
+            { x => x.Surname, student.Surname },
+            { x => x.Middlename, student.Middlename },
+        };
+        var dialog = await DialogService.ShowAsync<StudentDialog>("Редактирование студента", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: ValueTuple<string, string, string> data })
+        {
+            await Mediator.Send(new UpdateStudentCommand(student.Id, data.Item1, data.Item2, data.Item3, _groupId));
+            await LoadStudents();
+        }
+    }
+
+    private async Task DeleteStudent(StudentDto student)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить студента «{student.Surname} {student.Name}»?", yesText: "Удалить", cancelText: "Отмена");
+        if (confirmed == true)
+        {
+            await Mediator.Send(new DeleteStudentCommand(student.Id));
+            await LoadStudents();
+        }
+    }
+
+    private async Task ImportCsv()
+    {
+        var dialog = await DialogService.ShowAsync<ImportCsvDialog>("Импорт студентов из CSV");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: byte[] csv })
+        {
+            var summary = await Mediator.Send(new ImportStudentsCsvCommand(csv));
+            Snackbar.Add($"Импорт: создано {summary.CreatedStudents}, дубликатов {summary.DuplicateStudents}, новых групп {summary.CreatedGroups}, пропущено {summary.SkippedRows}", Severity.Success);
+            await LoadGroups();
+            await LoadStudents();
+        }
+    }
+}

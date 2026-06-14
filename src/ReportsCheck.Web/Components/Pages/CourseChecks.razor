@@ -1,0 +1,65 @@
+@page "/checks"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using ReportsCheck.Application.Features.Courses
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+@inject ProtectedLocalStorage LocalStorage
+
+<PageTitle>Проверка</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Проверка отчётов</MudText>
+
+<MudSelect T="int?" Value="_courseId" ValueChanged="OnCourseChanged" Label="Курс" Class="mb-4">
+    @foreach (var course in _courses)
+    {
+        <MudSelectItem T="int?" Value="@course.Id">@course.Name</MudSelectItem>
+    }
+</MudSelect>
+
+@if (_courseId is not null)
+{
+    <MudList T="LabSimpleDto">
+        @foreach (var lab in _labs)
+        {
+            <MudListItem T="LabSimpleDto" Icon="@Icons.Material.Filled.FactCheck" OnClick="@(() => Navigation.NavigateTo($"/labs/{lab.Id}/check"))">@lab.Name</MudListItem>
+        }
+    </MudList>
+}
+
+@code {
+    private const string StorageKey = "checks_course";
+    private IReadOnlyList<CourseSimpleDto> _courses = [];
+    private IReadOnlyList<LabSimpleDto> _labs = [];
+    private int? _courseId;
+
+    protected override async Task OnInitializedAsync() => _courses = await Mediator.Send(new GetAllCoursesQuery());
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var stored = await LocalStorage.GetAsync<int>(StorageKey);
+            if (stored.Success && _courses.Any(c => c.Id == stored.Value))
+            {
+                _courseId = stored.Value;
+                await LoadLabs();
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task OnCourseChanged(int? value)
+    {
+        _courseId = value;
+        if (value is not null)
+        {
+            await LocalStorage.SetAsync(StorageKey, value.Value);
+        }
+        await LoadLabs();
+    }
+
+    private async Task LoadLabs()
+    {
+        _labs = _courseId is null ? [] : await Mediator.Send(new GetCourseLabsQuery(_courseId.Value));
+    }
+}

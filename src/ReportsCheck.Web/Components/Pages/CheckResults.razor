@@ -1,0 +1,45 @@
+@page "/labs/{Id:int}/checks"
+@using ReportsCheck.Application.Features.Reports
+@inject IMediator Mediator
+
+<PageTitle>Результаты ЛР</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Результаты проверки</MudText>
+
+@if (_groups is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else if (_groups.Count == 0)
+{
+    <MudText>Проверок ещё нет.</MudText>
+}
+else
+{
+    <MudTabs Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+        @foreach (var group in _groups)
+        {
+            <MudTabPanel Text="@group.Group.Name">
+                @foreach (var studentChecks in group.Results)
+                {
+                    <MudText Typo="Typo.h6" Class="mt-2 mb-2">@studentChecks.Student.Surname @studentChecks.Student.Name @studentChecks.Student.Middlename</MudText>
+                    @foreach (var check in studentChecks.Checks)
+                    {
+                        <ResultItem Check="check" />
+                    }
+                }
+            </MudTabPanel>
+        }
+    </MudTabs>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private IReadOnlyList<LabCheckGroupDto>? _groups;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _groups = await Mediator.Send(new GetLabChecksQuery(Id));
+    }
+}

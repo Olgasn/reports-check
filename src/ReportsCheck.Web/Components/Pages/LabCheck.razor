@@ -1,0 +1,264 @@
+@page "/labs/{Id:int}/check"
+@using ReportsCheck.Application.Features.Groups
+@using ReportsCheck.Application.Features.Models
+@using ReportsCheck.Application.Features.Reports
+@using ReportsCheck.Application.Notifications
+@using ReportsCheck.Application.Reports.Models
+@inject IMediator Mediator
+@inject INotificationService Notifications
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>Проверка ЛР</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Проверка отчётов</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="7">
+        <MudPaper Class="pa-4">
+            <MudSelect T="int" MultiSelection="true" @bind-SelectedValues="_selectedModels" Label="Модели" Class="mb-3"
+                       MultiSelectionTextFunc="@(values => string.Join(", ", _models.Where(m => values.Contains(m.Id.ToString())).Select(m => m.Name)))">
+                @foreach (var model in _models)
+                {
+                    <MudSelectItem T="int" Value="@model.Id">@model.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
+                При выборе ≥2 моделей последняя в списке сводит результаты остальных.
+            </MudAlert>
+
+            <MudSelect T="int?" @bind-Value="_groupId" Label="Группа" Class="mb-3">
+                @foreach (var group in _groups)
+                {
+                    <MudSelectItem T="int?" Value="@group.Id">@group.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudRadioGroup T="string" @bind-Value="_mode" Class="mb-2">
+                <MudRadio T="string" Value="@("zip")">Архив отчётов (ZIP)</MudRadio>
+                <MudRadio T="string" Value="@("single")">Одиночный файл (PDF/DOCX/TXT)</MudRadio>
+            </MudRadioGroup>
+
+            @if (_mode == "zip")
+            {
+                <MudFileUpload T="IBrowserFile" FilesChanged="OnZipChanged" Accept=".zip" Class="mb-3">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FolderZip">
+                            @(_zipFile?.Name ?? "Выбрать ZIP-архив")
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+
+                @if (_parsedStudents.Count > 0)
+                {
+                    <MudSelect T="string" MultiSelection="true" @bind-SelectedValues="_selectedStudentIds" Label="Студенты (пусто = все)" Class="mb-3">
+                        @foreach (var student in _parsedStudents)
+                        {
+                            <MudSelectItem T="string" Value="@student.Id">@student.Surname @student.Name @student.Middlename</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+            }
+            else
+            {
+                <MudFileUpload T="IBrowserFile" @bind-Files="_singleFile" Accept=".pdf,.docx,.txt" Class="mb-3">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile">
+                            @(_singleFile?.Name ?? "Выбрать файл отчёта")
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+            }
+
+            <MudCheckBox @bind-Value="_checkPrev" Label="Учитывать предыдущую проверку" Class="mb-3" />
+
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow"
+                       OnClick="StartCheck" Disabled="_running">Запустить проверку</MudButton>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4" Style="min-height: 200px;">
+            <MudText Typo="Typo.h6" Class="mb-2">Ход проверки</MudText>
+            @if (_running)
+            {
+                <MudProgressLinear Indeterminate="true" Class="mb-2" />
+            }
+            <MudList T="string" Dense="true">
+                @foreach (var entry in _progress.Values.OrderBy(p => p.Student))
+                {
+                    <MudListItem T="string" Icon="@StatusIcon(entry.Status)" IconColor="@StatusColor(entry.Status)">
+                        @entry.Student — @entry.Model (@StatusText(entry.Status))
+                    </MudListItem>
+                }
+            </MudList>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private IReadOnlyList<ModelDto> _models = [];
+    private IReadOnlyList<GroupDto> _groups = [];
+    private IReadOnlyCollection<int> _selectedModels = new HashSet<int>();
+    private int? _groupId;
+    private string _mode = "zip";
+    private bool _checkPrev;
+    private bool _running;
+
+    private IBrowserFile? _zipFile;
+    private byte[]? _zipBytes;
+    private IBrowserFile? _singleFile;
+    private IReadOnlyList<ParsedStudent> _parsedStudents = [];
+    private IReadOnlyCollection<string> _selectedStudentIds = new HashSet<string>();
+
+    private readonly Dictionary<string, ReportProgress> _progress = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _models = await Mediator.Send(new GetModelsQuery());
+        _groups = await Mediator.Send(new GetGroupsQuery());
+
+        Notifications.OnReportProgress += HandleProgress;
+        Notifications.OnReportsChecked += HandleReportsChecked;
+        Notifications.OnCheckFailed += HandleCheckFailed;
+    }
+
+    private async Task OnZipChanged(IBrowserFile? file)
+    {
+        _zipFile = file;
+        _parsedStudents = [];
+        _selectedStudentIds = new HashSet<string>();
+
+        if (file is null)
+        {
+            _zipBytes = null;
+            return;
+        }
+
+        using var stream = file.OpenReadStream(maxAllowedSize: 100 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        _zipBytes = ms.ToArray();
+
+        _parsedStudents = await Mediator.Send(new ParseStudentsFromArchiveQuery(_zipBytes));
+    }
+
+    private async Task StartCheck()
+    {
+        if (!_selectedModels.Any() || _groupId is null)
+        {
+            Snackbar.Add("Выберите модели и группу", Severity.Warning);
+            return;
+        }
+
+        byte[]? zipBytes = null;
+        string? zipName = null;
+        byte[]? fileBytes = null;
+        string? fileName = null;
+        IReadOnlyList<ParsedStudent> students = [];
+
+        if (_mode == "zip")
+        {
+            if (_zipBytes is null)
+            {
+                Snackbar.Add("Выберите ZIP-архив", Severity.Warning);
+                return;
+            }
+            zipBytes = _zipBytes;
+            zipName = _zipFile?.Name;
+            students = _selectedStudentIds.Any()
+                ? _parsedStudents.Where(s => _selectedStudentIds.Contains(s.Id)).ToList()
+                : [];
+        }
+        else
+        {
+            if (_singleFile is null)
+            {
+                Snackbar.Add("Выберите файл отчёта", Severity.Warning);
+                return;
+            }
+            using var stream = _singleFile.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            fileBytes = ms.ToArray();
+            fileName = _singleFile.Name;
+        }
+
+        _progress.Clear();
+        _running = true;
+
+        await Mediator.Send(new EnqueueCheckReportsCommand(
+            _selectedModels.ToList(), students, Id, _groupId.Value, _checkPrev, zipName, zipBytes, fileName, fileBytes));
+
+        Snackbar.Add("Проверка началась", Severity.Info);
+    }
+
+    private void HandleProgress(ReportProgress progress)
+    {
+        if (progress.LabId != Id)
+        {
+            return;
+        }
+        _progress[$"{progress.Student}|{progress.Model}"] = progress;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleReportsChecked(ReportsCheckedNotification notification)
+    {
+        if (notification.LabId != Id)
+        {
+            return;
+        }
+        _running = false;
+        InvokeAsync(() =>
+        {
+            Snackbar.Add("Отчёты проверены", Severity.Success);
+            StateHasChanged();
+        });
+    }
+
+    private void HandleCheckFailed(CheckFailedNotification notification)
+    {
+        if (notification.LabId != Id)
+        {
+            return;
+        }
+        _running = false;
+        InvokeAsync(() =>
+        {
+            Snackbar.Add($"Не удалось проверить отчёты: {notification.Reason}", Severity.Error);
+            StateHasChanged();
+        });
+    }
+
+    private static string StatusText(string status) => status switch
+    {
+        "started" => "проверяется",
+        "checked" => "проверен",
+        "failed" => "ошибка",
+        _ => status,
+    };
+
+    private static string StatusIcon(string status) => status switch
+    {
+        "checked" => Icons.Material.Filled.CheckCircle,
+        "failed" => Icons.Material.Filled.Error,
+        _ => Icons.Material.Filled.HourglassEmpty,
+    };
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "checked" => Color.Success,
+        "failed" => Color.Error,
+        _ => Color.Warning,
+    };
+
+    public void Dispose()
+    {
+        Notifications.OnReportProgress -= HandleProgress;
+        Notifications.OnReportsChecked -= HandleReportsChecked;
+        Notifications.OnCheckFailed -= HandleCheckFailed;
+    }
+}

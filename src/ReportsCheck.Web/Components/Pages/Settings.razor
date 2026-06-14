@@ -1,0 +1,177 @@
+@page "/settings"
+@using ReportsCheck.Application.Features.Keys
+@using ReportsCheck.Application.Features.Models
+@using ReportsCheck.Application.Features.Providers
+@using ReportsCheck.Web.Components.Shared.Dialogs
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Настройки</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Настройки</MudText>
+
+<MudExpansionPanels MultiExpansion="true">
+    <MudExpansionPanel Text="Ключи API" Expanded="true">
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddKey">Добавить ключ</MudButton>
+        </MudStack>
+        <MudTable Items="_keys" Dense="true" Hover="true">
+            <HeaderContent><MudTh>Название</MudTh><MudTh>Значение</MudTh><MudTh></MudTh></HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@Mask(context.Value)</MudTd>
+                <MudTd Style="text-align:right">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditKey(context))" />
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteKey(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Провайдеры" Expanded="true">
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddProvider">Добавить провайдера</MudButton>
+        </MudStack>
+        <MudTable Items="_providers" Dense="true" Hover="true">
+            <HeaderContent><MudTh>Название</MudTh><MudTh>URL</MudTh><MudTh></MudTh></HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Url</MudTd>
+                <MudTd Style="text-align:right">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditProvider(context))" />
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteProvider(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Модели" Expanded="true">
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddModel">Добавить модель</MudButton>
+        </MudStack>
+        <MudTable Items="_models" Dense="true" Hover="true">
+            <HeaderContent><MudTh>Название</MudTh><MudTh>Идентификатор</MudTh><MudTh>Интерфейс</MudTh><MudTh></MudTh></HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Value</MudTd>
+                <MudTd>@context.LlmInterface</MudTd>
+                <MudTd Style="text-align:right">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditModel(context))" />
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteModel(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    private IReadOnlyList<KeyDto> _keys = [];
+    private IReadOnlyList<ProviderDto> _providers = [];
+    private IReadOnlyList<ModelDto> _models = [];
+
+    protected override Task OnInitializedAsync() => LoadAll();
+
+    private async Task LoadAll()
+    {
+        _keys = await Mediator.Send(new GetKeysQuery());
+        _providers = await Mediator.Send(new GetProvidersQuery());
+        _models = await Mediator.Send(new GetModelsQuery());
+    }
+
+    private static string Mask(string value) => value.Length <= 6 ? "••••" : $"{value[..3]}…{value[^3..]}";
+
+    // ----- Keys -----
+    private async Task AddKey()
+    {
+        var dialog = await DialogService.ShowAsync<KeyDialog>("Новый ключ");
+        if (await dialog.Result is { Canceled: false, Data: ValueTuple<string, string> d })
+        {
+            await Mediator.Send(new CreateKeyCommand(d.Item1, d.Item2));
+            await LoadAll();
+        }
+    }
+
+    private async Task EditKey(KeyDto key)
+    {
+        var parameters = new DialogParameters<KeyDialog> { { x => x.Name, key.Name }, { x => x.Value, key.Value } };
+        var dialog = await DialogService.ShowAsync<KeyDialog>("Редактирование ключа", parameters);
+        if (await dialog.Result is { Canceled: false, Data: ValueTuple<string, string> d })
+        {
+            await Mediator.Send(new UpdateKeyCommand(key.Id, d.Item1, d.Item2));
+            await LoadAll();
+        }
+    }
+
+    private async Task DeleteKey(KeyDto key)
+    {
+        if (await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить ключ «{key.Name}»?", yesText: "Удалить", cancelText: "Отмена") == true)
+        {
+            await Mediator.Send(new DeleteKeyCommand(key.Id));
+            await LoadAll();
+        }
+    }
+
+    // ----- Providers -----
+    private async Task AddProvider()
+    {
+        var dialog = await DialogService.ShowAsync<ProviderDialog>("Новый провайдер");
+        if (await dialog.Result is { Canceled: false, Data: ValueTuple<string, string> d })
+        {
+            await Mediator.Send(new CreateProviderCommand(d.Item1, d.Item2));
+            await LoadAll();
+        }
+    }
+
+    private async Task EditProvider(ProviderDto provider)
+    {
+        var parameters = new DialogParameters<ProviderDialog> { { x => x.Name, provider.Name }, { x => x.Url, provider.Url } };
+        var dialog = await DialogService.ShowAsync<ProviderDialog>("Редактирование провайдера", parameters);
+        if (await dialog.Result is { Canceled: false, Data: ValueTuple<string, string> d })
+        {
+            await Mediator.Send(new UpdateProviderCommand(provider.Id, d.Item1, d.Item2));
+            await LoadAll();
+        }
+    }
+
+    private async Task DeleteProvider(ProviderDto provider)
+    {
+        if (await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить провайдера «{provider.Name}»?", yesText: "Удалить", cancelText: "Отмена") == true)
+        {
+            await Mediator.Send(new DeleteProviderCommand(provider.Id));
+            await LoadAll();
+        }
+    }
+
+    // ----- Models -----
+    private async Task AddModel()
+    {
+        var parameters = new DialogParameters<ModelDialog> { { x => x.Keys, _keys }, { x => x.Providers, _providers } };
+        var dialog = await DialogService.ShowAsync<ModelDialog>("Новая модель", parameters);
+        if (await dialog.Result is { Canceled: false, Data: ModelDialog.ModelDialogResult d })
+        {
+            await Mediator.Send(new CreateModelCommand(d.Name, d.Value, d.TopP, d.Temperature, d.MaxTokens, d.MaxRetries, d.QueryDelay, d.ErrorDelay, d.LlmInterface, d.CacheControl, d.KeyId, d.ProviderId));
+            await LoadAll();
+        }
+    }
+
+    private async Task EditModel(ModelDto model)
+    {
+        var parameters = new DialogParameters<ModelDialog> { { x => x.Keys, _keys }, { x => x.Providers, _providers }, { x => x.Existing, model } };
+        var dialog = await DialogService.ShowAsync<ModelDialog>("Редактирование модели", parameters);
+        if (await dialog.Result is { Canceled: false, Data: ModelDialog.ModelDialogResult d })
+        {
+            await Mediator.Send(new UpdateModelCommand(model.Id, d.Name, d.Value, d.TopP, d.Temperature, d.MaxTokens, d.MaxRetries, d.QueryDelay, d.ErrorDelay, d.LlmInterface, d.CacheControl, d.KeyId, d.ProviderId));
+            await LoadAll();
+        }
+    }
+
+    private async Task DeleteModel(ModelDto model)
+    {
+        if (await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить модель «{model.Name}»?", yesText: "Удалить", cancelText: "Отмена") == true)
+        {
+            await Mediator.Send(new DeleteModelCommand(model.Id));
+            await LoadAll();
+        }
+    }
+}

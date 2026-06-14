@@ -1,0 +1,58 @@
+@namespace ReportsCheck.Web.Components.Shared.Dialogs
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-3" />
+        <MudTextField @bind-Value="_description" Label="Описание" Lines="2" Class="mb-3" />
+        <MudFileUpload T="IBrowserFile" @bind-Files="_file" Accept=".pdf,.docx,.txt">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile">
+                    @(_file?.Name ?? (RequireFile ? "Выбрать файл задания" : "Заменить файл задания"))
+                </MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string Name { get; set; } = string.Empty;
+    [Parameter] public string Description { get; set; } = string.Empty;
+    [Parameter] public bool RequireFile { get; set; } = true;
+
+    private string _name = string.Empty;
+    private string _description = string.Empty;
+    private IBrowserFile? _file;
+
+    protected override void OnInitialized()
+    {
+        _name = Name;
+        _description = Description;
+    }
+
+    private async Task Submit()
+    {
+        byte[]? content = null;
+        string? fileName = null;
+
+        if (_file is not null)
+        {
+            using var stream = _file.OpenReadStream(maxAllowedSize: 25 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            content = ms.ToArray();
+            fileName = _file.Name;
+        }
+
+        MudDialog.Close(DialogResult.Ok(new LabDialogResult(_name, _description, fileName, content)));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    public record LabDialogResult(string Name, string Description, string? FileName, byte[]? Content);
+}

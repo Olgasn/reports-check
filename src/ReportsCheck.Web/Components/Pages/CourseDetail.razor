@@ -1,0 +1,150 @@
+@page "/courses/{Id:int}"
+@using ReportsCheck.Application.Features.Courses
+@using ReportsCheck.Application.Features.Labs
+@using ReportsCheck.Application.Features.Prompts
+@using ReportsCheck.Web.Components.Shared.Dialogs
+@inject IMediator Mediator
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Курс</PageTitle>
+
+@if (_course is null)
+{
+    <MudProgressLinear Indeterminate="true" />
+}
+else
+{
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudText Typo="Typo.h4">@_course.Name</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="EditCourse" />
+    </MudStack>
+    <MudText Typo="Typo.body1" Class="mb-4">@_course.Description</MudText>
+
+    <MudCard Class="mb-4">
+        <MudCardHeader>
+            <CardHeaderContent><MudText Typo="Typo.h6">Промпт</MudText></CardHeaderContent>
+            <CardHeaderActions>
+                <MudButton OnClick="EditPrompt">@(_course.Prompt is null ? "Задать промпт" : "Изменить промпт")</MudButton>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@(_course.Prompt?.Content ?? "Промпт не задан")</MudText>
+        </MudCardContent>
+    </MudCard>
+
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudText Typo="Typo.h5">Лабораторные работы</MudText>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="AddLab">Добавить ЛР</MudButton>
+    </MudStack>
+
+    <MudList T="LabSimpleDto">
+        @foreach (var lab in _labs)
+        {
+            <MudListItem T="LabSimpleDto">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudText>@lab.Name</MudText>
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="@(() => Navigation.NavigateTo($"/labs/{lab.Id}/check"))">Проверить</MudButton>
+                        <MudButton Size="Size.Small" StartIcon="@Icons.Material.Filled.Assessment" OnClick="@(() => Navigation.NavigateTo($"/labs/{lab.Id}/checks"))">Результаты</MudButton>
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditLab(lab))" />
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteLab(lab))" />
+                    </MudStack>
+                </MudStack>
+            </MudListItem>
+        }
+    </MudList>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CourseDto? _course;
+    private IReadOnlyList<LabSimpleDto> _labs = [];
+
+    protected override async Task OnParametersSetAsync() => await Load();
+
+    private async Task Load()
+    {
+        _course = await Mediator.Send(new GetCourseByIdQuery(Id));
+        _labs = await Mediator.Send(new GetCourseLabsQuery(Id));
+    }
+
+    private async Task EditCourse()
+    {
+        var parameters = new DialogParameters<CourseDialog>
+        {
+            { x => x.Name, _course!.Name },
+            { x => x.Description, _course.Description },
+        };
+        var dialog = await DialogService.ShowAsync<CourseDialog>("Редактирование курса", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: ValueTuple<string, string> data })
+        {
+            await Mediator.Send(new UpdateCourseCommand(Id, data.Item1, data.Item2));
+            await Load();
+        }
+    }
+
+    private async Task EditPrompt()
+    {
+        var parameters = new DialogParameters<PromptDialog> { { x => x.Content, _course!.Prompt?.Content ?? string.Empty } };
+        var dialog = await DialogService.ShowAsync<PromptDialog>("Промпт курса", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: string content })
+        {
+            if (_course.Prompt is null)
+            {
+                await Mediator.Send(new CreatePromptCommand(content, Id));
+            }
+            else
+            {
+                await Mediator.Send(new UpdatePromptCommand(_course.Prompt.Id, content, Id));
+            }
+            Snackbar.Add("Промпт сохранён", Severity.Success);
+            await Load();
+        }
+    }
+
+    private async Task AddLab()
+    {
+        var dialog = await DialogService.ShowAsync<LabDialog>("Новая лабораторная работа");
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: LabDialog.LabDialogResult data } && data.Content is not null && data.FileName is not null)
+        {
+            await Mediator.Send(new CreateLabCommand(data.Name, data.Description, Id, data.FileName, data.Content));
+            Snackbar.Add("Лабораторная работа добавлена", Severity.Success);
+            await Load();
+        }
+    }
+
+    private async Task EditLab(LabSimpleDto lab)
+    {
+        var full = await Mediator.Send(new GetLabByIdQuery(lab.Id));
+        var parameters = new DialogParameters<LabDialog>
+        {
+            { x => x.Name, full.Name },
+            { x => x.Description, full.Description },
+            { x => x.RequireFile, false },
+        };
+        var dialog = await DialogService.ShowAsync<LabDialog>("Редактирование ЛР", parameters);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: LabDialog.LabDialogResult data })
+        {
+            await Mediator.Send(new UpdateLabCommand(lab.Id, data.Name, data.Description, data.FileName, data.Content));
+            Snackbar.Add("Лабораторная работа обновлена", Severity.Success);
+            await Load();
+        }
+    }
+
+    private async Task DeleteLab(LabSimpleDto lab)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить ЛР «{lab.Name}»?", yesText: "Удалить", cancelText: "Отмена");
+        if (confirmed == true)
+        {
+            await Mediator.Send(new DeleteLabCommand(lab.Id));
+            await Load();
+        }
+    }
+}
