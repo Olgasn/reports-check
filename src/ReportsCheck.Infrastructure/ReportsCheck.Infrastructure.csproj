@@ -21,7 +21,6 @@
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.77.0" />
     <PackageReference Include="PdfPig" Version="0.1.14" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.9" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.9" />
   </ItemGroup>
 
   <PropertyGroup>

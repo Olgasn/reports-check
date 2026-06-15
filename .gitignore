@@ -1,82 +1,72 @@
-# Dependencies
-node_modules/
+# ---------- .NET ----------
 
 # Build output
-dist/
-build/
-dist-ssr/
-
-# .NET build output
 [Bb]in/
 [Oo]bj/
 *.user
 
-# Runtime model logs (root .NET app)
-models_logs/
+# NuGet
+*.nupkg
+*.snupkg
+.packages/
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Publish profiles
+*.pubxml
+*.pubxml.user
 
-# Runtime / generated data
-server/db/
-server/temp/
-server/uploads/
-server/models_logs/
+# Test results
+TestResults/
+
+# ---------- Runtime data ----------
+
+# SQLite (all runtime database files)
 *.sqlite
 *.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite.bak*
 *.db
 
-# Coverage / test output
-coverage/
-.nyc_output/
+# Raw LLM response logs (written relative to process CWD on every check)
+models_logs/
 
-# Caches
-.eslintcache
+# Application logs
+logs/
+*.log
+
+# ---------- Legacy Node.js (client/ and server/ — не редактировать) ----------
+
+node_modules/
+dist/
+build/
+dist-ssr/
 *.tsbuildinfo
-.cache/
-.temp/
-.tmp/
 
-# Env files (keep .env.example if you add one)
-.env
-.env.local
-.env.*.local
-.env.development.local
-.env.test.local
-.env.production.local
+# ---------- IDE / editor ----------
 
-# IDE / editor
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
 .vs/
 *.suo
-*.sln
 *.ntvs*
 *.njsproj
 *.sublime-workspace
 *.sw?
 
-# OS
+# ---------- Environment & secrets ----------
+
+.env
+.env.local
+.env.*.local
+
+# ---------- OS ----------
+
 .DS_Store
 Thumbs.db
 
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
+# ---------- Claude Code ----------
 
-# Diagnostic reports
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-# Claude's notes
 .claude/
 CLAUDE.md
