@@ -4,7 +4,8 @@
     <DialogContent>
         <MudTextField @bind-Value="_surname" Label="Фамилия" Required="true" Class="mb-3" />
         <MudTextField @bind-Value="_name" Label="Имя" Required="true" Class="mb-3" />
-        <MudTextField @bind-Value="_middlename" Label="Отчество" Required="true" />
+        <MudTextField @bind-Value="_middlename" Label="Отчество" Required="true" Class="mb-3" />
+        <MudTextField @bind-Value="_email" Label="Email" InputType="InputType.Email" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Отмена</MudButton>
@@ -17,18 +18,21 @@
     [Parameter] public string Name { get; set; } = string.Empty;
     [Parameter] public string Surname { get; set; } = string.Empty;
     [Parameter] public string Middlename { get; set; } = string.Empty;
+    [Parameter] public string? Email { get; set; }
 
     private string _name = string.Empty;
     private string _surname = string.Empty;
     private string _middlename = string.Empty;
+    private string? _email;
 
     protected override void OnInitialized()
     {
         _name = Name;
         _surname = Surname;
         _middlename = Middlename;
+        _email = Email;
     }
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok((_name, _surname, _middlename)));
+    private void Submit() => MudDialog.Close(DialogResult.Ok((_name, _surname, _middlename, _email)));
     private void Cancel() => MudDialog.Cancel();
 }

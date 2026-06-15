@@ -49,12 +49,14 @@
                 <MudTh>Фамилия</MudTh>
                 <MudTh>Имя</MudTh>
                 <MudTh>Отчество</MudTh>
+                <MudTh>Email</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.Surname</MudTd>
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@context.Middlename</MudTd>
+                <MudTd>@context.Email</MudTd>
                 <MudTd Style="text-align:right">
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditStudent(context))" />
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteStudent(context))" />
@@ -156,9 +158,9 @@
     {
         var dialog = await DialogService.ShowAsync<StudentDialog>("Новый студент");
         var result = await dialog.Result;
-        if (result is { Canceled: false, Data: ValueTuple<string, string, string> data })
+        if (result is { Canceled: false, Data: ValueTuple<string, string, string, string?> data })
         {
-            await Mediator.Send(new CreateStudentCommand(data.Item1, data.Item2, data.Item3, _groupId!.Value));
+            await Mediator.Send(new CreateStudentCommand(data.Item1, data.Item2, data.Item3, _groupId!.Value, data.Item4));
             await LoadStudents();
         }
     }
@@ -170,12 +172,13 @@
             { x => x.Name, student.Name },
             { x => x.Surname, student.Surname },
             { x => x.Middlename, student.Middlename },
+            { x => x.Email, student.Email },
         };
         var dialog = await DialogService.ShowAsync<StudentDialog>("Редактирование студента", parameters);
         var result = await dialog.Result;
-        if (result is { Canceled: false, Data: ValueTuple<string, string, string> data })
+        if (result is { Canceled: false, Data: ValueTuple<string, string, string, string?> data })
         {
-            await Mediator.Send(new UpdateStudentCommand(student.Id, data.Item1, data.Item2, data.Item3, _groupId));
+            await Mediator.Send(new UpdateStudentCommand(student.Id, data.Item1, data.Item2, data.Item3, _groupId, data.Item4));
             await LoadStudents();
         }
     }

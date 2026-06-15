@@ -2,10 +2,11 @@
 
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <DialogContent>
-        <MudText Typo="Typo.body2" Class="mb-3">CSV со столбцами: Имя, Фамилия, Группы (опционально Отчество).</MudText>
+        <MudText Typo="Typo.body2" Class="mb-3">CSV со столбцами: Имя, Фамилия, Группы (опционально Отчество и Email).</MudText>
         <MudFileUpload T="IBrowserFile" @bind-Files="_file" Accept=".csv">
-            <CustomContent>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.UploadFile">
+            <CustomContent Context="upload">
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.UploadFile"
+                           OnClick="@(() => upload.OpenFilePickerAsync())">
                     @(_file?.Name ?? "Выбрать CSV-файл")
                 </MudButton>
             </CustomContent>

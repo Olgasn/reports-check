@@ -13,9 +13,9 @@ public record GetStudentsQuery : IRequest<IReadOnlyList<StudentDto>>;
 
 public record GetStudentByIdQuery(int Id) : IRequest<StudentDto>;
 
-public record CreateStudentCommand(string Name, string Surname, string Middlename, int GroupId) : IRequest<int>;
+public record CreateStudentCommand(string Name, string Surname, string Middlename, int GroupId, string? Email = null) : IRequest<int>;
 
-public record UpdateStudentCommand(int Id, string Name, string Surname, string Middlename, int? GroupId) : IRequest<Unit>;
+public record UpdateStudentCommand(int Id, string Name, string Surname, string Middlename, int? GroupId, string? Email = null) : IRequest<Unit>;
 
 public record DeleteStudentCommand(int Id) : IRequest<Unit>;
 
@@ -73,6 +73,7 @@ public class StudentHandlers :
             Name = request.Name,
             Surname = request.Surname,
             Middlename = request.Middlename,
+            Email = request.Email,
             GroupId = request.GroupId,
         };
         await _students.AddAsync(student, cancellationToken);
@@ -87,6 +88,7 @@ public class StudentHandlers :
         student.Name = request.Name;
         student.Surname = request.Surname;
         student.Middlename = request.Middlename;
+        student.Email = request.Email;
         if (request.GroupId is not null)
         {
             student.GroupId = request.GroupId;

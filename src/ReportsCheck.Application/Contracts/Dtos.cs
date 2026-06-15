@@ -10,7 +10,7 @@ public record CourseWithLabsDto(int Id, string Name, IReadOnlyList<LabSimpleDto>
 
 public record GroupDto(int Id, string Name);
 
-public record StudentDto(int Id, string Name, string Surname, string Middlename, GroupDto? Group);
+public record StudentDto(int Id, string Name, string Surname, string Middlename, string? Email, GroupDto? Group);
 
 public record LabSimpleDto(int Id, string Name);
 

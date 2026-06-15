@@ -15,7 +15,7 @@ public static class MappingExtensions
     public static GroupDto ToDto(this Group g) => new(g.Id, g.Name);
 
     public static StudentDto ToDto(this Student s) =>
-        new(s.Id, s.Name, s.Surname, s.Middlename, s.Group?.ToDto());
+        new(s.Id, s.Name, s.Surname, s.Middlename, s.Email, s.Group?.ToDto());
 
     public static LabSimpleDto ToSimpleDto(this Lab l) => new(l.Id, l.Name);
 

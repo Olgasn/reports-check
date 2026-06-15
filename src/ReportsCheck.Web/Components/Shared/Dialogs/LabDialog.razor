@@ -5,8 +5,9 @@
         <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-3" />
         <MudTextField @bind-Value="_description" Label="Описание" Lines="2" Class="mb-3" />
         <MudFileUpload T="IBrowserFile" @bind-Files="_file" Accept=".pdf,.docx,.txt">
-            <CustomContent>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile">
+            <CustomContent Context="upload">
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile"
+                           OnClick="@(() => upload.OpenFilePickerAsync())">
                     @(_file?.Name ?? (RequireFile ? "Выбрать файл задания" : "Заменить файл задания"))
                 </MudButton>
             </CustomContent>
