@@ -1,14 +1,14 @@
 @namespace ReportsCheck.Web.Components.Shared.Dialogs
 
-<MudDialog>
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <DialogContent>
         <MudText Typo="Typo.body2" Class="mb-3">CSV со столбцами: Имя, Фамилия, Группы (опционально Отчество).</MudText>
         <MudFileUpload T="IBrowserFile" @bind-Files="_file" Accept=".csv">
-            <ActivatorContent>
+            <CustomContent>
                 <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.UploadFile">
                     @(_file?.Name ?? "Выбрать CSV-файл")
                 </MudButton>
-            </ActivatorContent>
+            </CustomContent>
         </MudFileUpload>
     </DialogContent>
     <DialogActions>

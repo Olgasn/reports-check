@@ -1,6 +1,6 @@
 @namespace ReportsCheck.Web.Components.Shared.Dialogs
 
-<MudDialog>
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <DialogContent>
         <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-3" />
         <MudTextField @bind-Value="_description" Label="Описание" Lines="3" />

@@ -66,6 +66,11 @@ dist-ssr/
 .DS_Store
 Thumbs.db
 
+# ---------- Installer build artifacts ----------
+
+installer/app/
+installer/Output/
+
 # ---------- Claude Code ----------
 
 .claude/

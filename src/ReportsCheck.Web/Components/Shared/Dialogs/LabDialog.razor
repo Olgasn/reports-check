@@ -1,15 +1,15 @@
 @namespace ReportsCheck.Web.Components.Shared.Dialogs
 
-<MudDialog>
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <DialogContent>
         <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-3" />
         <MudTextField @bind-Value="_description" Label="Описание" Lines="2" Class="mb-3" />
         <MudFileUpload T="IBrowserFile" @bind-Files="_file" Accept=".pdf,.docx,.txt">
-            <ActivatorContent>
+            <CustomContent>
                 <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile">
                     @(_file?.Name ?? (RequireFile ? "Выбрать файл задания" : "Заменить файл задания"))
                 </MudButton>
-            </ActivatorContent>
+            </CustomContent>
         </MudFileUpload>
     </DialogContent>
     <DialogActions>

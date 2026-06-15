@@ -9,7 +9,7 @@
 @inject ISnackbar Snackbar
 @implements IDisposable
 
-<PageTitle>Проверка ЛР</PageTitle>
+<PageTitle>Проверка лабораторной работы</PageTitle>
 
 <MudText Typo="Typo.h4" Class="mb-4">Проверка отчётов</MudText>
 
@@ -42,11 +42,11 @@
             @if (_mode == "zip")
             {
                 <MudFileUpload T="IBrowserFile" FilesChanged="OnZipChanged" Accept=".zip" Class="mb-3">
-                    <ActivatorContent>
+                    <CustomContent>
                         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FolderZip">
                             @(_zipFile?.Name ?? "Выбрать ZIP-архив")
                         </MudButton>
-                    </ActivatorContent>
+                    </CustomContent>
                 </MudFileUpload>
 
                 @if (_parsedStudents.Count > 0)
@@ -62,11 +62,11 @@
             else
             {
                 <MudFileUpload T="IBrowserFile" @bind-Files="_singleFile" Accept=".pdf,.docx,.txt" Class="mb-3">
-                    <ActivatorContent>
+                    <CustomContent>
                         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile">
                             @(_singleFile?.Name ?? "Выбрать файл отчёта")
                         </MudButton>
-                    </ActivatorContent>
+                    </CustomContent>
                 </MudFileUpload>
             }
 

@@ -2,7 +2,7 @@
 @using ReportsCheck.Application.Features.Reports
 @inject IMediator Mediator
 
-<PageTitle>Результаты ЛР</PageTitle>
+<PageTitle>Результаты лабораторной работы</PageTitle>
 
 <MudText Typo="Typo.h4" Class="mb-4">Результаты проверки</MudText>
 
@@ -16,7 +16,7 @@ else if (_groups.Count == 0)
 }
 else
 {
-    <MudTabs Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+    <MudTabs Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-4">
         @foreach (var group in _groups)
         {
             <MudTabPanel Text="@group.Group.Name">

@@ -36,7 +36,7 @@ else
 
     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
         <MudText Typo="Typo.h5">Лабораторные работы</MudText>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="AddLab">Добавить ЛР</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="AddLab">Добавить лабораторную работу</MudButton>
     </MudStack>
 
     <MudList T="LabSimpleDto">
@@ -128,7 +128,7 @@ else
             { x => x.Description, full.Description },
             { x => x.RequireFile, false },
         };
-        var dialog = await DialogService.ShowAsync<LabDialog>("Редактирование ЛР", parameters);
+        var dialog = await DialogService.ShowAsync<LabDialog>("Редактирование лабораторной работы", parameters);
         var result = await dialog.Result;
         if (result is { Canceled: false, Data: LabDialog.LabDialogResult data })
         {
@@ -140,7 +140,7 @@ else
 
     private async Task DeleteLab(LabSimpleDto lab)
     {
-        var confirmed = await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить ЛР «{lab.Name}»?", yesText: "Удалить", cancelText: "Отмена");
+        var confirmed = await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить лабораторную работу «{lab.Name}»?", yesText: "Удалить", cancelText: "Отмена");
         if (confirmed == true)
         {
             await Mediator.Send(new DeleteLabCommand(lab.Id));
