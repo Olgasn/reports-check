@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Собирает Inno Setup .exe-установщик для системы проверки отчётов.

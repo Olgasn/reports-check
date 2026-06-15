@@ -43,7 +43,7 @@ public class DocumentTextExtractor : IDocumentTextExtractor
         using var stream = new MemoryStream(content);
         using var document = WordprocessingDocument.Open(stream, false);
 
-        var body = document.MainDocumentPart?.Document.Body;
+        var body = document.MainDocumentPart?.Document?.Body;
         if (body is null)
         {
             return string.Empty;
