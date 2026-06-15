@@ -27,6 +27,7 @@ public class CheckService : ICheckService
     {
         var checks = await _db.Checks
             .Where(c => c.LabId == labId)
+            .OrderByDescending(c => c.Date)
             .Include(c => c.Student).ThenInclude(s => s.Group)
             .Include(c => c.Model)
             .ToListAsync(cancellationToken);

@@ -4,11 +4,17 @@ using ReportsCheck.Domain.Entities;
 namespace ReportsCheck.Application.Llm;
 
 /// <summary>
+/// Ответ модели вместе с расходом токенов. <see cref="InputTokens"/> и
+/// <see cref="OutputTokens"/> равны 0, если провайдер не вернул usage.
+/// </summary>
+public record LlmResult(string Content, int InputTokens, int OutputTokens);
+
+/// <summary>
 /// Запрос к модели с повторными попытками. Порт LlmService.query.
 /// </summary>
 public interface ILlmService
 {
-    Task<string> QueryAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken = default);
+    Task<LlmResult> QueryAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

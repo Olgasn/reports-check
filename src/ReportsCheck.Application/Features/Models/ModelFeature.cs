@@ -21,6 +21,8 @@ public record CreateModelCommand(
     int MaxRetries,
     int QueryDelay,
     int ErrorDelay,
+    decimal InputTokenPrice,
+    decimal OutputTokenPrice,
     string LlmInterface,
     bool CacheControl,
     int? KeyId,
@@ -36,6 +38,8 @@ public record UpdateModelCommand(
     int MaxRetries,
     int QueryDelay,
     int ErrorDelay,
+    decimal InputTokenPrice,
+    decimal OutputTokenPrice,
     string LlmInterface,
     bool CacheControl,
     int? KeyId,
@@ -52,6 +56,8 @@ public class CreateModelValidator : AbstractValidator<CreateModelCommand>
         RuleFor(x => x.TopP).InclusiveBetween(0, 1);
         RuleFor(x => x.Temperature).InclusiveBetween(0, 2);
         RuleFor(x => x.MaxTokens).GreaterThan(0);
+        RuleFor(x => x.InputTokenPrice).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.OutputTokenPrice).GreaterThanOrEqualTo(0);
         RuleFor(x => x.LlmInterface).Must(v => Enum.TryParse<LlmInterface>(v, out _))
             .WithMessage("llmInterface должен быть OpenAi или Ollama.");
     }
@@ -84,8 +90,8 @@ public class ModelHandlers :
     {
         var model = new Model();
         Apply(model, request.Name, request.Value, request.TopP, request.Temperature, request.MaxTokens,
-            request.MaxRetries, request.QueryDelay, request.ErrorDelay, request.LlmInterface, request.CacheControl,
-            request.KeyId, request.ProviderId);
+            request.MaxRetries, request.QueryDelay, request.ErrorDelay, request.InputTokenPrice, request.OutputTokenPrice,
+            request.LlmInterface, request.CacheControl, request.KeyId, request.ProviderId);
         await _models.AddAsync(model, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return model.Id;
@@ -95,8 +101,8 @@ public class ModelHandlers :
     {
         var model = await _models.GetByIdAsync(request.Id, cancellationToken) ?? throw new NotFoundException("Модель не была найдена.");
         Apply(model, request.Name, request.Value, request.TopP, request.Temperature, request.MaxTokens,
-            request.MaxRetries, request.QueryDelay, request.ErrorDelay, request.LlmInterface, request.CacheControl,
-            request.KeyId, request.ProviderId);
+            request.MaxRetries, request.QueryDelay, request.ErrorDelay, request.InputTokenPrice, request.OutputTokenPrice,
+            request.LlmInterface, request.CacheControl, request.KeyId, request.ProviderId);
         _models.Update(model);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Unit.Value;
@@ -111,7 +117,8 @@ public class ModelHandlers :
     }
 
     private static void Apply(Model model, string name, string value, double topP, double temperature, int maxTokens,
-        int maxRetries, int queryDelay, int errorDelay, string llmInterface, bool cacheControl, int? keyId, int? providerId)
+        int maxRetries, int queryDelay, int errorDelay, decimal inputTokenPrice, decimal outputTokenPrice,
+        string llmInterface, bool cacheControl, int? keyId, int? providerId)
     {
         model.Name = name;
         model.Value = value;
@@ -121,6 +128,8 @@ public class ModelHandlers :
         model.MaxRetries = maxRetries;
         model.QueryDelay = queryDelay;
         model.ErrorDelay = errorDelay;
+        model.InputTokenPrice = inputTokenPrice;
+        model.OutputTokenPrice = outputTokenPrice;
         model.LlmInterface = Enum.Parse<LlmInterface>(llmInterface);
         model.CacheControl = cacheControl;
         model.KeyId = keyId;

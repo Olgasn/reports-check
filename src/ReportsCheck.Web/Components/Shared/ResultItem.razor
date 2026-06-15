@@ -27,6 +27,13 @@
         <MudText Typo="Typo.caption">@(Check.Model?.Name) · @Check.Date.ToLocalTime().ToString("g")</MudText>
     </MudStack>
 
+    @if (Check.InputTokens > 0 || Check.OutputTokens > 0 || Check.Cost > 0)
+    {
+        <MudText Typo="Typo.caption" Class="mb-2">
+            Токены: @Check.InputTokens вход. / @Check.OutputTokens выход. · Стоимость: @Check.Cost.ToString("0.######") $
+        </MudText>
+    }
+
     <MudText Typo="Typo.subtitle2">Отзыв</MudText>
     <MudText Typo="Typo.body2" Class="mb-2" Style="white-space: pre-wrap;">@Check.Review</MudText>
 

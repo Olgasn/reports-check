@@ -30,6 +30,8 @@ public record ModelDto(
     int MaxRetries,
     int QueryDelay,
     int ErrorDelay,
+    decimal InputTokenPrice,
+    decimal OutputTokenPrice,
     string LlmInterface,
     bool CacheControl,
     KeyDto? Key,
@@ -46,6 +48,9 @@ public record CheckDto(
     string PromptInjectionRisk,
     string PromptInjectionFragments,
     string SecurityComment,
+    int InputTokens,
+    int OutputTokens,
+    decimal Cost,
     DateTime Date,
     ModelDto? Model,
     StudentDto? Student);

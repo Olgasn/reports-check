@@ -1,16 +1,15 @@
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.Ollama;
+using OllamaSharp;
+using ReportsCheck.Application.Llm;
 using ReportsCheck.Application.Prompts;
 using ReportsCheck.Domain.Entities;
 
 namespace ReportsCheck.Infrastructure.Llm.Handlers;
 
 /// <summary>
-/// Локальная Ollama через Semantic Kernel. Порт OllamaHandler.
+/// Локальная Ollama через Microsoft.Extensions.AI (OllamaSharp реализует IChatClient). Порт OllamaHandler.
 /// </summary>
-#pragma warning disable SKEXP0070 // Ollama-коннектор помечен как экспериментальный.
 public class OllamaHandler : ILlmProviderHandler
 {
     private readonly LlmOptions _options;
@@ -20,29 +19,28 @@ public class OllamaHandler : ILlmProviderHandler
         _options = options.Value;
     }
 
-    public async Task<string> CompletionAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken)
+    public async Task<LlmResult> CompletionAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken)
     {
-        var builder = Kernel.CreateBuilder();
-        builder.AddOllamaChatCompletion(modelId: model.Value, endpoint: new Uri(_options.OllamaEndpoint));
+        IChatClient client = new OllamaApiClient(new Uri(_options.OllamaEndpoint), model.Value);
 
-        var kernel = builder.Build();
-        var chat = kernel.GetRequiredService<IChatCompletionService>();
-
-        var history = new ChatHistory();
+        var messages = new List<ChatMessage>();
         if (!string.IsNullOrEmpty(prompt.System))
         {
-            history.AddSystemMessage(prompt.System);
+            messages.Add(new ChatMessage(ChatRole.System, prompt.System));
         }
-        history.AddUserMessage(prompt.User);
+        messages.Add(new ChatMessage(ChatRole.User, prompt.User));
 
-        var settings = new OllamaPromptExecutionSettings
+        var chatOptions = new ChatOptions
         {
             Temperature = (float)model.Temperature,
             TopP = (float)model.TopP,
         };
 
-        var result = await chat.GetChatMessageContentAsync(history, settings, kernel, cancellationToken);
-        return result.Content ?? string.Empty;
+        var response = await client.GetResponseAsync(messages, chatOptions, cancellationToken);
+        return new LlmResult(
+            response.Text ?? string.Empty,
+            (int)(response.Usage?.InputTokenCount ?? 0),
+            (int)(response.Usage?.OutputTokenCount ?? 0));
     }
 
     public void ProcessError(Exception error)
@@ -51,4 +49,3 @@ public class OllamaHandler : ILlmProviderHandler
         throw new InvalidOperationException(error.Message);
     }
 }
-#pragma warning restore SKEXP0070

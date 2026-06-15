@@ -8,18 +8,18 @@ namespace ReportsCheck.Infrastructure.Llm;
 /// <summary>
 /// Запрос к модели с повторами. Прямой порт LlmService.query.
 /// </summary>
-public class SemanticKernelLlmService : ILlmService
+public class RetryingLlmService : ILlmService
 {
     private readonly ILlmProviderFactory _factory;
-    private readonly ILogger<SemanticKernelLlmService> _logger;
+    private readonly ILogger<RetryingLlmService> _logger;
 
-    public SemanticKernelLlmService(ILlmProviderFactory factory, ILogger<SemanticKernelLlmService> logger)
+    public RetryingLlmService(ILlmProviderFactory factory, ILogger<RetryingLlmService> logger)
     {
         _factory = factory;
         _logger = logger;
     }
 
-    public async Task<string> QueryAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken = default)
+    public async Task<LlmResult> QueryAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken = default)
     {
         var provider = _factory.Create(model.LlmInterface);
 
@@ -31,7 +31,7 @@ public class SemanticKernelLlmService : ILlmService
             {
                 var result = await provider.CompletionAsync(prompt, model, cancellationToken);
 
-                if (string.IsNullOrEmpty(result))
+                if (string.IsNullOrEmpty(result.Content))
                 {
                     _logger.LogWarning("Пустой ответ от модели [{Model}]. Выполнение повторного запроса", model.Name);
                     await Task.Delay(model.ErrorDelay, cancellationToken);

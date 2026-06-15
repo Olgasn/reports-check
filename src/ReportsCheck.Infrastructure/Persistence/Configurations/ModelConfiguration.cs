@@ -16,6 +16,8 @@ public class ModelConfiguration : IEntityTypeConfiguration<Model>
         builder.Property(m => m.QueryDelay).HasDefaultValue(2500);
         builder.Property(m => m.ErrorDelay).HasDefaultValue(10000);
         builder.Property(m => m.MaxTokens).HasDefaultValue(10000);
+        builder.Property(m => m.InputTokenPrice).HasDefaultValue(0m);
+        builder.Property(m => m.OutputTokenPrice).HasDefaultValue(0m);
         builder.Property(m => m.CacheControl).HasDefaultValue(false);
         builder.Property(m => m.LlmInterface).HasConversion<string>();
 

@@ -14,6 +14,12 @@ public class Model : BaseEntity
     public int ErrorDelay { get; set; } = 10000;
     public int MaxTokens { get; set; } = 10000;
 
+    /// <summary>Цена за 1 000 000 входных токенов, USD. Для локальной Ollama = 0.</summary>
+    public decimal InputTokenPrice { get; set; }
+
+    /// <summary>Цена за 1 000 000 выходных токенов, USD. Для локальной Ollama = 0.</summary>
+    public decimal OutputTokenPrice { get; set; }
+
     public LlmInterface LlmInterface { get; set; }
     public bool CacheControl { get; set; }
 

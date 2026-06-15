@@ -28,12 +28,12 @@ public static class MappingExtensions
 
     public static ModelDto ToDto(this Model m) =>
         new(m.Id, m.Name, m.Value, m.TopP, m.Temperature, m.MaxTokens, m.MaxRetries, m.QueryDelay, m.ErrorDelay,
-            m.LlmInterface.ToString(), m.CacheControl, m.Key?.ToDto(), m.Provider?.ToDto());
+            m.InputTokenPrice, m.OutputTokenPrice, m.LlmInterface.ToString(), m.CacheControl, m.Key?.ToDto(), m.Provider?.ToDto());
 
     public static CheckDto ToDto(this Check c) =>
         new(c.Id, c.Grade, c.Advantages, c.Disadvantages, c.Review, c.Report,
             c.PromptInjectionDetected, c.PromptInjectionRisk, c.PromptInjectionFragments, c.SecurityComment,
-            c.Date, c.Model?.ToDto(), c.Student?.ToDto());
+            c.InputTokens, c.OutputTokens, c.Cost, c.Date, c.Model?.ToDto(), c.Student?.ToDto());
 
     public static LabCheckGroupDto ToDto(this LabCheckGroup g) =>
         new(g.Group.ToDto(), g.Results.Select(r => new StudentChecksDto(

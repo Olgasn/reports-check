@@ -21,4 +21,13 @@ public class CheckResult : IPromptInjectionFields
     public string SecurityComment { get; set; } = string.Empty;
     public required Model Model { get; set; }
     public string Answer { get; set; } = string.Empty;
+
+    /// <summary>Потрачено входных токенов (в мультимодельном режиме — сумма по всем моделям).</summary>
+    public int InputTokens { get; set; }
+
+    /// <summary>Потрачено выходных токенов (в мультимодельном режиме — сумма по всем моделям).</summary>
+    public int OutputTokens { get; set; }
+
+    /// <summary>Стоимость в USD, зафиксированная по ценам модели на момент проверки.</summary>
+    public decimal Cost { get; set; }
 }

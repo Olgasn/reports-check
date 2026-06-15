@@ -24,6 +24,8 @@ public class ModelHandlersTests
         MaxRetries: 3,
         QueryDelay: 0,
         ErrorDelay: 500,
+        InputTokenPrice: 2.5m,
+        OutputTokenPrice: 10m,
         LlmInterface: llmInterface,
         CacheControl: false,
         KeyId: null,
@@ -43,12 +45,24 @@ public class ModelHandlersTests
     }
 
     [Fact]
+    public async Task CreateModel_PersistsTokenPrices()
+    {
+        var sut = CreateSut();
+
+        await sut.Handle(ValidCreateCommand(), CancellationToken.None);
+
+        await _models.Received(1).AddAsync(
+            Arg.Is<Model>(m => m.InputTokenPrice == 2.5m && m.OutputTokenPrice == 10m),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task UpdateModel_WhenNotFound_ThrowsNotFoundException()
     {
         _models.GetByIdAsync(99, Arg.Any<CancellationToken>()).Returns((Model?)null);
         var sut = CreateSut();
 
-        var cmd = new UpdateModelCommand(99, "n", "v", 1, 1, 100, 1, 0, 0, "OpenAi", false, null, null);
+        var cmd = new UpdateModelCommand(99, "n", "v", 1, 1, 100, 1, 0, 0, 0m, 0m, "OpenAi", false, null, null);
         await sut.Invoking(h => h.Handle(cmd, CancellationToken.None))
             .Should().ThrowAsync<NotFoundException>();
     }

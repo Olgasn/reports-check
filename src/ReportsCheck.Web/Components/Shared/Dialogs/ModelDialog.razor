@@ -1,9 +1,24 @@
 @namespace ReportsCheck.Web.Components.Shared.Dialogs
+@inject IOpenRouterPricingService OpenRouterPricing
 
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <DialogContent>
         <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-2" />
-        <MudTextField @bind-Value="_value" Label="Идентификатор модели" Required="true" Class="mb-2" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+            <MudTextField @bind-Value="_value" Label="Идентификатор модели" Required="true" Style="flex:1" />
+            <MudTooltip Text="Загрузить цены из каталога OpenRouter по идентификатору модели">
+                <MudIconButton Icon="@Icons.Material.Filled.Download"
+                               Color="Color.Primary"
+                               Variant="Variant.Outlined"
+                               Size="Size.Small"
+                               OnClick="FetchOpenRouterPricingAsync"
+                               Disabled="_fetchingPrices" />
+            </MudTooltip>
+        </MudStack>
+        @if (_pricingMessage is not null)
+        {
+            <MudAlert Severity="@_pricingSeverity" Dense="true" Class="mb-2">@_pricingMessage</MudAlert>
+        }
         <MudSelect T="string" @bind-Value="_llmInterface" Label="Интерфейс" Class="mb-2">
             <MudSelectItem Value="@("OpenAi")">OpenAi</MudSelectItem>
             <MudSelectItem Value="@("Ollama")">Ollama</MudSelectItem>
@@ -23,6 +38,8 @@
         <MudNumericField @bind-Value="_temperature" Label="Temperature" Min="0" Max="2" Step="0.1" Class="mb-2" />
         <MudNumericField @bind-Value="_topP" Label="top_p" Min="0" Max="1" Step="0.1" Class="mb-2" />
         <MudNumericField @bind-Value="_maxTokens" Label="max_tokens" Min="1" Class="mb-2" />
+        <MudNumericField T="decimal" @bind-Value="_inputTokenPrice" Label="Цена за 1M входных токенов, $" Min="0" Step="0.01M" Class="mb-2" />
+        <MudNumericField T="decimal" @bind-Value="_outputTokenPrice" Label="Цена за 1M выходных токенов, $" Min="0" Step="0.01M" Class="mb-2" />
         <MudNumericField @bind-Value="_maxRetries" Label="Макс. число попыток" Min="1" Class="mb-2" />
         <MudNumericField @bind-Value="_queryDelay" Label="Задержка запроса (мс)" Min="0" Class="mb-2" />
         <MudNumericField @bind-Value="_errorDelay" Label="Задержка при ошибке (мс)" Min="0" Class="mb-2" />
@@ -49,10 +66,16 @@
     private double _temperature = 1.0;
     private double _topP = 1.0;
     private int _maxTokens = 10000;
+    private decimal _inputTokenPrice;
+    private decimal _outputTokenPrice;
     private int _maxRetries = 5;
     private int _queryDelay = 2500;
     private int _errorDelay = 10000;
     private bool _cacheControl;
+
+    private bool _fetchingPrices;
+    private string? _pricingMessage;
+    private Severity _pricingSeverity = Severity.Info;
 
     protected override void OnInitialized()
     {
@@ -69,18 +92,53 @@
         _temperature = Existing.Temperature;
         _topP = Existing.TopP;
         _maxTokens = Existing.MaxTokens;
+        _inputTokenPrice = Existing.InputTokenPrice;
+        _outputTokenPrice = Existing.OutputTokenPrice;
         _maxRetries = Existing.MaxRetries;
         _queryDelay = Existing.QueryDelay;
         _errorDelay = Existing.ErrorDelay;
         _cacheControl = Existing.CacheControl;
     }
 
+    private async Task FetchOpenRouterPricingAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_value))
+        {
+            _pricingMessage = "Сначала укажите идентификатор модели.";
+            _pricingSeverity = Severity.Warning;
+            return;
+        }
+
+        _fetchingPrices = true;
+        _pricingMessage = null;
+        StateHasChanged();
+
+        var pricing = await OpenRouterPricing.GetPricingAsync(_value);
+
+        if (pricing is null)
+        {
+            _pricingMessage = $"Модель «{_value}» не найдена в каталоге OpenRouter или произошла ошибка запроса.";
+            _pricingSeverity = Severity.Warning;
+        }
+        else
+        {
+            _inputTokenPrice = pricing.InputPricePerMillion;
+            _outputTokenPrice = pricing.OutputPricePerMillion;
+            _pricingMessage = $"Цены загружены: вход {_inputTokenPrice:0.######} $/1M · выход {_outputTokenPrice:0.######} $/1M.";
+            _pricingSeverity = Severity.Success;
+        }
+
+        _fetchingPrices = false;
+    }
+
     private void Submit() => MudDialog.Close(DialogResult.Ok(new ModelDialogResult(
-        _name, _value, _topP, _temperature, _maxTokens, _maxRetries, _queryDelay, _errorDelay, _llmInterface, _cacheControl, _keyId, _providerId)));
+        _name, _value, _topP, _temperature, _maxTokens, _maxRetries, _queryDelay, _errorDelay,
+        _inputTokenPrice, _outputTokenPrice, _llmInterface, _cacheControl, _keyId, _providerId)));
 
     private void Cancel() => MudDialog.Cancel();
 
     public record ModelDialogResult(
         string Name, string Value, double TopP, double Temperature, int MaxTokens, int MaxRetries,
-        int QueryDelay, int ErrorDelay, string LlmInterface, bool CacheControl, int? KeyId, int? ProviderId);
+        int QueryDelay, int ErrorDelay, decimal InputTokenPrice, decimal OutputTokenPrice,
+        string LlmInterface, bool CacheControl, int? KeyId, int? ProviderId);
 }

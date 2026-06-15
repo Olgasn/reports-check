@@ -72,12 +72,12 @@ public class ReportChecker
 
         var result = await _llmService.QueryAsync(prompt, model, cancellationToken);
 
-        _responseLogger.Write(model.Name, result);
+        _responseLogger.Write(model.Name, result.Content);
 
         _notification.ReportOneChecked(studentStr, model.Name, student.Id, labId);
         _logger.LogInformation("Отчет студента [{Student}] был проверен моделью [{Model}]", studentStr, model.Name);
 
-        var resultDto = _extractor.Extract(result);
+        var resultDto = _extractor.Extract(result.Content);
         var checkedResult = _promptInjection.MergeResultFields(resultDto, securityAnalysis);
 
         _promptInjection.AssertGeneratedReviewAllowed(checkedResult.Review, checkedResult.Advantages, checkedResult.Disadvantages);
@@ -95,6 +95,9 @@ public class ReportChecker
             SecurityComment = checkedResult.SecurityComment,
             Model = model,
             Answer = report.Content,
+            InputTokens = result.InputTokens,
+            OutputTokens = result.OutputTokens,
+            Cost = LlmCost.Compute(model, result.InputTokens, result.OutputTokens),
         };
     }
 
@@ -198,6 +201,9 @@ public class ReportChecker
                 PromptInjectionRisk = result.PromptInjectionRisk,
                 PromptInjectionFragments = string.Join("\n", result.PromptInjectionFragments),
                 SecurityComment = result.SecurityComment,
+                InputTokens = result.InputTokens,
+                OutputTokens = result.OutputTokens,
+                Cost = result.Cost,
                 Date = DateTime.UtcNow,
             };
 

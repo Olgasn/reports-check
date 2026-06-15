@@ -14,6 +14,9 @@ public class CheckConfiguration : IEntityTypeConfiguration<Check>
         builder.Property(c => c.PromptInjectionRisk).HasDefaultValue(PromptInjectionRisk.None);
         builder.Property(c => c.PromptInjectionFragments).HasDefaultValue(string.Empty);
         builder.Property(c => c.SecurityComment).HasDefaultValue(string.Empty);
+        builder.Property(c => c.InputTokens).HasDefaultValue(0);
+        builder.Property(c => c.OutputTokens).HasDefaultValue(0);
+        builder.Property(c => c.Cost).HasDefaultValue(0m);
 
         // Check * — 1 Model; deleting a model removes its checks.
         builder.HasOne(c => c.Model)

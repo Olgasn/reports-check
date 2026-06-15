@@ -1,81 +1,96 @@
-using System.Net;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using System.ClientModel;
+using System.ClientModel.Primitives;
+using Microsoft.Extensions.AI;
+using OpenAI;
+using ReportsCheck.Application.Llm;
 using ReportsCheck.Application.Prompts;
 using ReportsCheck.Domain.Entities;
 
 namespace ReportsCheck.Infrastructure.Llm.Handlers;
 
 /// <summary>
-/// OpenAI / OpenRouter через Semantic Kernel. Порт OpenAiHandler.
+/// OpenAI / OpenRouter через Microsoft.Extensions.AI (IChatClient поверх OpenAI SDK). Порт OpenAiHandler.
 /// Сохранены настройки исходника: top_p, temperature, max_tokens, reasoning_effort='high',
-/// заголовки HTTP-Referer / X-Title.
-/// ВНИМАНИЕ (известный компромисс): Semantic Kernel не предоставляет чистого способа
-/// задать Anthropic ephemeral cache_control на блоках сообщений — реализовано по
-/// возможности (model.CacheControl фактически не транслируется в cache_control).
-/// reasoning_effort передаётся через ExtensionData и может игнорироваться коннектором.
+/// заголовки HTTP-Referer / X-Title (добавляются политикой конвейера).
+/// ВНИМАНИЕ (известный компромисс): Microsoft.Extensions.AI не предоставляет чистого способа
+/// задать Anthropic ephemeral cache_control на блоках сообщений (model.CacheControl фактически
+/// не транслируется). reasoning_effort передаётся через AdditionalProperties и может игнорироваться
+/// адаптером.
 /// </summary>
 public class OpenAiHandler : ILlmProviderHandler
 {
-    private static readonly HttpClient SharedClient = CreateClient();
+    /// <summary>Политика, добавляющая заголовки OpenRouter к каждому запросу.</summary>
+    private static readonly PipelinePolicy HeaderPolicy = new OpenRouterHeaderPolicy();
 
-    private static HttpClient CreateClient()
-    {
-        var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("HTTP-Referer", "https://github.com/Olgasn/reports-check");
-        client.DefaultRequestHeaders.Add("X-Title", "Reports_Check");
-        return client;
-    }
-
-    public async Task<string> CompletionAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken)
+    public async Task<LlmResult> CompletionAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken)
     {
         if (model.Provider is null || model.Key is null)
         {
             throw new InvalidOperationException("No provider or key specified for the model");
         }
 
-        var builder = Kernel.CreateBuilder();
-        builder.AddOpenAIChatCompletion(
-            modelId: model.Value,
-            endpoint: new Uri(model.Provider.Url),
-            apiKey: model.Key.Value,
-            httpClient: SharedClient);
+        var options = new OpenAIClientOptions { Endpoint = new Uri(model.Provider.Url) };
+        options.AddPolicy(HeaderPolicy, PipelinePosition.PerCall);
 
-        var kernel = builder.Build();
-        var chat = kernel.GetRequiredService<IChatCompletionService>();
+        IChatClient client = new OpenAIClient(new ApiKeyCredential(model.Key.Value), options)
+            .GetChatClient(model.Value)
+            .AsIChatClient();
 
-        var history = new ChatHistory();
+        var messages = new List<ChatMessage>();
         if (!string.IsNullOrEmpty(prompt.System))
         {
-            history.AddSystemMessage(prompt.System);
+            messages.Add(new ChatMessage(ChatRole.System, prompt.System));
         }
-        history.AddUserMessage(prompt.User);
+        messages.Add(new ChatMessage(ChatRole.User, prompt.User));
 
-        var settings = new OpenAIPromptExecutionSettings
+        var chatOptions = new ChatOptions
         {
-            Temperature = model.Temperature,
-            TopP = model.TopP,
-            MaxTokens = model.MaxTokens,
-            ExtensionData = new Dictionary<string, object> { ["reasoning_effort"] = "high" },
+            Temperature = (float)model.Temperature,
+            TopP = (float)model.TopP,
+            MaxOutputTokens = model.MaxTokens,
+            AdditionalProperties = new AdditionalPropertiesDictionary { ["reasoning_effort"] = "high" },
         };
 
-        var result = await chat.GetChatMessageContentAsync(history, settings, kernel, cancellationToken);
-        var content = result.Content;
+        var response = await client.GetResponseAsync(messages, chatOptions, cancellationToken);
+        var content = response.Text;
 
         if (string.IsNullOrEmpty(content))
         {
             throw new InvalidOperationException($"Received empty response from model [{model.Value}]");
         }
 
-        return content;
+        return new LlmResult(
+            content,
+            (int)(response.Usage?.InputTokenCount ?? 0),
+            (int)(response.Usage?.OutputTokenCount ?? 0));
     }
 
     public void ProcessError(Exception error)
     {
-        if (error is HttpOperationException { StatusCode: HttpStatusCode.BadRequest } httpEx)
+        if (error is ClientResultException { Status: 400 } ex)
         {
-            throw new InvalidOperationException(httpEx.Message);
+            throw new InvalidOperationException(ex.Message);
+        }
+    }
+
+    private sealed class OpenRouterHeaderPolicy : PipelinePolicy
+    {
+        private static void SetHeaders(PipelineMessage message)
+        {
+            message.Request.Headers.Set("HTTP-Referer", "https://github.com/Olgasn/reports-check");
+            message.Request.Headers.Set("X-Title", "Reports_Check");
+        }
+
+        public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+        {
+            SetHeaders(message);
+            ProcessNext(message, pipeline, currentIndex);
+        }
+
+        public override ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+        {
+            SetHeaders(message);
+            return ProcessNextAsync(message, pipeline, currentIndex);
         }
     }
 }

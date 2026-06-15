@@ -1,3 +1,4 @@
+using ReportsCheck.Application.Llm;
 using ReportsCheck.Application.Prompts;
 using ReportsCheck.Domain.Entities;
 
@@ -8,7 +9,7 @@ namespace ReportsCheck.Infrastructure.Llm;
 /// </summary>
 public interface ILlmProviderHandler
 {
-    Task<string> CompletionAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken);
+    Task<LlmResult> CompletionAsync(SplitPrompt prompt, Model model, CancellationToken cancellationToken);
 
     /// <summary>Бросает дружелюбное исключение для известных ошибок (иначе — без действия).</summary>
     void ProcessError(Exception error);

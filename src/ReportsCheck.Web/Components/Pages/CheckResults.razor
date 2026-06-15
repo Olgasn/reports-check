@@ -16,8 +16,70 @@ else if (_groups.Count == 0)
 }
 else
 {
+    var visible = _selectedGroupId is null
+        ? _groups
+        : _groups.Where(g => g.Group.Id == _selectedGroupId).ToList();
+
+    var stats = BuildStats(visible);
+
+    <MudSelect T="int?" @bind-Value="_selectedGroupId" Label="Фильтр по группе" Clearable="true" Class="mb-4">
+        @foreach (var g in _groups)
+        {
+            <MudSelectItem T="int?" Value="@((int?)g.Group.Id)">@g.Group.Name</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h6" Class="mb-2">Статистика по лабораторной</MudText>
+        <MudStack Row="true" Spacing="6" Wrap="Wrap.Wrap" Class="mb-2">
+            <div>
+                <MudText Typo="Typo.caption">Проверок</MudText>
+                <MudText Typo="Typo.h6">@stats.CheckCount</MudText>
+            </div>
+            <div>
+                <MudText Typo="Typo.caption">Входных токенов</MudText>
+                <MudText Typo="Typo.h6">@stats.InputTokens.ToString("N0")</MudText>
+            </div>
+            <div>
+                <MudText Typo="Typo.caption">Выходных токенов</MudText>
+                <MudText Typo="Typo.h6">@stats.OutputTokens.ToString("N0")</MudText>
+            </div>
+            <div>
+                <MudText Typo="Typo.caption">Итоговая стоимость</MudText>
+                <MudText Typo="Typo.h6">@stats.Cost.ToString("0.######") $</MudText>
+            </div>
+        </MudStack>
+
+        @if (stats.ByModel.Count > 1)
+        {
+            <MudSimpleTable Dense="true" Hover="true" Class="mt-2">
+                <thead>
+                    <tr>
+                        <th>Модель</th>
+                        <th style="text-align:right">Проверок</th>
+                        <th style="text-align:right">Вход. токены</th>
+                        <th style="text-align:right">Выход. токены</th>
+                        <th style="text-align:right">Стоимость, $</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in stats.ByModel)
+                    {
+                        <tr>
+                            <td>@m.ModelName</td>
+                            <td style="text-align:right">@m.CheckCount</td>
+                            <td style="text-align:right">@m.InputTokens.ToString("N0")</td>
+                            <td style="text-align:right">@m.OutputTokens.ToString("N0")</td>
+                            <td style="text-align:right">@m.Cost.ToString("0.######")</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudPaper>
+
     <MudTabs Rounded="true" ApplyEffectsToContainer="true" TabPanelsClass="pa-4">
-        @foreach (var group in _groups)
+        @foreach (var group in visible)
         {
             <MudTabPanel Text="@group.Group.Name">
                 @foreach (var studentChecks in group.Results)
@@ -37,9 +99,42 @@ else
     [Parameter] public int Id { get; set; }
 
     private IReadOnlyList<LabCheckGroupDto>? _groups;
+    private int? _selectedGroupId;
 
     protected override async Task OnParametersSetAsync()
     {
+        _selectedGroupId = null;
         _groups = await Mediator.Send(new GetLabChecksQuery(Id));
+    }
+
+    private sealed record ModelStats(string ModelName, int CheckCount, int InputTokens, int OutputTokens, decimal Cost);
+
+    private sealed record LabStats(int CheckCount, int InputTokens, int OutputTokens, decimal Cost, IReadOnlyList<ModelStats> ByModel);
+
+    // Сводка считается на стороне клиента из уже загруженных проверок (CheckDto несёт токены и стоимость).
+    private static LabStats BuildStats(IReadOnlyList<LabCheckGroupDto> groups)
+    {
+        var checks = groups
+            .SelectMany(g => g.Results)
+            .SelectMany(r => r.Checks)
+            .ToList();
+
+        var byModel = checks
+            .GroupBy(c => c.Model?.Name ?? "—")
+            .Select(g => new ModelStats(
+                g.Key,
+                g.Count(),
+                g.Sum(c => c.InputTokens),
+                g.Sum(c => c.OutputTokens),
+                g.Sum(c => c.Cost)))
+            .OrderByDescending(m => m.Cost)
+            .ToList();
+
+        return new LabStats(
+            checks.Count,
+            checks.Sum(c => c.InputTokens),
+            checks.Sum(c => c.OutputTokens),
+            checks.Sum(c => c.Cost),
+            byModel);
     }
 }

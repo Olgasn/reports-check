@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using ReportsCheck.Application.Files;
 using ReportsCheck.Application.Llm;
+using ReportsCheck.Application.Notifications;
 using ReportsCheck.Application.Prompts;
 using ReportsCheck.Application.Reports.Models;
 using ReportsCheck.Application.Security;
@@ -22,6 +23,7 @@ public class MultipleModelStrategy : IReportStrategy
     private readonly IModelResponseLogger _responseLogger;
     private readonly IModelResultExtractor _extractor;
     private readonly IPromptInjectionService _promptInjection;
+    private readonly INotificationService _notification;
     private readonly ILogger<MultipleModelStrategy> _logger;
 
     public MultipleModelStrategy(
@@ -33,6 +35,7 @@ public class MultipleModelStrategy : IReportStrategy
         IModelResponseLogger responseLogger,
         IModelResultExtractor extractor,
         IPromptInjectionService promptInjection,
+        INotificationService notification,
         ILogger<MultipleModelStrategy> logger)
     {
         _reportChecker = reportChecker;
@@ -43,10 +46,14 @@ public class MultipleModelStrategy : IReportStrategy
         _responseLogger = responseLogger;
         _extractor = extractor;
         _promptInjection = promptInjection;
+        _notification = notification;
         _logger = logger;
     }
 
-    private sealed record ReviewData(Student Student, List<ModelCheckResultSummary> Result, string Answer);
+    // InputTokens/OutputTokens/Cost — накопленные суммы по всем промежуточным моделям для этого студента.
+    private sealed record ReviewData(
+        Student Student, List<ModelCheckResultSummary> Result, string Answer,
+        int InputTokens, int OutputTokens, decimal Cost);
 
     public async Task<IReadOnlyList<Check>> CheckAsync(ReportCheckJob job, CancellationToken cancellationToken = default)
     {
@@ -66,7 +73,7 @@ public class MultipleModelStrategy : IReportStrategy
         var fulfilled = settled.Where(b => b.Success).Select(b => b.Results!).ToList();
         var reviewData = PrepareMultipleData(fulfilled);
 
-        var combineTasks = reviewData.Select(data => CombineCheckResultAsync(data, modelReview, task, content, cancellationToken)).ToList();
+        var combineTasks = reviewData.Select(data => CombineCheckResultAsync(data, modelReview, task, content, lab.Id, cancellationToken)).ToList();
         var combined = await Task.WhenAll(combineTasks);
 
         return await _reportChecker.CreateChecksAsync(combined, modelReview.Id, lab.Id, cancellationToken);
@@ -101,6 +108,9 @@ public class MultipleModelStrategy : IReportStrategy
         {
             var summaries = new List<ModelCheckResultSummary>();
             var answer = results[0][i].Answer;
+            var inputTokens = 0;
+            var outputTokens = 0;
+            var cost = 0m;
 
             foreach (var batch in results)
             {
@@ -117,32 +127,50 @@ public class MultipleModelStrategy : IReportStrategy
                     PromptInjectionFragments = r.PromptInjectionFragments,
                     SecurityComment = r.SecurityComment,
                 });
+
+                inputTokens += r.InputTokens;
+                outputTokens += r.OutputTokens;
+                cost += r.Cost;
             }
 
-            reviewData.Add(new ReviewData(results[0][i].Student, summaries, answer));
+            reviewData.Add(new ReviewData(results[0][i].Student, summaries, answer, inputTokens, outputTokens, cost));
         }
 
         return reviewData;
     }
 
-    private async Task<CheckResult> CombineCheckResultAsync(ReviewData data, Model modelReview, string task, string content, CancellationToken cancellationToken)
+    private async Task<CheckResult> CombineCheckResultAsync(ReviewData data, Model modelReview, string task, string content, int labId, CancellationToken cancellationToken)
     {
         var studentStr = $"{data.Student.Name} {data.Student.Surname} {data.Student.Middlename}";
         var securityAnalysis = _promptInjection.Analyze(data.Answer);
 
+        _notification.ReportOneStarted(studentStr, modelReview.Name, data.Student.Id, labId);
         _logger.LogInformation("Началось сведение ответов для студента [{Student}] моделью [{Model}]", studentStr, modelReview.Name);
 
-        var prompt = _promptService.PrepareMultiplePrompt(task, data.Answer, content, data.Result.Cast<object>().ToList(), securityAnalysis);
-        var response = await _llmService.QueryAsync(prompt, modelReview, cancellationToken);
+        LlmResult response;
+        try
+        {
+            var prompt = _promptService.PrepareMultiplePrompt(task, data.Answer, content, data.Result.Cast<object>().ToList(), securityAnalysis);
+            response = await _llmService.QueryAsync(prompt, modelReview, cancellationToken);
+        }
+        catch
+        {
+            _notification.ReportOneFailed(studentStr, modelReview.Name, data.Student.Id, labId);
+            throw;
+        }
 
-        _responseLogger.Write(modelReview.Name, response);
+        _responseLogger.Write(modelReview.Name, response.Content);
 
+        _notification.ReportOneChecked(studentStr, modelReview.Name, data.Student.Id, labId);
         _logger.LogInformation("Закончилось сведение ответов для студента [{Student}] моделью [{Model}]", studentStr, modelReview.Name);
 
-        var resultDto = _extractor.Extract(response);
+        var resultDto = _extractor.Extract(response.Content);
         var checkedResult = _promptInjection.MergeResultFields(resultDto, securityAnalysis);
 
         _promptInjection.AssertGeneratedReviewAllowed(checkedResult.Review, checkedResult.Advantages, checkedResult.Disadvantages);
+
+        // Итоговый чек несёт суммарный расход: промежуточные модели + вызов агрегатора.
+        var reviewCost = LlmCost.Compute(modelReview, response.InputTokens, response.OutputTokens);
 
         return new CheckResult
         {
@@ -157,6 +185,9 @@ public class MultipleModelStrategy : IReportStrategy
             SecurityComment = checkedResult.SecurityComment,
             Model = modelReview,
             Answer = data.Answer,
+            InputTokens = data.InputTokens + response.InputTokens,
+            OutputTokens = data.OutputTokens + response.OutputTokens,
+            Cost = data.Cost + reviewCost,
         };
     }
 

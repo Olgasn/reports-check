@@ -51,7 +51,9 @@ public static class DependencyInjection
         services.AddSingleton<OpenAiHandler>();
         services.AddSingleton<OllamaHandler>();
         services.AddSingleton<ILlmProviderFactory, LlmProviderFactory>();
-        services.AddSingleton<ILlmService, SemanticKernelLlmService>();
+        services.AddSingleton<ILlmService, RetryingLlmService>();
+        services.AddHttpClient();
+        services.AddScoped<IOpenRouterPricingService, OpenRouterPricingService>();
 
         // Очередь и фоновый обработчик проверок.
         services.AddSingleton<IReportCheckQueue, ReportCheckQueue>();

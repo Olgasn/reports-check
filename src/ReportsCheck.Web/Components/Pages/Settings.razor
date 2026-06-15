@@ -150,7 +150,7 @@
         var dialog = await DialogService.ShowAsync<ModelDialog>("Новая модель", parameters);
         if (await dialog.Result is { Canceled: false, Data: ModelDialog.ModelDialogResult d })
         {
-            await Mediator.Send(new CreateModelCommand(d.Name, d.Value, d.TopP, d.Temperature, d.MaxTokens, d.MaxRetries, d.QueryDelay, d.ErrorDelay, d.LlmInterface, d.CacheControl, d.KeyId, d.ProviderId));
+            await Mediator.Send(new CreateModelCommand(d.Name, d.Value, d.TopP, d.Temperature, d.MaxTokens, d.MaxRetries, d.QueryDelay, d.ErrorDelay, d.InputTokenPrice, d.OutputTokenPrice, d.LlmInterface, d.CacheControl, d.KeyId, d.ProviderId));
             await LoadAll();
         }
     }
@@ -161,7 +161,7 @@
         var dialog = await DialogService.ShowAsync<ModelDialog>("Редактирование модели", parameters);
         if (await dialog.Result is { Canceled: false, Data: ModelDialog.ModelDialogResult d })
         {
-            await Mediator.Send(new UpdateModelCommand(model.Id, d.Name, d.Value, d.TopP, d.Temperature, d.MaxTokens, d.MaxRetries, d.QueryDelay, d.ErrorDelay, d.LlmInterface, d.CacheControl, d.KeyId, d.ProviderId));
+            await Mediator.Send(new UpdateModelCommand(model.Id, d.Name, d.Value, d.TopP, d.Temperature, d.MaxTokens, d.MaxRetries, d.QueryDelay, d.ErrorDelay, d.InputTokenPrice, d.OutputTokenPrice, d.LlmInterface, d.CacheControl, d.KeyId, d.ProviderId));
             await LoadAll();
         }
     }

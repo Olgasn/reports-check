@@ -42,8 +42,9 @@
             @if (_mode == "zip")
             {
                 <MudFileUpload T="IBrowserFile" FilesChanged="OnZipChanged" Accept=".zip" Class="mb-3">
-                    <CustomContent>
-                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FolderZip">
+                    <CustomContent Context="upload">
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FolderZip"
+                                   OnClick="@(() => upload.OpenFilePickerAsync())">
                             @(_zipFile?.Name ?? "Выбрать ZIP-архив")
                         </MudButton>
                     </CustomContent>
@@ -62,8 +63,9 @@
             else
             {
                 <MudFileUpload T="IBrowserFile" @bind-Files="_singleFile" Accept=".pdf,.docx,.txt" Class="mb-3">
-                    <CustomContent>
-                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile">
+                    <CustomContent Context="upload">
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AttachFile"
+                                   OnClick="@(() => upload.OpenFilePickerAsync())">
                             @(_singleFile?.Name ?? "Выбрать файл отчёта")
                         </MudButton>
                     </CustomContent>
