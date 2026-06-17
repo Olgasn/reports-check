@@ -104,16 +104,20 @@ public class ModelResultExtractorTests
     }
 
     [Fact]
-    public void Extract_EmptyAdvantages_ThrowsValidation()
+    public void Extract_EmptyAdvantages_IsAllowed()
     {
+        // Модель может не найти достоинств у слабого отчёта — это не повод
+        // отбраковывать весь валидный результат (оценку, рецензию, недостатки).
         const string content = """
         <JSON>
-        { "grade": 5, "review": "r", "advantages": [], "disadvantages": [] }
+        { "grade": 5, "review": "r", "advantages": [], "disadvantages": ["нет выводов"] }
         </JSON>
         """;
 
-        var act = () => _extractor.Extract(content);
+        var result = _extractor.Extract(content);
 
-        act.Should().Throw<InvalidOperationException>().WithMessage("*Validation*");
+        result.Grade.Should().Be(5);
+        result.Advantages.Should().BeEmpty();
+        result.Disadvantages.Should().ContainSingle();
     }
 }

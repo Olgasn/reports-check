@@ -51,7 +51,7 @@ public class MultipleModelStrategy : IReportStrategy
     }
 
     // InputTokens/OutputTokens/Cost — накопленные суммы по всем промежуточным моделям для этого студента.
-    private sealed record ReviewData(
+    internal sealed record ReviewData(
         Student Student, List<ModelCheckResultSummary> Result, string Answer,
         int InputTokens, int OutputTokens, decimal Cost);
 
@@ -67,54 +67,78 @@ public class MultipleModelStrategy : IReportStrategy
         var task = lab.Content;
         var reportsData = await GetReportsDataAsync(job, cancellationToken);
 
+        // Каждая модель проверяет все отчёты; результат выровнен по индексу отчёта.
+        // null означает, что модель не справилась с конкретным отчётом — сбой одного
+        // отчёта (или модели) не должен ронять весь батч и срывать сведение.
         var batchTasks = models.Select(model => RunModelBatchAsync(model, reportsData, task, content, job, lab.Id, cancellationToken)).ToList();
-        var settled = await Task.WhenAll(batchTasks);
+        var batches = await Task.WhenAll(batchTasks);
 
-        var fulfilled = settled.Where(b => b.Success).Select(b => b.Results!).ToList();
-        var reviewData = PrepareMultipleData(fulfilled);
+        var reviewData = PrepareMultipleData(batches);
 
-        var combineTasks = reviewData.Select(data => CombineCheckResultAsync(data, modelReview, task, content, lab.Id, cancellationToken)).ToList();
-        var combined = await Task.WhenAll(combineTasks);
+        var combineTasks = reviewData.Select(data => CombineCheckResultSafelyAsync(data, modelReview, task, content, lab.Id, cancellationToken)).ToList();
+        var combined = (await Task.WhenAll(combineTasks)).Where(r => r is not null).Select(r => r!).ToList();
 
         return await _reportChecker.CreateChecksAsync(combined, modelReview.Id, lab.Id, cancellationToken);
     }
 
-    private async Task<(bool Success, List<CheckResult>? Results)> RunModelBatchAsync(
+    // Возвращает результаты, выровненные по индексу отчёта: null — отчёт не удалось проверить этой моделью.
+    private async Task<CheckResult?[]> RunModelBatchAsync(
         Model model, IReadOnlyList<ParsedReport> reports, string task, string content, ReportCheckJob job, int labId, CancellationToken cancellationToken)
+    {
+        var checkTasks = reports.Select(report =>
+            CheckReportSafelyAsync(report, task, content, model, job, labId, cancellationToken)).ToList();
+
+        return await Task.WhenAll(checkTasks);
+    }
+
+    private async Task<CheckResult?> CheckReportSafelyAsync(
+        ParsedReport report, string task, string content, Model model, ReportCheckJob job, int labId, CancellationToken cancellationToken)
     {
         try
         {
-            var checkTasks = reports.Select(report =>
-                _reportChecker.CheckOneReportAsync(report, task, content, model, job.GroupId, job.CheckPrev, labId, cancellationToken)).ToList();
-            var results = await Task.WhenAll(checkTasks);
-            return (true, results.ToList());
+            return await _reportChecker.CheckOneReportAsync(report, task, content, model, job.GroupId, job.CheckPrev, labId, cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
-            return (false, null);
+            var studentStr = $"{report.Name} {report.Surname} {report.Middlename}";
+            _notification.ReportOneFailed(studentStr, model.Name, 0, labId);
+            _logger.LogError(ex, "Не удалось проверить отчёт студента [{Student}] моделью [{Model}]", studentStr, model.Name);
+            return null;
         }
     }
 
-    private static List<ReviewData> PrepareMultipleData(List<List<CheckResult>> results)
+    internal static List<ReviewData> PrepareMultipleData(IReadOnlyList<CheckResult?[]> batches)
     {
         var reviewData = new List<ReviewData>();
 
-        if (results.Count == 0 || results[0].Count == 0)
+        if (batches.Count == 0)
         {
             return reviewData;
         }
 
-        for (var i = 0; i < results[0].Count; i++)
+        var reportCount = batches[0].Length;
+
+        for (var i = 0; i < reportCount; i++)
         {
+            // Сводки только тех моделей, что успешно проверили отчёт i.
+            var succeeded = batches
+                .Where(b => i < b.Length && b[i] is not null)
+                .Select(b => b[i]!)
+                .ToList();
+
+            // Ни одна модель не справилась с отчётом — сводить нечего (сбой уже отправлен в уведомления).
+            if (succeeded.Count == 0)
+            {
+                continue;
+            }
+
             var summaries = new List<ModelCheckResultSummary>();
-            var answer = results[0][i].Answer;
             var inputTokens = 0;
             var outputTokens = 0;
             var cost = 0m;
 
-            foreach (var batch in results)
+            foreach (var r in succeeded)
             {
-                var r = batch[i];
                 summaries.Add(new ModelCheckResultSummary
                 {
                     ModelName = r.Model.Name,
@@ -133,36 +157,46 @@ public class MultipleModelStrategy : IReportStrategy
                 cost += r.Cost;
             }
 
-            reviewData.Add(new ReviewData(results[0][i].Student, summaries, answer, inputTokens, outputTokens, cost));
+            var first = succeeded[0];
+            reviewData.Add(new ReviewData(first.Student, summaries, first.Answer, inputTokens, outputTokens, cost));
         }
 
         return reviewData;
     }
 
-    private async Task<CheckResult> CombineCheckResultAsync(ReviewData data, Model modelReview, string task, string content, int labId, CancellationToken cancellationToken)
+    private async Task<CheckResult?> CombineCheckResultSafelyAsync(
+        ReviewData data, Model modelReview, string task, string content, int labId, CancellationToken cancellationToken)
     {
         var studentStr = $"{data.Student.Name} {data.Student.Surname} {data.Student.Middlename}";
-        var securityAnalysis = _promptInjection.Analyze(data.Answer);
 
         _notification.ReportOneStarted(studentStr, modelReview.Name, data.Student.Id, labId);
         _logger.LogInformation("Началось сведение ответов для студента [{Student}] моделью [{Model}]", studentStr, modelReview.Name);
 
-        LlmResult response;
         try
         {
-            var prompt = _promptService.PrepareMultiplePrompt(task, data.Answer, content, data.Result.Cast<object>().ToList(), securityAnalysis);
-            response = await _llmService.QueryAsync(prompt, modelReview, cancellationToken);
+            var result = await CombineCheckResultAsync(data, modelReview, task, content, cancellationToken);
+
+            _notification.ReportOneChecked(studentStr, modelReview.Name, data.Student.Id, labId);
+            _logger.LogInformation("Закончилось сведение ответов для студента [{Student}] моделью [{Model}]", studentStr, modelReview.Name);
+
+            return result;
         }
-        catch
+        catch (Exception ex)
         {
             _notification.ReportOneFailed(studentStr, modelReview.Name, data.Student.Id, labId);
-            throw;
+            _logger.LogError(ex, "Не удалось свести ответы для студента [{Student}] моделью [{Model}]", studentStr, modelReview.Name);
+            return null;
         }
+    }
+
+    private async Task<CheckResult> CombineCheckResultAsync(ReviewData data, Model modelReview, string task, string content, CancellationToken cancellationToken)
+    {
+        var securityAnalysis = _promptInjection.Analyze(data.Answer);
+
+        var prompt = _promptService.PrepareMultiplePrompt(task, data.Answer, content, data.Result.Cast<object>().ToList(), securityAnalysis);
+        var response = await _llmService.QueryAsync(prompt, modelReview, cancellationToken);
 
         _responseLogger.Write(modelReview.Name, response.Content);
-
-        _notification.ReportOneChecked(studentStr, modelReview.Name, data.Student.Id, labId);
-        _logger.LogInformation("Закончилось сведение ответов для студента [{Student}] моделью [{Model}]", studentStr, modelReview.Name);
 
         var resultDto = _extractor.Extract(response.Content);
         var checkedResult = _promptInjection.MergeResultFields(resultDto, securityAnalysis);

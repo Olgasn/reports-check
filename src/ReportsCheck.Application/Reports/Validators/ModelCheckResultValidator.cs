@@ -18,7 +18,9 @@ public class ModelCheckResultValidator : AbstractValidator<ModelCheckResult>
 
         RuleFor(x => x.Review).NotNull().MaximumLength(5000);
 
-        RuleFor(x => x.Advantages).NotNull().NotEmpty()
+        // Пустой список допустим: модель может не найти достоинств у слабого отчёта
+        // (как и недостатков у сильного). Иначе валидный результат целиком терялся.
+        RuleFor(x => x.Advantages).NotNull()
             .Must(a => a.Count <= 30).WithMessage("advantages must contain no more than 30 elements");
         RuleForEach(x => x.Advantages).MaximumLength(1000);
 
