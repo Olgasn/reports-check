@@ -3,6 +3,7 @@
 <MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
     <DialogContent>
         <MudTextField @bind-Value="_name" Label="Название" Required="true" Class="mb-3" />
+        <MudTextField @bind-Value="_abbreviation" Label="Аббревиатура (латиницей, для имени репозитория)" Class="mb-3" />
         <MudTextField @bind-Value="_description" Label="Описание" Lines="3" />
     </DialogContent>
     <DialogActions>
@@ -16,17 +17,20 @@
 
     [Parameter] public string Name { get; set; } = string.Empty;
     [Parameter] public string Description { get; set; } = string.Empty;
+    [Parameter] public string Abbreviation { get; set; } = string.Empty;
 
     private string _name = string.Empty;
     private string _description = string.Empty;
+    private string _abbreviation = string.Empty;
 
     protected override void OnInitialized()
     {
         _name = Name;
         _description = Description;
+        _abbreviation = Abbreviation;
     }
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok((_name, _description)));
+    private void Submit() => MudDialog.Close(DialogResult.Ok((_name, _description, _abbreviation)));
 
     private void Cancel() => MudDialog.Cancel();
 }

@@ -46,17 +46,21 @@
     {
         <MudTable Items="_students.Items" Hover="true" Dense="true">
             <HeaderContent>
+                <MudTh>№</MudTh>
                 <MudTh>Фамилия</MudTh>
                 <MudTh>Имя</MudTh>
                 <MudTh>Отчество</MudTh>
                 <MudTh>Email</MudTh>
+                <MudTh>GitHub</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate>
+                <MudTd>@context.Number</MudTd>
                 <MudTd>@context.Surname</MudTd>
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@context.Middlename</MudTd>
                 <MudTd>@context.Email</MudTd>
+                <MudTd>@context.GitHubUsername</MudTd>
                 <MudTd Style="text-align:right">
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => EditStudent(context))" />
                     <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteStudent(context))" />
@@ -158,9 +162,9 @@
     {
         var dialog = await DialogService.ShowAsync<StudentDialog>("Новый студент");
         var result = await dialog.Result;
-        if (result is { Canceled: false, Data: ValueTuple<string, string, string, string?> data })
+        if (result is { Canceled: false, Data: StudentDialog.StudentDialogResult data })
         {
-            await Mediator.Send(new CreateStudentCommand(data.Item1, data.Item2, data.Item3, _groupId!.Value, data.Item4));
+            await Mediator.Send(new CreateStudentCommand(data.Name, data.Surname, data.Middlename, _groupId!.Value, data.Email, data.Number, data.GitHubUsername));
             await LoadStudents();
         }
     }
@@ -173,12 +177,14 @@
             { x => x.Surname, student.Surname },
             { x => x.Middlename, student.Middlename },
             { x => x.Email, student.Email },
+            { x => x.Number, student.Number },
+            { x => x.GitHubUsername, student.GitHubUsername },
         };
         var dialog = await DialogService.ShowAsync<StudentDialog>("Редактирование студента", parameters);
         var result = await dialog.Result;
-        if (result is { Canceled: false, Data: ValueTuple<string, string, string, string?> data })
+        if (result is { Canceled: false, Data: StudentDialog.StudentDialogResult data })
         {
-            await Mediator.Send(new UpdateStudentCommand(student.Id, data.Item1, data.Item2, data.Item3, _groupId, data.Item4));
+            await Mediator.Send(new UpdateStudentCommand(student.Id, data.Name, data.Surname, data.Middlename, _groupId, data.Email, data.Number, data.GitHubUsername));
             await LoadStudents();
         }
     }

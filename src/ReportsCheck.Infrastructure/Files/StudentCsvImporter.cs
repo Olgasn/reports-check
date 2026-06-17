@@ -42,6 +42,8 @@ public class StudentCsvImporter : IStudentCsvImporter
         var middlenameIdx = headers.FindIndex(h => h.StartsWith("отче") || h == "middlename");
         var groupsIdx = headers.FindIndex(h => h.StartsWith("групп") || h == "groups");
         var emailIdx = headers.FindIndex(h => h.Contains("почт") || h.Contains("email") || h.Contains("e-mail"));
+        var numberIdx = headers.FindIndex(h => h.StartsWith("ном") || h == "number" || h == "№" || h == "no");
+        var githubIdx = headers.FindIndex(h => h.Contains("github") || h.Contains("гитхаб"));
 
         if (nameIdx == -1 || surnameIdx == -1 || groupsIdx == -1)
         {
@@ -76,6 +78,10 @@ public class StudentCsvImporter : IStudentCsvImporter
             var groupName = PickPrimaryGroup(groupNameRaw);
             var emailRaw = emailIdx == -1 ? string.Empty : (row.ElementAtOrDefault(emailIdx) ?? string.Empty).Trim();
             var email = string.IsNullOrEmpty(emailRaw) ? null : emailRaw;
+            var numberRaw = numberIdx == -1 ? string.Empty : (row.ElementAtOrDefault(numberIdx) ?? string.Empty).Trim();
+            int? number = int.TryParse(numberRaw, out var parsedNumber) ? parsedNumber : null;
+            var githubRaw = githubIdx == -1 ? string.Empty : (row.ElementAtOrDefault(githubIdx) ?? string.Empty).Trim();
+            var github = string.IsNullOrEmpty(githubRaw) ? null : githubRaw;
 
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(surname) || string.IsNullOrEmpty(groupName))
             {
@@ -99,10 +105,28 @@ public class StudentCsvImporter : IStudentCsvImporter
 
             if (studentFound is not null)
             {
-                // Дополняем e-mail у существующего студента, если он раньше не был указан.
+                // Дополняем поля у существующего студента, если они раньше не были указаны.
+                var changed = false;
                 if (email is not null && string.IsNullOrEmpty(studentFound.Email))
                 {
                     studentFound.Email = email;
+                    changed = true;
+                }
+
+                if (number is not null && studentFound.Number is null)
+                {
+                    studentFound.Number = number;
+                    changed = true;
+                }
+
+                if (github is not null && string.IsNullOrEmpty(studentFound.GitHubUsername))
+                {
+                    studentFound.GitHubUsername = github;
+                    changed = true;
+                }
+
+                if (changed)
+                {
                     await _db.SaveChangesAsync(cancellationToken);
                 }
 
@@ -110,7 +134,7 @@ public class StudentCsvImporter : IStudentCsvImporter
                 continue;
             }
 
-            _db.Students.Add(new Student { Name = name, Surname = surname, Middlename = middlename, Email = email, GroupId = group.Id });
+            _db.Students.Add(new Student { Name = name, Surname = surname, Middlename = middlename, Email = email, Number = number, GitHubUsername = github, GroupId = group.Id });
             await _db.SaveChangesAsync(cancellationToken);
             createdStudents++;
         }

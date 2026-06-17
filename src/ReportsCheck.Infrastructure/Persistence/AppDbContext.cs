@@ -18,6 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<Key> Keys => Set<Key>();
     public DbSet<Provider> Providers => Set<Provider>();
     public DbSet<Model> Models => Set<Model>();
+    public DbSet<StudentRepository> StudentRepositories => Set<StudentRepository>();
+    public DbSet<AppSettings> AppSettings => Set<AppSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

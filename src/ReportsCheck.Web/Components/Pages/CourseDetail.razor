@@ -77,12 +77,13 @@ else
         {
             { x => x.Name, _course!.Name },
             { x => x.Description, _course.Description },
+            { x => x.Abbreviation, _course.Abbreviation },
         };
         var dialog = await DialogService.ShowAsync<CourseDialog>("Редактирование курса", parameters);
         var result = await dialog.Result;
-        if (result is { Canceled: false, Data: ValueTuple<string, string> data })
+        if (result is { Canceled: false, Data: ValueTuple<string, string, string> data })
         {
-            await Mediator.Send(new UpdateCourseCommand(Id, data.Item1, data.Item2));
+            await Mediator.Send(new UpdateCourseCommand(Id, data.Item1, data.Item2, data.Item3));
             await Load();
         }
     }

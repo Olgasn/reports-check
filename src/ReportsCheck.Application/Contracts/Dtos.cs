@@ -2,7 +2,7 @@ namespace ReportsCheck.Application.Contracts;
 
 public record PromptDto(int Id, string Content);
 
-public record CourseDto(int Id, string Name, string Description, PromptDto? Prompt);
+public record CourseDto(int Id, string Name, string Description, string Abbreviation, PromptDto? Prompt);
 
 public record CourseSimpleDto(int Id, string Name);
 
@@ -10,7 +10,31 @@ public record CourseWithLabsDto(int Id, string Name, IReadOnlyList<LabSimpleDto>
 
 public record GroupDto(int Id, string Name);
 
-public record StudentDto(int Id, string Name, string Surname, string Middlename, string? Email, GroupDto? Group);
+public record StudentDto(int Id, string Name, string Surname, string Middlename, string? Email, int? Number, string? GitHubUsername, GroupDto? Group);
+
+public record StudentRepositoryDto(
+    int Id,
+    int StudentId,
+    string StudentFullName,
+    int? StudentNumber,
+    int CourseId,
+    string Name,
+    string Url,
+    string Status,
+    string? Error,
+    bool InvitationEmailed,
+    DateTime CreatedAt);
+
+public record AppSettingsDto(
+    string GitHubToken,
+    string GitHubOrg,
+    string GitHubOwner,
+    bool RepoPrivate,
+    string SmtpServer,
+    int SmtpPort,
+    string SenderName,
+    string SenderEmail,
+    string SmtpPassword);
 
 public record LabSimpleDto(int Id, string Name);
 

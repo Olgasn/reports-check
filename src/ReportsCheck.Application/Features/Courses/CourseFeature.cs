@@ -17,9 +17,9 @@ public record GetCourseByIdQuery(int Id) : IRequest<CourseDto>;
 
 public record GetCourseLabsQuery(int Id) : IRequest<IReadOnlyList<LabSimpleDto>>;
 
-public record CreateCourseCommand(string Name, string Description) : IRequest<int>;
+public record CreateCourseCommand(string Name, string Description, string Abbreviation) : IRequest<int>;
 
-public record UpdateCourseCommand(int Id, string Name, string Description) : IRequest<Unit>;
+public record UpdateCourseCommand(int Id, string Name, string Description, string Abbreviation) : IRequest<Unit>;
 
 public record DeleteCourseCommand(int Id) : IRequest<Unit>;
 
@@ -92,7 +92,7 @@ public class CourseHandlers :
 
     public async Task<int> Handle(CreateCourseCommand request, CancellationToken cancellationToken)
     {
-        var course = new Course { Name = request.Name, Description = request.Description };
+        var course = new Course { Name = request.Name, Description = request.Description, Abbreviation = request.Abbreviation };
         await _courses.AddAsync(course, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return course.Id;
@@ -104,6 +104,7 @@ public class CourseHandlers :
             ?? throw new NotFoundException("Курс не был найден.");
         course.Name = request.Name;
         course.Description = request.Description;
+        course.Abbreviation = request.Abbreviation;
         _courses.Update(course);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Unit.Value;

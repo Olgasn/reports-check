@@ -80,9 +80,9 @@ else
     {
         var dialog = await DialogService.ShowAsync<CourseDialog>("Новый курс");
         var result = await dialog.Result;
-        if (result is { Canceled: false, Data: ValueTuple<string, string> data })
+        if (result is { Canceled: false, Data: ValueTuple<string, string, string> data })
         {
-            await Mediator.Send(new CreateCourseCommand(data.Item1, data.Item2));
+            await Mediator.Send(new CreateCourseCommand(data.Item1, data.Item2, data.Item3));
             Snackbar.Add("Курс создан", Severity.Success);
             await Load();
         }
@@ -94,12 +94,13 @@ else
         {
             { x => x.Name, course.Name },
             { x => x.Description, course.Description },
+            { x => x.Abbreviation, course.Abbreviation },
         };
         var dialog = await DialogService.ShowAsync<CourseDialog>("Редактирование курса", parameters);
         var result = await dialog.Result;
-        if (result is { Canceled: false, Data: ValueTuple<string, string> data })
+        if (result is { Canceled: false, Data: ValueTuple<string, string, string> data })
         {
-            await Mediator.Send(new UpdateCourseCommand(course.Id, data.Item1, data.Item2));
+            await Mediator.Send(new UpdateCourseCommand(course.Id, data.Item1, data.Item2, data.Item3));
             Snackbar.Add("Курс обновлён", Severity.Success);
             await Load();
         }

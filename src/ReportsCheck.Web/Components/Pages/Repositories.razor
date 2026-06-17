@@ -1,0 +1,249 @@
+@page "/repositories"
+@using ReportsCheck.Application.Features.Courses
+@using ReportsCheck.Application.Features.Groups
+@using ReportsCheck.Application.Features.Repositories
+@using ReportsCheck.Application.Notifications
+@inject IMediator Mediator
+@inject INotificationService Notifications
+@inject ISnackbar Snackbar
+@implements IDisposable
+
+<PageTitle>Репозитории</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Репозитории студентов</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" md="5">
+            <MudSelect T="int?" Value="_courseId" ValueChanged="OnCourseChanged" Label="Дисциплина">
+                @foreach (var course in _courses)
+                {
+                    <MudSelectItem T="int?" Value="@course.Id">@course.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="5">
+            <MudSelect T="int?" Value="_groupId" ValueChanged="OnGroupChanged" Label="Группа">
+                @foreach (var group in _groups)
+                {
+                    <MudSelectItem T="int?" Value="@group.Id">@group.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+
+    <MudStack Row="true" Spacing="2" Class="mt-3">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="CreateRepositories" Disabled="@(_running || _courseId is null || _groupId is null)">
+            Создать репозитории
+        </MudButton>
+        <MudButton Color="Color.Secondary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Email"
+                   OnClick="SendInvitations" Disabled="@(_running || _courseId is null || _groupId is null)">
+            Разослать приглашения
+        </MudButton>
+    </MudStack>
+
+    @if (_running)
+    {
+        <MudProgressLinear Indeterminate="true" Class="mt-3" />
+    }
+</MudPaper>
+
+@if (_progress.Count > 0)
+{
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-2">Ход выполнения</MudText>
+        <MudList T="string" Dense="true">
+            @foreach (var entry in _progress.OrderBy(p => p.Key))
+            {
+                <MudListItem T="string" Icon="@StatusIcon(entry.Value)" IconColor="@StatusColor(entry.Value)">
+                    @entry.Key — @StatusText(entry.Value)
+                </MudListItem>
+            }
+        </MudList>
+    </MudPaper>
+}
+
+@if (_courseId is not null && _groupId is not null)
+{
+    <MudTable Items="_repositories" Dense="true" Hover="true">
+        <HeaderContent>
+            <MudTh>№</MudTh>
+            <MudTh>Студент</MudTh>
+            <MudTh>Репозиторий</MudTh>
+            <MudTh>Статус</MudTh>
+            <MudTh>Письмо</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.StudentNumber</MudTd>
+            <MudTd>@context.StudentFullName</MudTd>
+            <MudTd>
+                @if (!string.IsNullOrEmpty(context.Url))
+                {
+                    <MudLink Href="@context.Url" Target="_blank">@context.Name</MudLink>
+                }
+                else
+                {
+                    @context.Name
+                }
+            </MudTd>
+            <MudTd>
+                @if (context.Status == "Created")
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success">Создан</MudChip>
+                }
+                else
+                {
+                    <MudTooltip Text="@context.Error">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error">Ошибка</MudChip>
+                    </MudTooltip>
+                }
+            </MudTd>
+            <MudTd>
+                @if (context.InvitationEmailed)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.MarkEmailRead" Color="Color.Success" Size="Size.Small" />
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private IReadOnlyList<CourseSimpleDto> _courses = [];
+    private IReadOnlyList<GroupDto> _groups = [];
+    private int? _courseId;
+    private int? _groupId;
+    private bool _running;
+
+    private IReadOnlyList<StudentRepositoryDto> _repositories = [];
+    private readonly Dictionary<string, string> _progress = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _courses = await Mediator.Send(new GetAllCoursesQuery());
+        _groups = await Mediator.Send(new GetGroupsQuery());
+
+        Notifications.OnProvisioningProgress += HandleProgress;
+        Notifications.OnProvisioningDone += HandleDone;
+        Notifications.OnProvisioningFailed += HandleFailed;
+    }
+
+    private async Task OnCourseChanged(int? value)
+    {
+        _courseId = value;
+        await LoadRepositories();
+    }
+
+    private async Task OnGroupChanged(int? value)
+    {
+        _groupId = value;
+        await LoadRepositories();
+    }
+
+    private async Task LoadRepositories()
+    {
+        if (_courseId is null || _groupId is null)
+        {
+            _repositories = [];
+            return;
+        }
+        _repositories = await Mediator.Send(new GetRepositoriesQuery(_courseId.Value, _groupId.Value));
+    }
+
+    private async Task CreateRepositories()
+    {
+        if (_courseId is null || _groupId is null)
+        {
+            return;
+        }
+        _progress.Clear();
+        _running = true;
+        await Mediator.Send(new EnqueueCreateRepositoriesCommand(_courseId.Value, _groupId.Value, []));
+        Snackbar.Add("Создание репозиториев запущено", Severity.Info);
+    }
+
+    private async Task SendInvitations()
+    {
+        if (_courseId is null || _groupId is null)
+        {
+            return;
+        }
+        _progress.Clear();
+        _running = true;
+        await Mediator.Send(new EnqueueSendInvitationsCommand(_courseId.Value, _groupId.Value, []));
+        Snackbar.Add("Рассылка приглашений запущена", Severity.Info);
+    }
+
+    private void HandleProgress(ProvisioningProgress p)
+    {
+        if (p.CourseId != _courseId || p.GroupId != _groupId)
+        {
+            return;
+        }
+        _progress[p.Student] = p.Status;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleDone(ProvisioningDoneNotification n)
+    {
+        if (n.CourseId != _courseId || n.GroupId != _groupId)
+        {
+            return;
+        }
+        _running = false;
+        InvokeAsync(async () =>
+        {
+            await LoadRepositories();
+            Snackbar.Add("Операция завершена", Severity.Success);
+            StateHasChanged();
+        });
+    }
+
+    private void HandleFailed(ProvisioningFailedNotification n)
+    {
+        if (n.CourseId != _courseId || n.GroupId != _groupId)
+        {
+            return;
+        }
+        _running = false;
+        InvokeAsync(() =>
+        {
+            Snackbar.Add($"Ошибка: {n.Reason}", Severity.Error);
+            StateHasChanged();
+        });
+    }
+
+    private static string StatusText(string status) => status switch
+    {
+        "started" => "обработка…",
+        "created" => "репозиторий создан",
+        "emailed" => "письмо отправлено",
+        "skipped" => "пропущен",
+        "failed" => "ошибка",
+        _ => status,
+    };
+
+    private static string StatusIcon(string status) => status switch
+    {
+        "created" or "emailed" => Icons.Material.Filled.CheckCircle,
+        "failed" => Icons.Material.Filled.Error,
+        "skipped" => Icons.Material.Filled.Block,
+        _ => Icons.Material.Filled.HourglassEmpty,
+    };
+
+    private static Color StatusColor(string status) => status switch
+    {
+        "created" or "emailed" => Color.Success,
+        "failed" => Color.Error,
+        "skipped" => Color.Default,
+        _ => Color.Warning,
+    };
+
+    public void Dispose()
+    {
+        Notifications.OnProvisioningProgress -= HandleProgress;
+        Notifications.OnProvisioningDone -= HandleDone;
+        Notifications.OnProvisioningFailed -= HandleFailed;
+    }
+}

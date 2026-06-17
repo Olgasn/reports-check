@@ -2,6 +2,7 @@
 @using ReportsCheck.Application.Features.Keys
 @using ReportsCheck.Application.Features.Models
 @using ReportsCheck.Application.Features.Providers
+@using ReportsCheck.Application.Features.Settings
 @using ReportsCheck.Web.Components.Shared.Dialogs
 @inject IMediator Mediator
 @inject IDialogService DialogService
@@ -63,12 +64,48 @@
             </RowTemplate>
         </MudTable>
     </MudExpansionPanel>
+
+    <MudExpansionPanel Text="GitHub" Expanded="true">
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+            <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="EditGitHubSettings">Редактировать</MudButton>
+        </MudStack>
+        @if (_settings is not null)
+        {
+            <MudSimpleTable Dense="true" Hover="false" Bordered="false" Striped="false">
+                <tbody>
+                    <tr><td>Токен</td><td>@Mask(_settings.GitHubToken)</td></tr>
+                    <tr><td>Организация</td><td>@_settings.GitHubOrg</td></tr>
+                    <tr><td>Владелец</td><td>@_settings.GitHubOwner</td></tr>
+                    <tr><td>Приватные репозитории</td><td>@(_settings.RepoPrivate ? "да" : "нет")</td></tr>
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Почтовая рассылка (SMTP)" Expanded="true">
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+            <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="EditSmtpSettings">Редактировать</MudButton>
+        </MudStack>
+        @if (_settings is not null)
+        {
+            <MudSimpleTable Dense="true" Hover="false" Bordered="false" Striped="false">
+                <tbody>
+                    <tr><td>Сервер</td><td>@_settings.SmtpServer</td></tr>
+                    <tr><td>Порт</td><td>@_settings.SmtpPort</td></tr>
+                    <tr><td>Имя отправителя</td><td>@_settings.SenderName</td></tr>
+                    <tr><td>Email отправителя</td><td>@_settings.SenderEmail</td></tr>
+                    <tr><td>Пароль</td><td>@Mask(_settings.SmtpPassword)</td></tr>
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudExpansionPanel>
 </MudExpansionPanels>
 
 @code {
     private IReadOnlyList<KeyDto> _keys = [];
     private IReadOnlyList<ProviderDto> _providers = [];
     private IReadOnlyList<ModelDto> _models = [];
+    private AppSettingsDto? _settings;
 
     protected override Task OnInitializedAsync() => LoadAll();
 
@@ -77,9 +114,50 @@
         _keys = await Mediator.Send(new GetKeysQuery());
         _providers = await Mediator.Send(new GetProvidersQuery());
         _models = await Mediator.Send(new GetModelsQuery());
+        _settings = await Mediator.Send(new GetSettingsQuery());
     }
 
-    private static string Mask(string value) => value.Length <= 6 ? "••••" : $"{value[..3]}…{value[^3..]}";
+    private static string Mask(string value) =>
+        string.IsNullOrEmpty(value) ? "—" : value.Length <= 6 ? "••••" : $"{value[..3]}…{value[^3..]}";
+
+    // ----- GitHub -----
+    private async Task EditGitHubSettings()
+    {
+        var parameters = new DialogParameters<GitHubSettingsDialog>
+        {
+            { x => x.Token, _settings!.GitHubToken },
+            { x => x.Org, _settings.GitHubOrg },
+            { x => x.Owner, _settings.GitHubOwner },
+            { x => x.RepoPrivate, _settings.RepoPrivate },
+        };
+        var dialog = await DialogService.ShowAsync<GitHubSettingsDialog>("Настройки GitHub", parameters);
+        if (await dialog.Result is { Canceled: false, Data: GitHubSettingsDialog.GitHubSettingsResult d })
+        {
+            await Mediator.Send(new UpdateGitHubSettingsCommand(d.Token, d.Org, d.Owner, d.RepoPrivate));
+            Snackbar.Add("Настройки GitHub сохранены", Severity.Success);
+            await LoadAll();
+        }
+    }
+
+    // ----- SMTP -----
+    private async Task EditSmtpSettings()
+    {
+        var parameters = new DialogParameters<SmtpSettingsDialog>
+        {
+            { x => x.Server, _settings!.SmtpServer },
+            { x => x.Port, _settings.SmtpPort },
+            { x => x.SenderName, _settings.SenderName },
+            { x => x.SenderEmail, _settings.SenderEmail },
+            { x => x.Password, _settings.SmtpPassword },
+        };
+        var dialog = await DialogService.ShowAsync<SmtpSettingsDialog>("Настройки рассылки", parameters);
+        if (await dialog.Result is { Canceled: false, Data: SmtpSettingsDialog.SmtpSettingsResult d })
+        {
+            await Mediator.Send(new UpdateEmailSettingsCommand(d.Server, d.Port, d.SenderName, d.SenderEmail, d.Password));
+            Snackbar.Add("Настройки рассылки сохранены", Severity.Success);
+            await LoadAll();
+        }
+    }
 
     // ----- Keys -----
     private async Task AddKey()

@@ -14,6 +14,10 @@ public class InMemoryNotificationService : INotificationService
     public event Action<ReportsCheckedNotification>? OnReportsChecked;
     public event Action<CheckFailedNotification>? OnCheckFailed;
 
+    public event Action<ProvisioningProgress>? OnProvisioningProgress;
+    public event Action<ProvisioningDoneNotification>? OnProvisioningDone;
+    public event Action<ProvisioningFailedNotification>? OnProvisioningFailed;
+
     public void ReportOneStarted(string student, string model, int id, int labId) =>
         OnReportProgress?.Invoke(new ReportProgress(student, model, id, labId, "started"));
 
@@ -30,4 +34,13 @@ public class InMemoryNotificationService : INotificationService
 
     public void CheckFailed(int labId, string reason = "Неизвестная ошибка") =>
         OnCheckFailed?.Invoke(new CheckFailedNotification(labId, reason));
+
+    public void ProvisioningStudent(string student, string status, int courseId, int groupId) =>
+        OnProvisioningProgress?.Invoke(new ProvisioningProgress(student, status, courseId, groupId));
+
+    public void ProvisioningDone(int courseId, int groupId) =>
+        OnProvisioningDone?.Invoke(new ProvisioningDoneNotification(courseId, groupId));
+
+    public void ProvisioningFailed(int courseId, int groupId, string reason = "Неизвестная ошибка") =>
+        OnProvisioningFailed?.Invoke(new ProvisioningFailedNotification(courseId, groupId, reason));
 }

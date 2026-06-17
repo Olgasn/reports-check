@@ -1,0 +1,40 @@
+@namespace ReportsCheck.Web.Components.Shared.Dialogs
+
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
+    <DialogContent>
+        <MudTextField @bind-Value="_token" Label="GitHub Personal Access Token" InputType="InputType.Password" Class="mb-3" />
+        <MudTextField @bind-Value="_org" Label="Организация" Required="true" Class="mb-3" />
+        <MudTextField @bind-Value="_owner" Label="Владелец (аккаунт)" Required="true" Class="mb-3" />
+        <MudSwitch @bind-Value="_repoPrivate" Label="Создавать приватные репозитории" Color="Color.Primary" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string Token { get; set; } = string.Empty;
+    [Parameter] public string Org { get; set; } = string.Empty;
+    [Parameter] public string Owner { get; set; } = string.Empty;
+    [Parameter] public bool RepoPrivate { get; set; } = true;
+
+    private string _token = string.Empty;
+    private string _org = string.Empty;
+    private string _owner = string.Empty;
+    private bool _repoPrivate = true;
+
+    protected override void OnInitialized()
+    {
+        _token = Token;
+        _org = Org;
+        _owner = Owner;
+        _repoPrivate = RepoPrivate;
+    }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(new GitHubSettingsResult(_token, _org, _owner, _repoPrivate)));
+    private void Cancel() => MudDialog.Cancel();
+
+    public record GitHubSettingsResult(string Token, string Org, string Owner, bool RepoPrivate);
+}

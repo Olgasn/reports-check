@@ -5,7 +5,9 @@
         <MudTextField @bind-Value="_surname" Label="Фамилия" Required="true" Class="mb-3" />
         <MudTextField @bind-Value="_name" Label="Имя" Required="true" Class="mb-3" />
         <MudTextField @bind-Value="_middlename" Label="Отчество" Required="true" Class="mb-3" />
-        <MudTextField @bind-Value="_email" Label="Email" InputType="InputType.Email" />
+        <MudTextField @bind-Value="_email" Label="Email" InputType="InputType.Email" Class="mb-3" />
+        <MudNumericField @bind-Value="_number" Label="Номер в группе" Min="0" Class="mb-3" />
+        <MudTextField @bind-Value="_gitHubUsername" Label="Логин GitHub" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Отмена</MudButton>
@@ -19,11 +21,15 @@
     [Parameter] public string Surname { get; set; } = string.Empty;
     [Parameter] public string Middlename { get; set; } = string.Empty;
     [Parameter] public string? Email { get; set; }
+    [Parameter] public int? Number { get; set; }
+    [Parameter] public string? GitHubUsername { get; set; }
 
     private string _name = string.Empty;
     private string _surname = string.Empty;
     private string _middlename = string.Empty;
     private string? _email;
+    private int? _number;
+    private string? _gitHubUsername;
 
     protected override void OnInitialized()
     {
@@ -31,8 +37,12 @@
         _surname = Surname;
         _middlename = Middlename;
         _email = Email;
+        _number = Number;
+        _gitHubUsername = GitHubUsername;
     }
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok((_name, _surname, _middlename, _email)));
+    private void Submit() => MudDialog.Close(DialogResult.Ok(new StudentDialogResult(_name, _surname, _middlename, _email, _number, _gitHubUsername)));
     private void Cancel() => MudDialog.Cancel();
+
+    public record StudentDialogResult(string Name, string Surname, string Middlename, string? Email, int? Number, string? GitHubUsername);
 }

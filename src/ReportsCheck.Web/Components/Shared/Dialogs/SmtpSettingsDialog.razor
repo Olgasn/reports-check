@@ -1,0 +1,56 @@
+@namespace ReportsCheck.Web.Components.Shared.Dialogs
+
+<MudDialog Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true })">
+    <DialogContent>
+        <MudTextField @bind-Value="_server" Label="SMTP-сервер" Required="true" Class="mb-3"
+                      HelperText="Адрес сервера исходящей почты. Для Gmail — smtp.gmail.com." />
+        <MudNumericField @bind-Value="_port" Label="Порт" Min="1" Max="65535" Class="mb-3"
+                         HelperText="Порт SMTP. 587 — STARTTLS (рекомендуется для Gmail); 465 — SSL." />
+        <MudTextField @bind-Value="_senderName" Label="Имя отправителя" Class="mb-3"
+                      HelperText="Отображаемое имя в поле «От кого», например «Кафедра ИТ». Необязательно." />
+        <MudTextField @bind-Value="_senderEmail" Label="Email отправителя" InputType="InputType.Email" Class="mb-3"
+                      HelperText="Адрес, от имени которого отправляются письма. Должен совпадать с учётной записью SMTP (для Gmail — ваш почтовый адрес Gmail)." />
+        <MudTextField @bind-Value="_password" Label="Пароль" InputType="InputType.Password"
+                      HelperText="Пароль учётной записи SMTP. Для Gmail — пароль приложения (16 символов), а не пароль аккаунта." />
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-4">
+            Для Gmail включите двухэтапную аутентификацию и создайте «пароль приложения»
+            (Аккаунт Google → Безопасность → Пароли приложений) — обычный пароль аккаунта не подойдёт.
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    private const string DefaultServer = "smtp.gmail.com";
+    private const int DefaultPort = 587;
+
+    [Parameter] public string Server { get; set; } = string.Empty;
+    [Parameter] public int Port { get; set; } = DefaultPort;
+    [Parameter] public string SenderName { get; set; } = string.Empty;
+    [Parameter] public string SenderEmail { get; set; } = string.Empty;
+    [Parameter] public string Password { get; set; } = string.Empty;
+
+    private string _server = DefaultServer;
+    private int _port = DefaultPort;
+    private string _senderName = string.Empty;
+    private string _senderEmail = string.Empty;
+    private string _password = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _server = string.IsNullOrWhiteSpace(Server) ? DefaultServer : Server;
+        _port = Port <= 0 ? DefaultPort : Port;
+        _senderName = SenderName;
+        _senderEmail = SenderEmail;
+        _password = Password;
+    }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(new SmtpSettingsResult(_server, _port, _senderName, _senderEmail, _password)));
+    private void Cancel() => MudDialog.Cancel();
+
+    public record SmtpSettingsResult(string Server, int Port, string SenderName, string SenderEmail, string Password);
+}

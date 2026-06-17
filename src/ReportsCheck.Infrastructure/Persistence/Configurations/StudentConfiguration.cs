@@ -17,5 +17,11 @@ public class StudentConfiguration : IEntityTypeConfiguration<Student>
             .WithOne(c => c.Student)
             .HasForeignKey(c => c.StudentId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Student 1 — * StudentRepository; deleting a student removes its repositories.
+        builder.HasMany(s => s.Repositories)
+            .WithOne(r => r.Student)
+            .HasForeignKey(r => r.StudentId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

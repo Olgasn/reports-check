@@ -2,13 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ReportsCheck.Application.Checks;
+using ReportsCheck.Application.Email;
 using ReportsCheck.Application.Files;
+using ReportsCheck.Application.GitHub;
 using ReportsCheck.Application.Llm;
 using ReportsCheck.Application.Notifications;
+using ReportsCheck.Application.Provisioning;
 using ReportsCheck.Application.Reports;
+using ReportsCheck.Application.Settings;
 using ReportsCheck.Domain.Interfaces;
 using ReportsCheck.Infrastructure.BackgroundJobs;
+using ReportsCheck.Infrastructure.Email;
 using ReportsCheck.Infrastructure.Files;
+using ReportsCheck.Infrastructure.GitHub;
 using ReportsCheck.Infrastructure.Llm;
 using ReportsCheck.Infrastructure.Llm.Handlers;
 using ReportsCheck.Infrastructure.Notifications;
@@ -37,6 +43,11 @@ public static class DependencyInjection
         services.AddScoped<ICheckService, CheckService>();
         services.AddScoped<IReportDataProvider, ReportDataProvider>();
         services.AddScoped<IStudentCsvImporter, StudentCsvImporter>();
+        services.AddScoped<ISettingsService, SettingsService>();
+
+        // GitHub + почтовая рассылка.
+        services.AddScoped<IGitHubRepositoryService, GitHubRepositoryService>();
+        services.AddScoped<IEmailService, EmailService>();
 
         // Файлы.
         services.AddSingleton<IDocumentTextExtractor, DocumentTextExtractor>();
@@ -58,6 +69,10 @@ public static class DependencyInjection
         // Очередь и фоновый обработчик проверок.
         services.AddSingleton<IReportCheckQueue, ReportCheckQueue>();
         services.AddHostedService<ReportCheckWorker>();
+
+        // Очередь и фоновый обработчик создания репозиториев / рассылки.
+        services.AddSingleton<IProvisioningQueue, ProvisioningQueue>();
+        services.AddHostedService<ProvisioningWorker>();
 
         return services;
     }

@@ -9,8 +9,15 @@ public class Student : BaseEntity
     /// <summary>Адрес электронной почты студента (опционально, импортируется из CSV).</summary>
     public string? Email { get; set; }
 
+    /// <summary>Номер студента в группе — входит в имя GitHub-репозитория.</summary>
+    public int? Number { get; set; }
+
+    /// <summary>Логин GitHub студента (для выдачи прав администратора на репозиторий).</summary>
+    public string? GitHubUsername { get; set; }
+
     public int? GroupId { get; set; }
     public Group? Group { get; set; }
 
     public ICollection<Check> Checks { get; set; } = new List<Check>();
+    public ICollection<StudentRepository> Repositories { get; set; } = new List<StudentRepository>();
 }

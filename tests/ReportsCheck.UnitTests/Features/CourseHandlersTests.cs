@@ -19,9 +19,9 @@ public class CourseHandlersTests
     {
         var sut = CreateSut();
 
-        await sut.Handle(new CreateCourseCommand("Курс", "Описание"), CancellationToken.None);
+        await sut.Handle(new CreateCourseCommand("Курс", "Описание", "BD"), CancellationToken.None);
 
-        await _courses.Received(1).AddAsync(Arg.Is<Course>(c => c.Name == "Курс" && c.Description == "Описание"), Arg.Any<CancellationToken>());
+        await _courses.Received(1).AddAsync(Arg.Is<Course>(c => c.Name == "Курс" && c.Description == "Описание" && c.Abbreviation == "BD"), Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
