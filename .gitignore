@@ -34,14 +34,6 @@ models_logs/
 logs/
 *.log
 
-# ---------- Legacy Node.js (client/ and server/ — не редактировать) ----------
-
-node_modules/
-dist/
-build/
-dist-ssr/
-*.tsbuildinfo
-
 # ---------- IDE / editor ----------
 
 .vscode/*
@@ -50,8 +42,6 @@ dist-ssr/
 .idea/
 .vs/
 *.suo
-*.ntvs*
-*.njsproj
 *.sublime-workspace
 *.sw?
 
