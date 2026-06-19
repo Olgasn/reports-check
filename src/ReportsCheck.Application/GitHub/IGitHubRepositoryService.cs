@@ -7,6 +7,8 @@ namespace ReportsCheck.Application.GitHub;
 public interface IGitHubRepositoryService
 {
     Task<GitHubRepoResult> CreateRepositoryAsync(GitHubRepoRequest request, CancellationToken cancellationToken = default);
+
+    Task DeleteRepositoryAsync(string name, CancellationToken cancellationToken = default);
 }
 
 /// <param name="Name">Имя репозитория на латинице (см. <see cref="RepositoryNaming"/>).</param>

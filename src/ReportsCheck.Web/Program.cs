@@ -28,7 +28,7 @@ builder.Services.AddSingleton(PromptTemplatesLoader.Load(builder.Environment.Con
 
 var app = builder.Build();
 
-// Применение миграций при старте (как MigrateAsync в PersonalLearning).
+// Применение миграций при старте.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

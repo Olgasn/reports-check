@@ -7,6 +7,7 @@
 @inject IMediator Mediator
 @inject INotificationService Notifications
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 @implements IDisposable
 
 <PageTitle>Проверка лабораторной работы</PageTitle>
@@ -94,6 +95,15 @@
                     </MudListItem>
                 }
             </MudList>
+
+            @if (ShowResultsLink)
+            {
+                <MudButton Class="mt-3" Color="Color.Primary" Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Assessment"
+                           Href="@($"/labs/{Id}/checks")">
+                    Посмотреть результаты
+                </MudButton>
+            }
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -108,6 +118,10 @@
     private string _mode = "zip";
     private bool _checkPrev;
     private bool _running;
+    private bool _completed;
+
+    // Кнопка результатов показывается, если проверка завершилась или хотя бы один отчёт уже проверен.
+    private bool ShowResultsLink => _completed || _progress.Values.Any(p => p.Status == "checked");
 
     private IBrowserFile? _zipFile;
     private byte[]? _zipBytes;
@@ -190,6 +204,7 @@
 
         _progress.Clear();
         _running = true;
+        _completed = false;
 
         await Mediator.Send(new EnqueueCheckReportsCommand(
             _selectedModels.ToList(), students, Id, _groupId.Value, _checkPrev, zipName, zipBytes, fileName, fileBytes));
@@ -214,9 +229,20 @@
             return;
         }
         _running = false;
+        _completed = true;
         InvokeAsync(() =>
         {
-            Snackbar.Add("Отчёты проверены", Severity.Success);
+            Snackbar.Add("Отчёты проверены", Severity.Success, config =>
+            {
+                config.Action = "Открыть результаты";
+                config.ActionColor = Color.Inherit;
+                config.CloseAfterNavigation = true;
+                config.OnClick = _ =>
+                {
+                    Navigation.NavigateTo($"/labs/{Id}/checks");
+                    return Task.CompletedTask;
+                };
+            });
             StateHasChanged();
         });
     }

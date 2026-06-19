@@ -6,6 +6,7 @@
 @inject IMediator Mediator
 @inject INotificationService Notifications
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @implements IDisposable
 
 <PageTitle>Репозитории</PageTitle>
@@ -73,6 +74,7 @@
             <MudTh>Репозиторий</MudTh>
             <MudTh>Статус</MudTh>
             <MudTh>Письмо</MudTh>
+            <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.StudentNumber</MudTd>
@@ -104,6 +106,10 @@
                 {
                     <MudIcon Icon="@Icons.Material.Filled.MarkEmailRead" Color="Color.Success" Size="Size.Small" />
                 }
+            </MudTd>
+            <MudTd Style="text-align:right">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                               OnClick="@(() => DeleteRepository(context))" />
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -173,6 +179,25 @@
         _running = true;
         await Mediator.Send(new EnqueueSendInvitationsCommand(_courseId.Value, _groupId.Value, []));
         Snackbar.Add("Рассылка приглашений запущена", Severity.Info);
+    }
+
+    private async Task DeleteRepository(StudentRepositoryDto repository)
+    {
+        if (await DialogService.ShowMessageBoxAsync("Удаление", $"Удалить репозиторий «{repository.Name}» студента {repository.StudentFullName}? Репозиторий будет удалён и на GitHub.", yesText: "Удалить", cancelText: "Отмена") != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await Mediator.Send(new DeleteRepositoryCommand(repository.Id));
+            Snackbar.Add("Репозиторий удалён", Severity.Success);
+            await LoadRepositories();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Не удалось удалить репозиторий: {ex.Message}", Severity.Error);
+        }
     }
 
     private void HandleProgress(ProvisioningProgress p)

@@ -4,7 +4,6 @@ namespace ReportsCheck.Web;
 
 /// <summary>
 /// Загрузка трёх шаблонов промптов из каталога Prompts при старте.
-/// Порт чтения шаблонов в config.ts.
 /// </summary>
 public static class PromptTemplatesLoader
 {

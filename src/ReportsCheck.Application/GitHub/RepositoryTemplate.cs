@@ -4,7 +4,7 @@ namespace ReportsCheck.Application.GitHub;
 /// Шаблон структуры учебного репозитория: 6 лабораторных работ.
 /// Возвращает словарь «путь → содержимое файла» (порядок не важен).
 /// Папки в git существуют только за счёт файлов, поэтому в каждой папке есть Readme.md,
-/// а файлы workflow (*.yml) — пустые.
+/// а файлы workflow (*.yml) содержат лишь заглушку-комментарий (пустые файлы Contents API не создаёт).
 /// </summary>
 public static class RepositoryTemplate
 {
@@ -20,15 +20,17 @@ public static class RepositoryTemplate
     {
         var files = new Dictionary<string, string>
         {
-            ["Readme.md"] = BuildRootReadme(fullName, groupName, courseName),
+            // README.md в верхнем регистре — перезаписывает файл, созданный AutoInit.
+            ["README.md"] = BuildRootReadme(fullName, groupName, courseName),
         };
 
         for (var i = 1; i <= LabCount; i++)
         {
             var n = i.ToString("D2");
             files[$"Lab{n}/Readme.md"] = $"# Лабораторная работа №{i}\n";
-            // Файлы workflow — пустые согласно требованиям.
-            files[$".github/workflows/lab{n}.yml"] = string.Empty;
+            // Заглушка-комментарий: Contents API не создаёт пустые файлы, а пустой workflow
+            // всё равно невалиден для GitHub Actions. Содержимое заполняется позже.
+            files[$".github/workflows/lab{n}.yml"] = $"# Workflow для лабораторной работы №{i} (заполните позже)\n";
         }
 
         return files;
