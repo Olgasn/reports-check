@@ -3,7 +3,8 @@ namespace ReportsCheck.Domain.Entities;
 /// <summary>
 /// Глобальные настройки приложения (одна строка в таблице): доступ к GitHub
 /// и параметры SMTP-рассылки. Редактируются через UI.
-/// Секреты (токен, пароль) хранятся в открытом виде — как и существующие API-ключи.
+/// Секреты (<see cref="GitHubToken"/>, <see cref="SmtpPassword"/>) шифруются в БД
+/// EF-конвертером через ISecretProtector — как и <c>Key.Value</c>.
 /// </summary>
 public class AppSettings : BaseEntity
 {

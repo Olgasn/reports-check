@@ -19,6 +19,7 @@ using ReportsCheck.Infrastructure.Llm;
 using ReportsCheck.Infrastructure.Llm.Handlers;
 using ReportsCheck.Infrastructure.Notifications;
 using ReportsCheck.Infrastructure.Persistence;
+using ReportsCheck.Infrastructure.Security;
 using ReportsCheck.Infrastructure.Services;
 
 namespace ReportsCheck.Infrastructure;
@@ -33,6 +34,10 @@ public static class DependencyInjection
             var dbPath = configuration["DATABASE"] ?? "reports-check.sqlite";
             connectionString = $"Data Source={dbPath}";
         }
+
+        // Шифрование секретов в БД. ISecretProtector регистрируется в Web/Program.cs
+        // с изолированным экземпляром Data Protection (отдельно от key-ring приложения).
+        services.AddScoped<SecretEncryptionMigrator>();
 
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 

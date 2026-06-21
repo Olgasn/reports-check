@@ -27,6 +27,9 @@ TestResults/
 *.sqlite.bak*
 *.db
 
+# Data Protection key ring (encrypts DB secrets — must never be committed)
+DataProtection-Keys/
+
 # Raw LLM response logs (written relative to process CWD on every check)
 models_logs/
 
